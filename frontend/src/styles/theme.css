@@ -1,0 +1,272 @@
+@custom-variant dark (&:is(.dark *));
+
+/* Design Concept A: Nordic Minimal Utility */
+:root {
+  --font-size: 16px;
+  
+  /* Nordic Minimal - Cool grays with muted blue accent */
+  --background: #FAFBFC;
+  --foreground: #1A1D29;
+  --card: #FFFFFF;
+  --card-foreground: #1A1D29;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1D29;
+  --primary: #2B3A52;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F4F5F7;
+  --secondary-foreground: #1A1D29;
+  --muted: #E8EAED;
+  --muted-foreground: #5F6675;
+  --accent: #DDE5F0;
+  --accent-foreground: #2B3A52;
+  --destructive: #C93A3A;
+  --destructive-foreground: #FFFFFF;
+  --border: #E1E4E8;
+  --input: transparent;
+  --input-background: #F9FAFB;
+  --switch-background: #D1D5DB;
+  --ring: #2B3A52;
+  
+  /* Accent color - muted Nordic blue */
+  --nordic-accent: #5B7A9E;
+  --nordic-accent-light: #E8EEF5;
+  --nordic-accent-dark: #3B5372;
+  
+  /* Design tokens */
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --radius: 0.5rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  
+  /* Spacing scale */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  
+  /* Elevation */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.06);
+  --shadow-xl: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
+  
+  /* Chart colors - muted palette */
+  --chart-1: #5B7A9E;
+  --chart-2: #7BA28D;
+  --chart-3: #9B8FA8;
+  --chart-4: #B89077;
+  --chart-5: #8A9BAE;
+  
+  /* Sidebar */
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1D29;
+  --sidebar-primary: #2B3A52;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #F4F5F7;
+  --sidebar-accent-foreground: #1A1D29;
+  --sidebar-border: #E1E4E8;
+  --sidebar-ring: #2B3A52;
+}
+
+/* Design Concept B: Modern Technical Calm */
+:root[data-theme="technical"] {
+  /* Technical - Warmer grays with sage green accent */
+  --background: #FBFBFA;
+  --foreground: #1C1E1A;
+  --card: #FFFFFF;
+  --card-foreground: #1C1E1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1C1E1A;
+  --primary: #3A4438;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F5F6F4;
+  --secondary-foreground: #1C1E1A;
+  --muted: #E9EBE7;
+  --muted-foreground: #5E625D;
+  --accent: #DFE5DC;
+  --accent-foreground: #3A4438;
+  --destructive: #C93A3A;
+  --destructive-foreground: #FFFFFF;
+  --border: #E0E3DE;
+  --input: transparent;
+  --input-background: #F8F9F7;
+  --switch-background: #D0D4CB;
+  --ring: #3A4438;
+  
+  /* Accent color - sage green */
+  --nordic-accent: #6B8F71;
+  --nordic-accent-light: #E8F0EA;
+  --nordic-accent-dark: #4A6851;
+  
+  /* Subtle depth with warm shadows */
+  --shadow-sm: 0 1px 3px 0 rgba(28, 30, 26, 0.04);
+  --shadow-md: 0 2px 10px 0 rgba(28, 30, 26, 0.05);
+  --shadow-lg: 0 4px 18px 0 rgba(28, 30, 26, 0.07);
+  --shadow-xl: 0 8px 36px 0 rgba(28, 30, 26, 0.09);
+  
+  /* Chart colors - technical palette */
+  --chart-1: #6B8F71;
+  --chart-2: #8F9B6B;
+  --chart-3: #8B8EA8;
+  --chart-4: #9E8775;
+  --chart-5: #7B9195;
+  
+  /* Slightly softer corners */
+  --radius: 0.625rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.125rem;
+}
+
+.dark {
+  --background: #141820;
+  --foreground: #E4E7EC;
+  --card: #1A1F2B;
+  --card-foreground: #E4E7EC;
+  --popover: #1A1F2B;
+  --popover-foreground: #E4E7EC;
+  --primary: #E4E7EC;
+  --primary-foreground: #141820;
+  --secondary: #232938;
+  --secondary-foreground: #E4E7EC;
+  --muted: #232938;
+  --muted-foreground: #8A90A0;
+  --accent: #2A3142;
+  --accent-foreground: #E4E7EC;
+  --destructive: #E05252;
+  --destructive-foreground: #FFFFFF;
+  --border: #2A3142;
+  --input: transparent;
+  --input-background: #1E2330;
+  --switch-background: #3A4255;
+  --ring: #5B7A9E;
+
+  --nordic-accent: #6D8FB5;
+  --nordic-accent-light: #1E2A3A;
+  --nordic-accent-dark: #8AAED4;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px 0 rgba(0, 0, 0, 0.25);
+  --shadow-lg: 0 4px 16px 0 rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+
+  --chart-1: #6D8FB5;
+  --chart-2: #7BA28D;
+  --chart-3: #9B8FA8;
+  --chart-4: #B89077;
+  --chart-5: #8A9BAE;
+
+  --sidebar: #1A1F2B;
+  --sidebar-foreground: #E4E7EC;
+  --sidebar-primary: #6D8FB5;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #232938;
+  --sidebar-accent-foreground: #E4E7EC;
+  --sidebar-border: #2A3142;
+  --sidebar-ring: #5B7A9E;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+}

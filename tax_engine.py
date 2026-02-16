@@ -1,0 +1,294 @@
+"""
+Tax calculation engine for Denmark (2026).
+
+Two public functions:
+  • compute_tax()            — salary/wage earners (full-time or part-time)
+  • compute_student_income() — student (SU + part-time work)
+"""
+
+from data import (
+    AM_RATE,
+    PERSONFRADRAG,
+    BUNDSKAT_RATE,
+    MELLEMSKAT_THRESHOLD, MELLEMSKAT_RATE,
+    TOPSKAT_THRESHOLD,    TOPSKAT_RATE,
+    TOPTOPSKAT_THRESHOLD, TOPTOPSKAT_RATE,
+    SKATTELOFT,
+    BESKAEFT_RATE, BESKAEFT_MAX,
+    JOB_FRADRAG_RATE, JOB_FRADRAG_MAX,
+    FRIBELOEB_LAVESTE_VID,
+    SU_REPAYMENT_INTEREST_RATE,
+    FERIETILLAEG_RATE, FERIEPENGE_RATE,
+    ATP_MONTHLY,
+)
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  EMPLOYEE TAX
+# ═══════════════════════════════════════════════════════════════════════
+
+def compute_tax(
+    gross_annual: float,
+    pension_pct: float,
+    kommune_pct: float,
+    kirke_pct: float,
+    is_church: bool,
+    has_employment_income: bool = True,
+    employer_pension_pct: float = 0.0,
+    is_hourly: bool = False,
+    taxable_benefits_annual: float = 0.0,
+    other_pay_annual: float = 0.0,
+    pretax_deductions_annual: float = 0.0,
+    aftertax_deductions_annual: float = 0.0,
+    atp_monthly: float = 0.0,
+) -> dict:
+    """Full Danish tax calculation for one year.
+
+    Parameters
+    ----------
+    gross_annual           Gross salary (before any deductions).
+    pension_pct            Employee pension contribution (0–1), deducted from gross.
+    kommune_pct            Municipal tax rate as **percentage** (e.g. 23.39).
+    kirke_pct              Church-tax rate as **percentage** (e.g. 0.80).
+    is_church              Member of the national church?
+    has_employment_income  True → AM-bidrag + beskæftigelsesfradrag apply.
+    employer_pension_pct   Employer pension contribution ON TOP (0–1), not taxed.
+    is_hourly              True → 12.5% feriepenge; False → 1% ferietillæg.
+    taxable_benefits_annual  Non-cash benefits that add to taxable income
+                             (e.g. fri telefon, sundhedsforsikring).
+    other_pay_annual       Extra cash compensation (broadband, allowances, etc.).
+    pretax_deductions_annual  Employer deductions from pay before tax (e.g. DSB card).
+    aftertax_deductions_annual  Deductions after tax (canteen, clubs, etc.).
+    atp_monthly            ATP employee contribution per month.
+    """
+    # 0) Feriepenge / ferietillæg (additional taxable income)
+    ferie_rate = FERIEPENGE_RATE if is_hourly else FERIETILLAEG_RATE
+    feriepenge = gross_annual * ferie_rate
+
+    # Total cash pay = salary + feriepenge + other pay - pretax deductions
+    total_cash = gross_annual + feriepenge + other_pay_annual - pretax_deductions_annual
+
+    # Total taxable gross = cash pay + taxable non-cash benefits
+    total_gross = total_cash + taxable_benefits_annual
+
+    # 1) Pension (on base salary only, not on feriepenge/benefits)
+    employee_pension = gross_annual * pension_pct          # deducted from gross
+    employer_pension = gross_annual * employer_pension_pct # on top, not taxed
+    total_pension    = employee_pension + employer_pension
+    pension = employee_pension  # only employee part reduces taxable income
+    am_basis = total_gross - pension
+
+    # 2) AM-bidrag
+    am_bidrag = am_basis * AM_RATE if has_employment_income else 0.0
+    income_after_am = am_basis - am_bidrag
+
+    # 2b) ATP (deducted from pay, but NOT from AM-base; deducted pre-tax)
+    atp_annual = atp_monthly * 12
+
+    # 3) Employment deductions
+    if has_employment_income:
+        beskaeft = min(income_after_am * BESKAEFT_RATE, BESKAEFT_MAX)
+        job_frad = min(income_after_am * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
+    else:
+        beskaeft = job_frad = 0.0
+
+    # 4) Bundskat
+    bundskat_base = max(income_after_am - PERSONFRADRAG, 0)
+    bundskat = bundskat_base * BUNDSKAT_RATE
+
+    # 5) Kommuneskat (reduced base via fradrag)
+    kommune_base = max(income_after_am - PERSONFRADRAG - beskaeft - job_frad, 0)
+    k_pct = kommune_pct / 100.0
+    kommuneskat = kommune_base * k_pct
+
+    # 6) Kirkeskat
+    kirkeskat = 0.0
+    if is_church:
+        kirke_base = max(income_after_am - PERSONFRADRAG, 0)
+        kirkeskat = kirke_base * (kirke_pct / 100.0)
+
+    # 7) Progressive brackets — capped by skatteloft
+    base_marginal = BUNDSKAT_RATE + k_pct
+
+    eff_mellem = MELLEMSKAT_RATE
+    if base_marginal + eff_mellem > SKATTELOFT:
+        eff_mellem = max(SKATTELOFT - base_marginal, 0)
+
+    eff_top = TOPSKAT_RATE
+    if base_marginal + eff_mellem + eff_top > SKATTELOFT:
+        eff_top = max(SKATTELOFT - base_marginal - eff_mellem, 0)
+
+    eff_toptop = TOPTOPSKAT_RATE
+    if base_marginal + eff_mellem + eff_top + eff_toptop > SKATTELOFT:
+        eff_toptop = max(SKATTELOFT - base_marginal - eff_mellem - eff_top, 0)
+
+    mellem_base = max(min(income_after_am, TOPSKAT_THRESHOLD)
+                      - MELLEMSKAT_THRESHOLD, 0)
+    top_base    = max(min(income_after_am, TOPTOPSKAT_THRESHOLD)
+                      - TOPSKAT_THRESHOLD, 0)
+    toptop_base = max(income_after_am - TOPTOPSKAT_THRESHOLD, 0)
+
+    mellemskat = mellem_base * eff_mellem
+    topskat    = top_base    * eff_top
+    toptopskat = toptop_base * eff_toptop
+
+    # 8) Totals
+    total_income_tax = (bundskat + kommuneskat + kirkeskat
+                        + mellemskat + topskat + toptopskat)
+    total_deductions = am_bidrag + pension + total_income_tax + atp_annual
+    # Net = total cash - deductions - after-tax items
+    # (taxable benefits are non-cash so not in net)
+    net_annual = total_cash - total_deductions - aftertax_deductions_annual
+
+    return {
+        "gross_annual":        gross_annual,
+        "feriepenge":          feriepenge,
+        "other_pay":           other_pay_annual,
+        "pretax_deductions":   pretax_deductions_annual,
+        "aftertax_deductions": aftertax_deductions_annual,
+        "taxable_benefits":    taxable_benefits_annual,
+        "total_gross":         total_gross,
+        "pension":             pension,
+        "employee_pension":    employee_pension,
+        "employer_pension":    employer_pension,
+        "total_pension":       total_pension,
+        "am_bidrag":           am_bidrag,
+        "atp_annual":          atp_annual,
+        "income_after_am":     income_after_am,
+        "beskaeft_fradrag":    beskaeft,
+        "job_fradrag":         job_frad,
+        "bundskat":            bundskat,
+        "kommuneskat":         kommuneskat,
+        "kirkeskat":           kirkeskat,
+        "mellemskat":          mellemskat,
+        "topskat":             topskat,
+        "toptopskat":          toptopskat,
+        "total_income_tax":    total_income_tax,
+        "total_deductions":    total_deductions,
+        "net_annual":          net_annual,
+        "net_monthly":         net_annual / 12,
+        "effective_tax_rate":  (total_deductions / total_gross * 100)
+                                 if total_gross > 0 else 0,
+    }
+
+
+# ═══════════════════════════════════════════════════════════════════════
+#  STUDENT (SU + WORK)
+# ═══════════════════════════════════════════════════════════════════════
+
+def compute_student_income(
+    su_monthly: float,
+    work_gross_monthly: float,
+    pension_pct: float,
+    kommune_pct: float,
+    kirke_pct: float,
+    is_church: bool,
+    employer_pension_pct: float = 0.0,
+    aars_fribeloeb: float | None = None,
+) -> dict:
+    """Combined net income: SU (no AM) + work wages (AM applies).
+
+    The personfradrag covers the combined personal income.
+    If aars_fribeloeb is not given, defaults to 12 × laveste videregående.
+    """
+    if aars_fribeloeb is None:
+        aars_fribeloeb = FRIBELOEB_LAVESTE_VID * 12
+    su_annual_gross = su_monthly * 12
+    work_annual     = work_gross_monthly * 12
+
+    # Feriepenge (12.5 % for hourly student jobs — counts towards egenindkomst)
+    work_feriepenge = work_annual * FERIEPENGE_RATE
+
+    # Work side
+    work_employee_pension = work_annual * pension_pct
+    work_employer_pension = work_annual * employer_pension_pct  # on top
+    work_total_pension    = work_employee_pension + work_employer_pension
+    work_pension          = work_employee_pension  # only employee part is deducted
+    work_am_basis  = (work_annual + work_feriepenge) - work_pension
+    work_am_bidrag = work_am_basis * AM_RATE
+    work_after_am  = work_am_basis - work_am_bidrag
+
+    # ── Fribeløb check & SU repayment ──────────────────────────────
+    # Egenindkomst includes feriepenge (su.dk: "Dine feriepenge tæller med")
+    # Årsfribeløb = sum of 12 månedsfribeløb (passed in or default)
+    fribeloeb_excess = max(work_after_am - aars_fribeloeb, 0)
+    # Repayment is krone-for-krone, capped at total SU received
+    su_repayment     = min(fribeloeb_excess, su_annual_gross)
+    over_fribeloeb   = fribeloeb_excess > 0
+
+    # Interest on the repayment amount (9.75 % p.a.)
+    su_repayment_interest = su_repayment * SU_REPAYMENT_INTEREST_RATE
+
+    # Effective SU after repayment (what you actually keep)
+    su_annual = su_annual_gross - su_repayment
+
+    # Combined personal income (using effective SU)
+    total_personal = su_annual + work_after_am
+
+    # Employment deductions (work portion only)
+    beskaeft = min(work_after_am * BESKAEFT_RATE, BESKAEFT_MAX)
+    job_frad = min(work_after_am * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
+
+    # Bundskat
+    bundskat_base = max(total_personal - PERSONFRADRAG, 0)
+    bundskat = bundskat_base * BUNDSKAT_RATE
+
+    # Kommuneskat
+    kommune_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad, 0)
+    k_pct = kommune_pct / 100.0
+    kommuneskat = kommune_base * k_pct
+
+    # Kirkeskat
+    kirkeskat = 0.0
+    if is_church:
+        kirke_base = max(total_personal - PERSONFRADRAG, 0)
+        kirkeskat = kirke_base * (kirke_pct / 100.0)
+
+    # Higher brackets (unlikely for most students)
+    base_marginal = BUNDSKAT_RATE + k_pct
+    eff_mellem = min(MELLEMSKAT_RATE, max(SKATTELOFT - base_marginal, 0))
+    mellem_base = max(min(total_personal, TOPSKAT_THRESHOLD)
+                      - MELLEMSKAT_THRESHOLD, 0)
+    mellemskat = mellem_base * eff_mellem
+
+    # Totals — note: net is based on effective SU (after repayment)
+    total_income_tax = bundskat + kommuneskat + kirkeskat + mellemskat
+    total_deductions = (work_am_bidrag + work_pension + total_income_tax
+                        + su_repayment + su_repayment_interest)
+    net_annual = (su_annual_gross + work_annual + work_feriepenge) - total_deductions
+
+    # Monthly helpers
+    work_after_am_monthly = work_after_am / 12
+
+    return {
+        "su_annual_gross":         su_annual_gross,
+        "su_annual":               su_annual,
+        "su_monthly":              su_monthly,
+        "su_repayment":            su_repayment,
+        "su_repayment_interest":   su_repayment_interest,
+        "aars_fribeloeb":          aars_fribeloeb,
+        "fribeloeb_excess":        fribeloeb_excess,
+        "work_feriepenge":         work_feriepenge,
+        "work_gross_annual":       work_annual,
+        "work_gross_monthly":      work_gross_monthly,
+        "work_pension":            work_pension,
+        "work_employee_pension":   work_employee_pension,
+        "work_employer_pension":   work_employer_pension,
+        "work_total_pension":      work_total_pension,
+        "work_am_bidrag":          work_am_bidrag,
+        "work_after_am":           work_after_am,
+        "total_personal":          total_personal,
+        "beskaeft_fradrag":        beskaeft,
+        "job_fradrag":             job_frad,
+        "bundskat":                bundskat,
+        "kommuneskat":             kommuneskat,
+        "kirkeskat":               kirkeskat,
+        "mellemskat":              mellemskat,
+        "total_income_tax":        total_income_tax,
+        "total_deductions":        total_deductions,
+        "net_annual":              net_annual,
+        "net_monthly":             net_annual / 12,
+        "over_fribeloeb":          over_fribeloeb,
+        "fribeloeb_limit":         FRIBELOEB_LAVESTE_VID,
+        "work_after_am_monthly":   work_after_am_monthly,
+    }

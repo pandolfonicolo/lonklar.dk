@@ -1,0 +1,96 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--muted);
+  border-radius: 5px;
+  border: 2px solid var(--background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--muted) var(--background);
+}
+
+/* Selection color */
+::selection {
+  background: var(--nordic-accent-light);
+  color: var(--foreground);
+}
+
+::-moz-selection {
+  background: var(--nordic-accent-light);
+  color: var(--foreground);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Remove focus outline on mouse click */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  /* Hide interactive elements */
+  header,
+  button,
+  nav {
+    display: none !important;
+  }
+
+  /* Ensure good contrast */
+  * {
+    color: #000 !important;
+    background: #fff !important;
+  }
+
+  /* Page breaks */
+  h1, h2, h3 {
+    page-break-after: avoid;
+  }
+
+  /* Expand containers */
+  .max-w-4xl,
+  .max-w-5xl,
+  .max-w-7xl {
+    max-width: 100% !important;
+  }
+}
