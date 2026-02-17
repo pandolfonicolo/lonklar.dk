@@ -29,9 +29,9 @@ kommune_base    = max(income_after_am − 54 100
 kommuneskat     = kommune_base × kommune_%
 
 // ── progressive brackets (capped by skatteloft 44.57%) ──
-mellemskat      = max(min(income, 640 109) − 611 800, 0) × 7.5%
-topskat         = max(min(income, 750 000) − 640 109, 0) × 7.5%
-toptopskat      = max(income − 750 000, 0)               × 5.0%
+mellemskat      = max(min(income, 777 900) − 641 200, 0) × 7.5%
+topskat         = max(min(income, 2 592 700) − 777 900, 0) × 7.5%
+toptopskat      = max(income − 2 592 700, 0)               × 5.0%
 
 // ── net ──
 total_tax       = am_bidrag + bundskat + kommuneskat

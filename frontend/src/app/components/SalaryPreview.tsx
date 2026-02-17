@@ -9,14 +9,14 @@ import { useI18n } from "../utils/i18n";
 export function SalaryPreview() {
   const { t, lang } = useI18n();
   const fmt = (n: number) =>
-    n.toLocaleString(lang === "da" ? "da-DK" : "en-DK", { maximumFractionDigits: 0 });
+    n.toLocaleString("da-DK", { maximumFractionDigits: 0 });
 
   const rows = [
-    { label: lang === "da" ? "Bruttoløn" : "Gross salary", value: 42000, type: "gross" as const },
-    { label: "AM-bidrag (8%) ", value: -3360, type: "deduction" as const },
-    { label: lang === "da" ? "A-skat" : "Income tax", value: -9814, type: "deduction" as const },
-    { label: lang === "da" ? "ATP" : "ATP", value: -94, type: "deduction" as const },
-    { label: lang === "da" ? "Nettoløn" : "Net salary", value: 28732, type: "net" as const },
+    { label: t("preview.gross"), value: 42000, type: "gross" as const },
+    { label: t("preview.am"), value: -3360, type: "deduction" as const },
+    { label: t("preview.incomeTax"), value: -9814, type: "deduction" as const },
+    { label: t("preview.atp"), value: -94, type: "deduction" as const },
+    { label: t("preview.net"), value: 28732, type: "net" as const },
   ];
 
   return (
@@ -30,13 +30,13 @@ export function SalaryPreview() {
       <div className="bg-card border-2 border-dashed border-border/60 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden relative">
         {/* "Example" ribbon — top-right corner */}
         <div className="absolute top-3 -right-8 z-10 bg-muted-foreground/70 text-white text-[9px] font-bold uppercase tracking-widest px-8 py-0.5 rotate-45 shadow-sm pointer-events-none select-none">
-          {lang === "da" ? "Eksempel" : "Example"}
+          {t("preview.example")}
         </div>
 
         {/* Header strip */}
         <div className="bg-[var(--nordic-accent)] px-5 py-3">
           <span className="text-white/90 text-xs font-medium tracking-wide uppercase">
-            {lang === "da" ? "Månedsoversigt" : "Monthly overview"}
+            {t("preview.monthlyOverview")}
           </span>
         </div>
 
@@ -81,7 +81,7 @@ export function SalaryPreview() {
         <div className="px-5 pb-4">
           <div className="flex items-center justify-between bg-[var(--nordic-accent-light)] rounded-[var(--radius-md)] px-3 py-2">
             <span className="text-xs text-[var(--nordic-accent-dark)]">
-              {lang === "da" ? "Effektiv skattesats" : "Effective tax rate"}
+              {t("preview.effectiveRate")}
             </span>
             <span className="text-xs font-mono font-semibold text-[var(--nordic-accent-dark)]">
               31,6%
@@ -92,7 +92,7 @@ export function SalaryPreview() {
 
       {/* Caption */}
       <p className="text-center text-[11px] text-muted-foreground/60 mt-2 italic">
-        {lang === "da" ? "Illustrativt. Din beregning kan afvige." : "Illustrative only. Your result may differ."}
+        {t("preview.illustrative")}
       </p>
 
       {/* Decorative blur */}

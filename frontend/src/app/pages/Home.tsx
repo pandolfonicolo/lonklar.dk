@@ -135,7 +135,7 @@ export function Home() {
                 description={t(s.descKey)}
                 onClick={() => navigate(`/wizard/${s.id}`)}
                 comingSoon={s.comingSoon}
-                comingSoonLabel={lang === "da" ? "Kommer snart" : "Coming soon"}
+                comingSoonLabel={t("home.comingSoon")}
               />
             ))}
           </div>

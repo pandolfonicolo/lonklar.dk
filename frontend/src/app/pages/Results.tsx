@@ -25,6 +25,9 @@ import {
   ReferenceDot,
   ReferenceLine,
   ReferenceArea,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
@@ -64,6 +67,14 @@ function fmtEUR(n: number, rate: number): string {
   })}`;
 }
 
+/** Smart axis label: use M for millions, k for thousands */
+function fmtAxisDKK(v: number): string {
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
+  return String(v);
+}
+
 function pct(n: number): string {
   return `${n.toFixed(2)} %`;
 }
@@ -78,82 +89,14 @@ type Row = {
   spacer?: boolean;
 };
 
-// ── TAX GLOSSARY ─────────────────────────────────────────────────────
+// ── TAX GLOSSARY (i18n keys) ─────────────────────────────────────────
 
-const GLOSSARY: { term: string; desc: string }[] = [
-  {
-    term: "AM-bidrag",
-    desc: "Arbejdsmarkedsbidrag — 8% labour-market contribution deducted from all earned income before income tax. Funds unemployment benefits and active labour-market programmes.",
-  },
-  {
-    term: "Bundskat",
-    desc: "Base state income tax (12.01%) applied to income above the personal allowance (personfradrag). Everyone with taxable income pays it.",
-  },
-  {
-    term: "Kommuneskat",
-    desc: "Municipal income tax, set individually by each of Denmark's 98 municipalities. Typically 23–27% and is the largest single tax component.",
-  },
-  {
-    term: "Kirkeskat",
-    desc: "Church tax (0.4–1.3%) only paid by members of the Folkekirken (Danish National Church). Opt out by leaving the church.",
-  },
-  {
-    term: "Mellemskat",
-    desc: "7.5% bracket tax on income exceeding 641,200 kr/year after AM-bidrag. Part of the progressive bracket system.",
-  },
-  {
-    term: "Topskat",
-    desc: "7.5% bracket tax on income exceeding 777,900 kr/year after AM-bidrag. Subject to the skatteloft ceiling.",
-  },
-  {
-    term: "Toptopskat",
-    desc: "5% bracket tax on income exceeding 2,592,700 kr/year. Introduced in 2026 for very high earners.",
-  },
-  {
-    term: "Personfradrag",
-    desc: "Annual personal tax allowance (54,100 kr in 2026). Income below this amount is effectively tax-free at the municipal level.",
-  },
-  {
-    term: "Beskæftigelsesfradrag",
-    desc: "Employment deduction (12.75%, max 63,300 kr) that reduces your municipal tax base.",
-  },
-  {
-    term: "Jobfradrag",
-    desc: "Additional employment deduction (4.50%, max 3,100 kr) also reducing your municipal tax base.",
-  },
-  {
-    term: "Befordringsfradrag",
-    desc: "Transport deduction for commuting >24 km round-trip: 1.98 kr/km for km 25–120, 0.99 kr/km above 120 km. A ligningsmæssigt fradrag — reduces municipal/church tax only (~26% tax value).",
-  },
-  {
-    term: "Fagforening / A-kasse",
-    desc: "Trade union and unemployment insurance fees. Up to 7,000 kr/year is deductible. A ligningsmæssigt fradrag — reduces municipal/church tax only (~26% tax value).",
-  },
-  {
-    term: "Ligningsmæssige fradrag",
-    desc: "Personal deductions (transport, union fees, etc.) that only reduce your municipal and church tax base — NOT your AM-bidrag or bundskat base. Tax value is ~26%.",
-  },
-  {
-    term: "Skatteloft",
-    desc: "Tax ceiling (44.57%). Caps the combined state + municipal marginal tax rate so it never exceeds this limit.",
-  },
-  {
-    term: "Feriepenge",
-    desc: "Holiday pay (12.5%) set aside by employers for hourly workers, paid out during vacation periods. Counts as taxable income.",
-  },
-  {
-    term: "Ferietillæg",
-    desc: "Holiday supplement (1%) paid to salaried employees on top of regular salary.",
-  },
-  {
-    term: "ATP",
-    desc: "Arbejdsmarkedets Tillægspension — mandatory supplementary pension. Employee pays ~95 kr/month, employer pays ~190 kr/month on top.",
-  },
-  {
-    term: "Fribeløb",
-    desc: "Annual earnings limit for SU recipients. Three tiers exist: laveste (SU months), mellemste (enrolled but opted out), and højeste (not enrolled). Exceeding it requires repaying SU krone-for-krone on the excess, plus 9.75% interest.",
-  },
-];
+const GLOSSARY_KEYS = [
+  "am", "bundskat", "kommuneskat", "kirkeskat", "mellemskat",
+  "topskat", "toptopskat", "personfradrag", "beskfradrag", "jobfradrag",
+  "befordring", "fagforening", "ligningsfradrag", "skatteloft",
+  "feriepenge", "ferietillaeg", "atp", "fribeloeb",
+] as const;
 
 // ── Build breakdown rows ─────────────────────────────────────────────
 
@@ -379,6 +322,120 @@ function studentBreakdown(r: StudentResult): Row[] {
   return rows;
 }
 
+// ── Salary breakdown pie chart ───────────────────────────────────────
+
+const PIE_COLORS = [
+  "var(--nordic-accent)",   // net pay — primary accent
+  "var(--chart-3)",         // income tax — matches bundskat/tax rows
+  "var(--chart-4)",         // AM-bidrag — warm tone
+  "var(--chart-2)",         // pension — matches pension row
+  "var(--chart-5)",         // ATP — steel/teal
+  "var(--chart-1)",         // church tax — primary blue/sage
+  "var(--muted-foreground)",// after-tax deductions — neutral
+];
+
+function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: TaxResult | StudentResult; isStudent: boolean; period: "monthly" | "annual"; showEur: boolean; eurRate: number }) {
+  const { t } = useI18n();
+
+  if (isStudent) return null;
+
+  const tr = r as TaxResult;
+  const div = period === "annual" ? 1 : 12;
+  const grossVal = Math.round((tr.gross_annual + tr.feriepenge) / div);
+  const netVal = Math.round(tr.net_annual / div);
+  const incomeTax = Math.round(tr.total_income_tax / div);
+  const am = Math.round(tr.am_bidrag / div);
+  const pension = Math.round(tr.employee_pension / div);
+  const atp = Math.round(tr.atp_annual / div);
+  const kirkeskat = Math.round(tr.kirkeskat / div);
+  const afterTax = Math.round((tr.aftertax_deductions || 0) / div);
+
+  type Slice = { key: string; value: number };
+  const data: Slice[] = [
+    { key: "chart.pie.net", value: netVal },
+    { key: "chart.pie.incomeTax", value: incomeTax },
+    { key: "chart.pie.am", value: am },
+  ];
+  if (pension > 0) data.push({ key: "chart.pie.pension", value: pension });
+  if (atp > 0) data.push({ key: "chart.pie.atp", value: atp });
+  if (kirkeskat > 0) data.push({ key: "chart.pie.kirkeskat", value: kirkeskat });
+  if (afterTax > 0) data.push({ key: "chart.pie.afterTax", value: afterTax });
+
+  return (
+    <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
+      <h3 className="text-foreground font-medium mb-1">{t("chart.pie.title" as any)}</h3>
+      <p className="text-sm text-muted-foreground mb-6">{fmtDKK(grossVal)} kr/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}{showEur ? ` (${fmtEUR(grossVal, eurRate)})` : ''}</p>
+
+      <div className="flex flex-col sm:flex-row items-center gap-6">
+        {/* Donut */}
+        <div className="w-52 h-52 flex-shrink-0">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={90}
+                paddingAngle={2}
+                stroke="none"
+              >
+                {data.map((_, i) => (
+                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                ))}
+              </Pie>
+              <RTooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const d = payload[0]?.payload as Slice | undefined;
+                  if (!d) return null;
+                  const pctVal = ((d.value / grossVal) * 100).toFixed(1);
+                  return (
+                    <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '8px 12px', lineHeight: 1.6 }}>
+                      <p style={{ fontWeight: 600 }}>{t(d.key as any)}</p>
+                      <p>{fmtDKK(d.value)} kr{showEur ? ` (${fmtEUR(d.value, eurRate)})` : ''} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
+                    </div>
+                  );
+                }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Legend */}
+        <div className="flex flex-col gap-2.5 text-sm flex-1">
+          {data.map((d, i) => {
+            const pctVal = ((d.value / grossVal) * 100).toFixed(1);
+            return (
+              <div key={d.key} className="flex items-center gap-2.5">
+                <span
+                  className="w-3 h-3 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }}
+                />
+                <span className="text-muted-foreground">{t(d.key as any)}</span>
+                <span className="text-muted-foreground/60 text-xs ml-1">({pctVal}%)</span>
+                <span className="font-medium text-foreground ml-auto tabular-nums">
+                  {fmtDKK(d.value)} kr
+                  {showEur && <span className="text-muted-foreground/60 text-xs ml-1">{fmtEUR(d.value, eurRate)}</span>}
+                </span>
+              </div>
+            );
+          })}
+          <div className="border-t border-border pt-2 mt-1 flex items-center gap-2.5">
+            <span className="w-3 h-3 flex-shrink-0" />
+            <span className="text-muted-foreground font-medium">Total</span>
+            <span className="font-semibold text-foreground ml-auto tabular-nums">
+              {fmtDKK(grossVal)} kr
+              {showEur && <span className="text-muted-foreground/60 text-xs ml-1">{fmtEUR(grossVal, eurRate)}</span>}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Page ─────────────────────────────────────────────────────────────
 
 export function Results() {
@@ -469,7 +526,7 @@ export function Results() {
     : r.effective_tax_rate;
 
   const mul = period === "annual" ? 12 : 1;
-  const perLabel = period === "annual" ? (lang === "da" ? "/år" : "/year") : (lang === "da" ? "/md" : "/month");
+  const perLabel = period === "annual" ? t("perLabel.year" as any) : t("perLabel.month" as any);
   const eurRate = meta?.dkk_per_eur ?? 7.45;
 
   const displayAmount = netMonthly * mul;
@@ -525,7 +582,7 @@ export function Results() {
               )}
               <p className="text-sm opacity-75 mt-1">
                 {fmtDKK(period === "annual" ? netMonthly : netAnnual)} kr{" "}
-                {period === "annual" ? (lang === "da" ? "/md" : "/month") : (lang === "da" ? "/år" : "/year")}
+                {period === "annual" ? t("perLabel.month" as any) : t("perLabel.year" as any)}
               </p>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-[var(--radius-md)]">
@@ -596,6 +653,7 @@ export function Results() {
             <Stat
               label={`Pension (total)${perLabel}`}
               value={`${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
+              eurSub={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
             />
           )}
           {isStudent && (
@@ -689,20 +747,14 @@ export function Results() {
                       </p>
                     </div>
                     <div className="flex gap-8 shrink-0">
-                      <p
-                        className={`w-28 text-right font-mono text-sm ${
-                          item.bold ? "font-semibold" : ""
-                        }`}
-                      >
-                        {fmtDKK(item.value)}
-                      </p>
-                      <p
-                        className={`w-28 text-right font-mono text-sm text-muted-foreground ${
-                          item.bold ? "font-semibold" : ""
-                        }`}
-                      >
-                        {fmtDKK(item.value / 12)}
-                      </p>
+                      <div className={`w-28 text-right font-mono text-sm ${item.bold ? "font-semibold" : ""}`}>
+                        <p>{fmtDKK(item.value)}</p>
+                        {showEur && <p className="text-xs text-muted-foreground/70">{fmtEUR(item.value, eurRate)}</p>}
+                      </div>
+                      <div className={`w-28 text-right font-mono text-sm text-muted-foreground ${item.bold ? "font-semibold" : ""}`}>
+                        <p>{fmtDKK(item.value / 12)}</p>
+                        {showEur && <p className="text-xs text-muted-foreground/70">{fmtEUR(item.value / 12, eurRate)}</p>}
+                      </div>
                     </div>
                   </div>
                 )
@@ -729,14 +781,18 @@ export function Results() {
           {/* ── Chart tab ──────────────────────────────────────── */}
           {(serviceId === "fulltime" || serviceId === "parttime") && (
             <TabsContent value="chart" className="mt-6 space-y-8">
+
               {/* Net vs Gross curve */}
-              {curveData.length > 0 && (
+              {curveData.length > 0 && (() => {
+                const cMul = period === "annual" ? 12 : 1;
+                const ticks = Array.from({ length: 15 }, (_, i) => i * 10000);
+                return (
                 <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
                   <h3 className="text-foreground font-medium mb-1">
                     {t("chart.netVsGross")}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    {t("chart.netVsGross.desc")}
+                    {period === "annual" ? t("chart.netVsGross.desc.annual" as any) : t("chart.netVsGross.desc")}
                   </p>
                   <ResponsiveContainer width="100%" height={450}>
                     <LineChart data={curveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
@@ -748,13 +804,10 @@ export function Results() {
                         dataKey="gross_monthly"
                         type="number"
                         domain={[0, 140000]}
-                        ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
-                        tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                        ticks={ticks}
+                        tickFormatter={(v: number) => fmtAxisDKK(v * cMul)}
                         label={{
-                          value:
-                            lang === "da"
-                              ? "Bruttoløn pr. måned (DKK)"
-                              : "Gross monthly salary (DKK)",
+                          value: period === "annual" ? t('chart.grossAnnual' as any) : t('chart.grossMonth'),
                           position: "insideBottom",
                           offset: -5,
                         }}
@@ -763,11 +816,11 @@ export function Results() {
                       />
                       <YAxis
                         type="number"
-                        tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                        tickFormatter={(v: number) => fmtAxisDKK(v * cMul)}
                         domain={[0, 140000]}
-                        ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
+                        ticks={ticks}
                         label={{
-                          value: "DKK/" + (lang === "da" ? "md" : "month"),
+                          value: "DKK/" + (period === "annual" ? t('chart.dkkYear' as any) : t('chart.dkkMonth')),
                           angle: -90,
                           position: "insideLeft",
                         }}
@@ -779,8 +832,9 @@ export function Results() {
                           if (!active || !payload?.length) return null;
                           const d = payload[0]?.payload as CurvePoint | undefined;
                           if (!d) return null;
-                          const tax = d.gross_monthly - d.net_monthly;
-                          const netEur = fmtEUR(d.net_monthly, eurRate);
+                          const gVal = d.gross_monthly * cMul;
+                          const nVal = d.net_monthly * cMul;
+                          const netEur = fmtEUR(nVal, eurRate);
                           const mellemThreshold = Math.round(641200 / 12);
                           const topThreshold = Math.round(777900 / 12);
                           const bracket = d.gross_monthly >= topThreshold
@@ -794,9 +848,9 @@ export function Results() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
                                 {bracket.label}
                               </p>
-                              <p style={{ fontWeight: 500 }}>{lang === 'da' ? 'Brutto' : 'Gross'}: {fmtDKK(d.gross_monthly)} kr</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{lang === 'da' ? 'Netto' : 'Net'}: {fmtDKK(d.net_monthly)} kr <span style={{ opacity: 0.7 }}>({netEur})</span></p>
-                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{lang === 'da' ? 'Effektiv skat' : 'Effective tax'}: {d.effective_rate.toFixed(1)}%</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {fmtDKK(gVal)} kr</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {fmtDKK(nVal)} kr <span style={{ opacity: 0.7 }}>({netEur})</span></p>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
                         }}
@@ -804,7 +858,7 @@ export function Results() {
                       <Line
                         type="monotone"
                         dataKey="gross_monthly"
-                        name="Gross monthly"
+                        name="Gross"
                         stroke="var(--muted-foreground)"
                         strokeDasharray="5 5"
                         strokeWidth={1.5}
@@ -814,7 +868,7 @@ export function Results() {
                       <Line
                         type="monotone"
                         dataKey="net_monthly"
-                        name="Net monthly"
+                        name="Net"
                         stroke="var(--nordic-accent)"
                         strokeWidth={2.5}
                         dot={false}
@@ -853,16 +907,19 @@ export function Results() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              )}
+                );
+              })()}
 
               {/* Net vs Hours curve (part-time only) */}
-              {serviceId === "parttime" && hoursCurveData.length > 0 && (
+              {serviceId === "parttime" && hoursCurveData.length > 0 && (() => {
+                const hMul = period === "annual" ? 12 : 1;
+                return (
                 <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
                   <h3 className="text-foreground font-medium mb-1">
                     {t("chart.netVsHours")}
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    How your net monthly income changes with hours at{" "}
+                    How your net {period === "annual" ? "annual" : "monthly"} income changes with hours at{" "}
                     {fmtDKK(r.hourly_rate)} DKK/hour
                   </p>
                   <ResponsiveContainer width="100%" height={400}>
@@ -874,7 +931,7 @@ export function Results() {
                       <XAxis
                         dataKey="hours_month"
                         label={{
-                          value: lang === "da" ? "Timer / måned" : "Hours / month",
+                          value: t('chart.hoursPerMonth'),
                           position: "insideBottom",
                           offset: -5,
                         }}
@@ -882,9 +939,9 @@ export function Results() {
                         fontSize={12}
                       />
                       <YAxis
-                        tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                        tickFormatter={(v: number) => fmtAxisDKK(v * hMul)}
                         label={{
-                          value: "DKK/" + (lang === "da" ? "md" : "month"),
+                          value: "DKK/" + (period === "annual" ? t('chart.dkkYear' as any) : t('chart.dkkMonth')),
                           angle: -90,
                           position: "insideLeft",
                         }}
@@ -896,14 +953,16 @@ export function Results() {
                           if (!active || !payload?.length) return null;
                           const d = payload[0]?.payload as HoursCurvePoint | undefined;
                           if (!d) return null;
-                          const tax = d.gross_monthly - d.net_monthly;
+                          const gVal = d.gross_monthly * hMul;
+                          const nVal = d.net_monthly * hMul;
+                          const tax = gVal - nVal;
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
-                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{d.hours_month} {lang === 'da' ? 'timer/md' : 'hours/month'}</p>
-                              <p style={{ fontWeight: 500 }}>{lang === 'da' ? 'Brutto' : 'Gross'}: {fmtDKK(d.gross_monthly)} kr</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{lang === 'da' ? 'Netto' : 'Net'}: {fmtDKK(d.net_monthly)} kr</p>
-                              <p style={{ color: 'var(--destructive)' }}>{lang === 'da' ? 'Skat + fradrag' : 'Tax + ded.'}: {fmtDKK(tax)} kr</p>
-                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{lang === 'da' ? 'Effektiv skat' : 'Effective tax'}: {d.effective_rate.toFixed(1)}%</p>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{d.hours_month} {t('chart.hoursMonth')}</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {fmtDKK(gVal)} kr</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {fmtDKK(nVal)} kr</p>
+                              <p style={{ color: 'var(--destructive)' }}>{t('chart.taxDed')}: {fmtDKK(tax)} kr</p>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
                         }}
@@ -911,7 +970,7 @@ export function Results() {
                       <Line
                         type="monotone"
                         dataKey="gross_monthly"
-                        name="Gross monthly"
+                        name="Gross"
                         stroke="var(--muted-foreground)"
                         strokeDasharray="5 5"
                         strokeWidth={1.5}
@@ -920,7 +979,7 @@ export function Results() {
                       <Line
                         type="monotone"
                         dataKey="net_monthly"
-                        name="Net monthly"
+                        name="Net"
                         stroke="var(--nordic-accent)"
                         strokeWidth={2.5}
                         dot={false}
@@ -936,7 +995,11 @@ export function Results() {
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
-              )}
+                );
+              })()}
+
+              {/* ── Salary breakdown pie ── */}
+              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
             </TabsContent>
           )}
 
@@ -951,15 +1014,18 @@ export function Results() {
                   <PensionStat
                     label={`${t("pension.yours")}${perLabel}`}
                     value={fmtDKK(r.employee_pension / (period === "annual" ? 1 : 12))}
+                    eurSub={showEur ? fmtEUR(r.employee_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
                   />
                   <PensionStat
                     label={`${t("pension.employer")}${perLabel}`}
                     value={fmtDKK(r.employer_pension / (period === "annual" ? 1 : 12))}
+                    eurSub={showEur ? fmtEUR(r.employer_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
                   />
                   <PensionStat
                     label={`${t("pension.total")}${perLabel}`}
                     value={fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))}
                     highlight
+                    eurSub={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
@@ -1098,13 +1164,13 @@ export function Results() {
                 {t("glossary.title")}
               </h3>
               <div className="space-y-4">
-                {GLOSSARY.map((g) => (
-                  <div key={g.term}>
+                {GLOSSARY_KEYS.map((key) => (
+                  <div key={key}>
                     <p className="text-sm font-semibold text-foreground">
-                      {g.term}
+                      {t(`glossary.${key}.term` as any)}
                     </p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {g.desc}
+                      {t(`glossary.${key}.desc` as any)}
                     </p>
                   </div>
                 ))}
@@ -1326,11 +1392,12 @@ export function Results() {
 
 // ── Small components ─────────────────────────────────────────────────
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, eurSub }: { label: string; value: string; eurSub?: string }) {
   return (
     <div className="bg-card border border-border rounded-[var(--radius-md)] p-4">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="text-foreground font-mono text-sm">{value}</p>
+      {eurSub && <p className="text-xs text-muted-foreground font-mono mt-0.5">{eurSub}</p>}
     </div>
   );
 }
@@ -1339,10 +1406,12 @@ function PensionStat({
   label,
   value,
   highlight,
+  eurSub,
 }: {
   label: string;
   value: string;
   highlight?: boolean;
+  eurSub?: string;
 }) {
   return (
     <div
@@ -1354,6 +1423,7 @@ function PensionStat({
     >
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="text-lg font-mono text-foreground">{value} kr</p>
+      {eurSub && <p className="text-xs text-muted-foreground font-mono mt-0.5">{eurSub}</p>}
     </div>
   );
 }

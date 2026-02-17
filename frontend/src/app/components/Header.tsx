@@ -47,7 +47,7 @@ export function Header() {
   );
 }
 
-/* ── Language switcher with flag SVGs (dropdown for 4 langs) ─── */
+/* ── Language switcher with flag SVGs (dropdown for 7 langs) ─── */
 
 const flags: Record<Lang, { label: string; flag: React.ReactNode }> = {
   en: {
@@ -72,13 +72,25 @@ const flags: Record<Lang, { label: string; flag: React.ReactNode }> = {
       </svg>
     ),
   },
-  it: {
-    label: "Italiano",
+  sv: {
+    label: "Svenska",
     flag: (
       <svg viewBox="0 0 640 480" className="w-5 h-3.5 rounded-[2px] shadow-sm" aria-hidden="true">
-        <rect width="213.3" height="480" fill="#009246" />
-        <rect x="213.3" width="213.4" height="480" fill="#fff" />
-        <rect x="426.7" width="213.3" height="480" fill="#ce2b37" />
+        <rect width="640" height="480" fill="#006AA7" />
+        <rect x="176" width="64" height="480" fill="#FECC00" />
+        <rect y="208" width="640" height="64" fill="#FECC00" />
+      </svg>
+    ),
+  },
+  nb: {
+    label: "Norsk",
+    flag: (
+      <svg viewBox="0 0 640 480" className="w-5 h-3.5 rounded-[2px] shadow-sm" aria-hidden="true">
+        <rect width="640" height="480" fill="#BA0C2F" />
+        <rect x="160" width="80" height="480" fill="#fff" />
+        <rect y="200" width="640" height="80" fill="#fff" />
+        <rect x="172" width="56" height="480" fill="#00205B" />
+        <rect y="212" width="640" height="56" fill="#00205B" />
       </svg>
     ),
   },
@@ -92,9 +104,28 @@ const flags: Record<Lang, { label: string; flag: React.ReactNode }> = {
       </svg>
     ),
   },
+  it: {
+    label: "Italiano",
+    flag: (
+      <svg viewBox="0 0 640 480" className="w-5 h-3.5 rounded-[2px] shadow-sm" aria-hidden="true">
+        <rect width="213.3" height="480" fill="#009246" />
+        <rect x="213.3" width="213.4" height="480" fill="#fff" />
+        <rect x="426.7" width="213.3" height="480" fill="#ce2b37" />
+      </svg>
+    ),
+  },
+  es: {
+    label: "Español",
+    flag: (
+      <svg viewBox="0 0 640 480" className="w-5 h-3.5 rounded-[2px] shadow-sm" aria-hidden="true">
+        <rect width="640" height="480" fill="#AA151B" />
+        <rect y="120" width="640" height="240" fill="#F1BF00" />
+      </svg>
+    ),
+  },
 };
 
-const langOrder: Lang[] = ["en", "da", "it", "de"];
+const langOrder: Lang[] = ["en", "da", "sv", "nb", "de", "it", "es"];
 
 function LangSwitcher() {
   const { lang, setLang } = useI18n();
