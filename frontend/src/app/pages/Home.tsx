@@ -56,14 +56,30 @@ export function Home() {
           <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
             {/* Left — copy */}
             <div className="flex-1 text-center lg:text-left">
-              <motion.h1
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="text-3xl sm:text-4xl lg:text-[2.6rem] font-semibold text-foreground tracking-tight leading-[1.15] mb-4 whitespace-pre-line"
-              >
-                {t("home.hero.title")}
-              </motion.h1>
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight leading-[1.2] mb-5 relative">
+                {(() => {
+                  const [line1, line2] = t("home.hero.title").split("\n");
+                  return (
+                    <>
+                      <span className="relative z-10 text-foreground">{line1}</span>
+                      {line2 && (
+                        <span className="block overflow-hidden">
+                          <motion.span
+                            initial={{ opacity: 0, y: "-100%" }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7, delay: 0.8, ease: [0.22, 1, 0.36, 1] }}
+                            className="block relative"
+                          >
+                            <span className="relative z-0 text-[var(--nordic-accent)] dark:text-[var(--nordic-accent-dark)]">
+                              {line2}.
+                            </span>
+                          </motion.span>
+                        </span>
+                      )}
+                    </>
+                  );
+                })()}
+              </h1>
               <motion.p
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}

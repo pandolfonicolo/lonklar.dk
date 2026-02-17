@@ -19,6 +19,8 @@ export function SalaryPreview() {
     { label: t("preview.net"), value: 28732, type: "net" as const },
   ];
 
+  const rowKeys = ["gross", "am", "tax", "atp", "net"];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -44,7 +46,7 @@ export function SalaryPreview() {
         <div className="px-5 py-4 space-y-0">
           {rows.map((row, i) => (
             <motion.div
-              key={row.label}
+              key={rowKeys[i]}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.3, delay: 0.4 + i * 0.1 }}

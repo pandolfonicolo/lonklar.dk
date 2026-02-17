@@ -312,7 +312,7 @@ export function Wizard() {
                 onClick={() => setSalaryMode("annual")}
                 className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
                   salaryMode === "annual"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -322,7 +322,7 @@ export function Wizard() {
                 onClick={() => setSalaryMode("monthly")}
                 className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
                   salaryMode === "monthly"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -510,7 +510,9 @@ export function Wizard() {
                 value={studyPeriod}
                 onValueChange={(v) => setStudyPeriod(v as "full" | "start" | "finish")}
               >
-                <SelectTrigger className="h-12">
+                <SelectTrigger className={`h-12 border rounded-[var(--radius-md)] transition-colors ${
+                  studyPeriod ? "border-[var(--nordic-accent)] bg-[var(--nordic-accent-light)]" : "border-border"
+                }`}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -527,11 +529,13 @@ export function Wizard() {
                   value={String(studyStartMonth)}
                   onValueChange={(v) => setStudyStartMonth(Number(v))}
                 >
-                  <SelectTrigger className="h-12">
+                  <SelectTrigger className={`h-12 border rounded-[var(--radius-md)] transition-colors ${
+                    studyStartMonth ? "border-[var(--nordic-accent)] bg-[var(--nordic-accent-light)]" : "border-border"
+                  }`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {monthOptions.slice(0, 11).map((m) => (
+                    {monthOptions.map((m) => (
                       <SelectItem key={m.value} value={String(m.value)}>
                         {m.label}
                       </SelectItem>
@@ -547,11 +551,13 @@ export function Wizard() {
                   value={String(studyEndMonth)}
                   onValueChange={(v) => setStudyEndMonth(Number(v))}
                 >
-                  <SelectTrigger className="h-12">
+                  <SelectTrigger className={`h-12 border rounded-[var(--radius-md)] transition-colors ${
+                    studyEndMonth ? "border-[var(--nordic-accent)] bg-[var(--nordic-accent-light)]" : "border-border"
+                  }`}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {monthOptions.slice(0, 11).map((m) => (
+                    {monthOptions.map((m) => (
                       <SelectItem key={m.value} value={String(m.value)}>
                         {m.label}
                       </SelectItem>
@@ -569,7 +575,9 @@ export function Wizard() {
                   max="10"
                   value={children}
                   onChange={(e) => setChildren(e.target.value)}
-                  className="h-12"
+                  className={`h-12 rounded-[var(--radius-md)] transition-colors ${
+                    Number(children) > 0 ? "!border-[var(--nordic-accent)] !bg-[var(--nordic-accent-light)]" : "!border-border"
+                  }`}
                 />
               </Field>
               <Field label={t("input.suMonths")} tooltip={t("input.suMonths.tip")}>
@@ -585,7 +593,9 @@ export function Wizard() {
                     if (Number(optedOutMonths) > remaining)
                       setOptedOutMonths(String(remaining));
                   }}
-                  className="h-12"
+                  className={`h-12 rounded-[var(--radius-md)] transition-colors ${
+                    Number(suMonths) > 0 ? "!border-[var(--nordic-accent)] !bg-[var(--nordic-accent-light)]" : "!border-border"
+                  }`}
                 />
               </Field>
               <Field label={t("input.optedOut")} tooltip={t("input.optedOut.tip")}>
@@ -599,7 +609,9 @@ export function Wizard() {
                     const v = Math.min(max, Math.max(0, Number(e.target.value)));
                     setOptedOutMonths(String(v));
                   }}
-                  className="h-12"
+                  className={`h-12 rounded-[var(--radius-md)] transition-colors ${
+                    Number(optedOutMonths) > 0 ? "!border-[var(--nordic-accent)] !bg-[var(--nordic-accent-light)]" : "!border-border"
+                  }`}
                 />
               </Field>
             </div>
@@ -645,7 +657,7 @@ export function Wizard() {
                 onClick={() => setStudentWorkMode("hourly")}
                 className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
                   studentWorkMode === "hourly"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -655,7 +667,7 @@ export function Wizard() {
                 onClick={() => setStudentWorkMode("none")}
                 className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
                   studentWorkMode === "none"
-                    ? "bg-card text-foreground shadow-sm"
+                    ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -1046,10 +1058,10 @@ export function Wizard() {
           <Stepper steps={steps} currentStep={step} />
         </div>
 
-        <div className="bg-card border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
-          <div className="flex flex-col p-8 pb-0">{renderStep()}</div>
+        <div className="bg-card border border-border rounded-[var(--radius-xl)] p-8 shadow-[var(--shadow-lg)]">
+          <div className="flex flex-col">{renderStep()}</div>
 
-          <div className="flex items-center justify-between sticky bottom-0 bg-card p-8 pt-6 mt-8 border-t border-border rounded-b-[var(--radius-xl)]">
+          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
             <Button variant="outline" onClick={handleBack}>
               <ChevronLeft className="w-4 h-4 mr-2" />
               {step === 0 ? t("btn.home") : t("btn.back")}
