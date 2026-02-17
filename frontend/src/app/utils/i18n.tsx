@@ -364,7 +364,7 @@ const translations = {
     es: "Si comienzas o terminas los estudios a mitad de año, solo los meses en que estés inscrito cuentan para el fribeløb. Esto puede evitarte el reembolso.",
     nb: "Hvis du starter eller avslutter utdanning midt i året, teller bare månedene du er innskrevet for fribeløb. Det kan hindre tilbakebetaling.",
   },
-  "input.studyPeriod.full": { en: "Full year (Jan – Dec)", da: "Hele året (jan – dec)", it: "Anno intero (gen – dic)", de: "Ganzes Jahr (Jan – Dez)", sv: "Helår (jan – dec)", es: "Año completo (ene – dic)", nb: "Hele året (jan – des)" },
+  "input.studyPeriod.full": { en: "Full year", da: "Hele året", it: "Anno intero", de: "Ganzes Jahr", sv: "Helår", es: "Año completo", nb: "Hele året" },
   "input.studyPeriod.start": { en: "Starting mid-year", da: "Starter midt i året", it: "Inizio a metà anno", de: "Beginn Mitte des Jahres", sv: "Börjar mitt i året", es: "Comienza a mitad de año", nb: "Starter midt i året" },
   "input.studyPeriod.finish": { en: "Finishing mid-year", da: "Afslutter midt i året", it: "Fine a metà anno", de: "Ende Mitte des Jahres", sv: "Slutar mitt i året", es: "Termina a mitad de año", nb: "Avslutter midt i året" },
   "input.studyPeriod.startMonth": { en: "Start month", da: "Startmåned", it: "Mese di inizio", de: "Startmonat", sv: "Startmånad", es: "Mes de inicio", nb: "Startmåned" },
