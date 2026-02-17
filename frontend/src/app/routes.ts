@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router";
 import { Home } from "./pages/Home";
 import { Wizard } from "./pages/Wizard";
 import { Results } from "./pages/Results";
-import { Methodology } from "./pages/Methodology";
+import { HowItWorks } from "./pages/HowItWorks";
 import { QuickOverview } from "./pages/QuickOverview";
 import { Feedback } from "./pages/Feedback";
 import { NotFound } from "./pages/NotFound";
@@ -27,8 +27,8 @@ export const router = createBrowserRouter([
     Component: QuickOverview,
   },
   {
-    path: "/methodology",
-    Component: Methodology,
+    path: "/how-it-works",
+    Component: HowItWorks,
   },
   {
     path: "/feedback",
