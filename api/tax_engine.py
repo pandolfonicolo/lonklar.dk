@@ -34,7 +34,7 @@ Combined, these factors typically result in ±1–2% deviation from the
 actual net pay shown on a payslip.
 """
 
-from data import (
+from .data import (
     AM_RATE,
     PERSONFRADRAG,
     BUNDSKAT_RATE,
