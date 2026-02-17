@@ -84,7 +84,7 @@ export function Home() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 }}
-                className="text-base text-muted-foreground leading-relaxed mb-4 max-w-lg mx-auto lg:mx-0"
+                className="text-base text-muted-foreground leading-relaxed mb-4 max-w-lg mx-auto lg:mx-0 whitespace-pre-line"
               >
                 {t("home.hero.subtitle")}
               </motion.p>
