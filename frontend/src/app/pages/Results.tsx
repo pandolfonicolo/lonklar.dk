@@ -1232,13 +1232,15 @@ export function Results() {
         {/* ── Feedback & Accuracy Report ───────────────────────── */}
         <div className="mt-10 bg-card border border-border rounded-[var(--radius-lg)] p-6 space-y-6">
           {/* Thumbs feedback */}
-          <div>
-            <h3 className="text-sm font-semibold text-card-foreground mb-1">
-              {lang === "da" ? "Er estimatet rigtigt?" : "Does this estimate look right?"}
-            </h3>
-            <p className="text-xs text-muted-foreground mb-3">
-              {lang === "da" ? "Din feedback hjælper os med at forbedre." : "Your feedback helps us improve."}
-            </p>
+          <div className="flex items-center flex-wrap gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-card-foreground">
+                {lang === "da" ? "Er estimatet rigtigt?" : "Does this estimate look right?"}
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                {lang === "da" ? "Din feedback hjælper os med at forbedre." : "Your feedback helps us improve."}
+              </p>
+            </div>
             {thumbsVote ? (
               <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
                 <CheckCircle className="w-4 h-4" />
