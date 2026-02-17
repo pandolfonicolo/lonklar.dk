@@ -26,10 +26,10 @@ export function SalaryPreview() {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="relative w-full max-w-xs mx-auto lg:mx-0"
+      className="relative w-full max-w-xs mx-auto lg:mx-0 flex flex-col flex-1"
     >
       {/* Card — visually marked as example */}
-      <div className="bg-card border-2 border-dashed border-border/60 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden relative">
+      <div className="bg-card border-2 border-dashed border-border/60 rounded-[var(--radius-lg)] shadow-[var(--shadow-lg)] overflow-hidden relative flex flex-col flex-1">
         {/* "Example" ribbon — top-right corner */}
         <div className="absolute top-3 -right-8 z-10 bg-muted-foreground/70 text-white text-[9px] font-bold uppercase tracking-widest px-8 py-0.5 rotate-45 shadow-sm pointer-events-none select-none">
           {t("preview.example")}
@@ -43,7 +43,7 @@ export function SalaryPreview() {
         </div>
 
         {/* Rows */}
-        <div className="px-5 py-4 space-y-0">
+        <div className="px-5 py-4 space-y-0 flex-1 flex flex-col justify-center">
           {rows.map((row, i) => (
             <motion.div
               key={rowKeys[i]}

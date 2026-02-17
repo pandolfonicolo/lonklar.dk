@@ -53,9 +53,9 @@ export function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--nordic-accent-light)]/40 to-transparent pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10">
-          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+          <div className="flex flex-col lg:flex-row items-stretch gap-10 lg:gap-16">
             {/* Left — copy */}
-            <div className="flex-1 text-center lg:text-left">
+            <div className="flex-1 text-center lg:text-left flex flex-col justify-center">
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] font-bold tracking-tight leading-[1.2] mb-5 relative">
                 {(() => {
                   const [line1, line2] = t("home.hero.title").split("\n");
@@ -128,7 +128,7 @@ export function Home() {
             </div>
 
             {/* Right — live salary preview */}
-            <div className="flex-shrink-0 w-full max-w-xs lg:w-auto">
+            <div className="flex-shrink-0 w-full max-w-xs lg:w-auto flex flex-col">
               <SalaryPreview />
             </div>
           </div>
@@ -136,8 +136,11 @@ export function Home() {
       </section>
 
       {/* ── Service Cards ────────────────────────────────── */}
-      <section className="px-4 sm:px-6 lg:px-8 pb-14">
-        <div className="max-w-5xl mx-auto">
+      <section className="relative px-4 sm:px-6 lg:px-8 py-14 -mt-2">
+        {/* Accent background band */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[var(--nordic-accent)]/[0.07] via-[var(--nordic-accent)]/[0.05] to-transparent border-y border-[var(--nordic-accent)]/15 pointer-events-none" />
+
+        <div className="relative max-w-5xl mx-auto">
           <h2 className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-6">
             {t("home.cards.heading")}
           </h2>
@@ -159,7 +162,7 @@ export function Home() {
       </section>
 
       {/* ── How It Works ─────────────────────────────────── */}
-      <section className="py-14 px-4 sm:px-6 lg:px-8 bg-secondary/30">
+      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-center mb-10 text-foreground">{t("home.how.title")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -188,8 +191,9 @@ export function Home() {
       </section>
 
       {/* ── Disclaimer + Feedback Band ──────────────────── */}
-      <section id="disclaimer-band" className="bg-[var(--nordic-accent)] text-white transition-all duration-500">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+      <section id="disclaimer-band" className="relative overflow-hidden transition-all duration-500">
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--nordic-accent)] to-[var(--nordic-accent-dark)] pointer-events-none" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
           <div className="flex-1 text-center sm:text-left">
             <p className="text-sm leading-relaxed text-white/85">
               {t("home.disclaimer")}
@@ -197,7 +201,7 @@ export function Home() {
           </div>
           <Link
             to="/feedback"
-            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[var(--nordic-accent)] text-sm font-semibold rounded-[var(--radius-md)] hover:bg-white/90 transition-colors shadow-sm"
+            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white/95 text-[var(--nordic-accent-dark)] text-sm font-semibold rounded-[var(--radius-md)] hover:bg-white transition-colors shadow-sm"
           >
             <MessageSquare className="w-4 h-4" />
             {t("home.disclaimer.cta")}
@@ -206,7 +210,7 @@ export function Home() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────── */}
-      <footer className="py-8 px-4 sm:px-6 lg:px-8 border-t border-border">
+      <footer className="py-8 px-4 sm:px-6 lg:px-8 bg-secondary/20">
         <div className="max-w-5xl mx-auto text-center text-sm text-muted-foreground">
           <p>{t("home.footer")}</p>
         </div>
