@@ -612,7 +612,7 @@ const translations = {
   "ferie.daysPerMonth": { en: "Days / month", da: "Dage / md", it: "Giorni / mese", de: "Tage / Monat", sv: "Dagar / månad", es: "Días / mes", nb: "Dager / mnd" },
   "ferie.ferietillaeg": { en: "Ferietillæg (1%)", da: "Ferietillæg (1%)", it: "Ferietillæg (1%)", de: "Ferietillæg (1%)", sv: "Ferietillæg (1 %)", es: "Ferietillæg (1 %)", nb: "Ferietillæg (1 %)" },
   "ferie.feriepenge": { en: "Feriepenge (12.5%)", da: "Feriepenge (12,5%)", it: "Feriepenge (12,5%)", de: "Feriepenge (12,5%)", sv: "Feriepenge (12,5 %)", es: "Feriepenge (12,5 %)", nb: "Feriepenge (12,5 %)" },
-  "ferie.dailyRate": { en: "Daily vacation pay", da: "Daglig feriepenge", it: "Paga giornaliera delle ferie", de: "Tägliches Urlaubsgeld", sv: "Daglig semesterlön", es: "Paga diaria de vacaciones", nb: "Daglig feriepenger" },
+  "ferie.dailyRate": { en: "Daily vacation pay (gross)", da: "Daglig feriepenge (brutto)", it: "Paga giornaliera ferie (lorda)", de: "Tägliches Urlaubsgeld (brutto)", sv: "Daglig semesterlön (brutto)", es: "Paga diaria vacaciones (bruta)", nb: "Daglig feriepenger (brutto)" },
   "ferie.salaryNote": {
     en: "Salaried employees receive paid leave (ferie med løn) plus 1% ferietillæg on top of gross salary.",
     da: "Funktionærer modtager løn under ferie (ferie med løn) plus 1% ferietillæg oven i bruttolønnen.",
