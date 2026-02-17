@@ -1046,10 +1046,10 @@ export function Wizard() {
           <Stepper steps={steps} currentStep={step} />
         </div>
 
-        <div className="bg-card border border-border rounded-[var(--radius-xl)] p-8 shadow-[var(--shadow-lg)]">
-          <div className="flex flex-col">{renderStep()}</div>
+        <div className="bg-card border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-lg)]">
+          <div className="flex flex-col p-8 pb-0">{renderStep()}</div>
 
-          <div className="flex items-center justify-between mt-8 pt-6 border-t border-border">
+          <div className="flex items-center justify-between sticky bottom-0 bg-card p-8 pt-6 mt-8 border-t border-border rounded-b-[var(--radius-xl)]">
             <Button variant="outline" onClick={handleBack}>
               <ChevronLeft className="w-4 h-4 mr-2" />
               {step === 0 ? t("btn.home") : t("btn.back")}
