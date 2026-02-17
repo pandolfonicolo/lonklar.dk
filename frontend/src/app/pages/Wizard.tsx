@@ -1079,16 +1079,15 @@ export function Wizard() {
 
         {/* Quick overview link — only on fulltime step 0 */}
         {serviceId === "fulltime" && step === 0 && (
-          <div className="mt-4 text-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
+          <div className="mt-5 text-center">
+            <button
               onClick={() => navigate("/quick-overview")}
+              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--nordic-accent)] dark:text-[var(--nordic-accent-dark)] border border-[var(--nordic-accent)]/30 dark:border-[var(--nordic-accent-dark)]/30 rounded-full hover:bg-[var(--nordic-accent-light)] hover:border-[var(--nordic-accent)]/50 transition-all duration-200"
             >
-              <BarChart3 className="w-4 h-4 mr-2" />
+              <BarChart3 className="w-4 h-4" />
               {t("overview.link")}
-            </Button>
+              <ChevronRight className="w-3.5 h-3.5 -mr-1" />
+            </button>
           </div>
         )}
 

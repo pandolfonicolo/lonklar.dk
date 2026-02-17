@@ -13,6 +13,7 @@ import {
   CheckCircle,
   ThumbsUp,
   ThumbsDown,
+  Info,
 } from "lucide-react";
 import {
   LineChart,
@@ -771,10 +772,13 @@ export function Results() {
               </div>
             )}
 
-            <div className="mt-4 p-4 bg-secondary/30 border border-border rounded-[var(--radius-md)]">
-              <p className="text-sm text-muted-foreground">
-                {t("disclaimer")} ({r.kommune})
-              </p>
+            <div className="mt-4 p-4 bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800/40 rounded-[var(--radius-md)]">
+              <div className="flex gap-2">
+                <Info className="w-4 h-4 text-blue-500 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-muted-foreground">
+                  {t("disclaimer")}
+                </p>
+              </div>
             </div>
           </TabsContent>
 

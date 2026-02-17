@@ -857,13 +857,13 @@ const translations = {
 
   // Disclaimer
   "disclaimer": {
-    en: "All calculations use official SKAT 2026 rates — bundskat 12.01%, AM-bidrag 8%, personfradrag 54,100 kr/year.",
-    da: "Alle beregninger bruger officielle SKAT 2026-satser — bundskat 12,01%, AM-bidrag 8%, personfradrag 54.100 kr/år.",
-    it: "Tutti i calcoli usano le aliquote ufficiali SKAT 2026 — bundskat 12,01%, AM-bidrag 8%, personfradrag 54.100 kr/anno.",
-    de: "Alle Berechnungen verwenden offizielle SKAT 2026-Sätze — bundskat 12,01%, AM-bidrag 8%, personfradrag 54.100 kr/Jahr.",
-    sv: "Alla beräkningar använder officiella SKAT 2026-satser — bundskat 12,01 %, AM-bidrag 8 %, personfradrag 54 100 kr/år.",
-    es: "Todos los cálculos usan las tasas oficiales SKAT 2026 — bundskat 12,01 %, AM-bidrag 8 %, personfradrag 54.100 kr/año.",
-    nb: "Alle beregninger bruker offisielle SKAT 2026-satser — bundskat 12,01 %, AM-bidrag 8 %, personfradrag 54 100 kr/år.",
+    en: "Estimates are typically within ±1.5% of your actual net pay. Differences arise because ferietillæg is spread across 12 months, and your personal fradrag from forskudsopgørelsen may include deductions we can't account for (e.g. mortgage interest).",
+    da: "Estimater er typisk inden for ±1,5% af din faktiske nettoløn. Forskelle skyldes at ferietillæg fordeles over 12 måneder, og dit personlige fradrag fra forskudsopgørelsen kan indeholde fradrag vi ikke kan tage højde for (f.eks. rentefradrag).",
+    it: "Le stime sono generalmente entro ±1,5% della tua retribuzione netta effettiva. Le differenze derivano dal fatto che il ferietillæg viene distribuito su 12 mesi e il tuo fradrag personale dalla forskudsopgørelse può includere detrazioni che non possiamo considerare (es. interessi sul mutuo).",
+    de: "Schätzungen liegen typischerweise innerhalb von ±1,5% Ihres tatsächlichen Nettogehalts. Abweichungen entstehen, weil Ferietillæg auf 12 Monate verteilt wird und Ihr persönlicher Fradrag aus der Forskudsopgørelse Abzüge enthalten kann, die wir nicht berücksichtigen können (z.B. Hypothekenzinsen).",
+    sv: "Uppskattningar ligger vanligtvis inom ±1,5% av din faktiska nettolön. Skillnader beror på att ferietillæg fördelas över 12 månader och ditt personliga fradrag från forskudsopgørelsen kan innehålla avdrag vi inte kan ta hänsyn till (t.ex. bolåneränta).",
+    es: "Las estimaciones están típicamente dentro de ±1,5% de tu salario neto real. Las diferencias se deben a que el ferietillæg se distribuye en 12 meses y tu fradrag personal de la forskudsopgørelse puede incluir deducciones que no podemos considerar (ej. intereses hipotecarios).",
+    nb: "Estimater er vanligvis innenfor ±1,5% av din faktiske nettolønn. Forskjeller skyldes at ferietillæg fordeles over 12 måneder, og ditt personlige fradrag fra forskudsoppgaven kan inneholde fradrag vi ikke kan ta hensyn til (f.eks. boliglånsrenter).",
   },
 
   // Months
@@ -1032,13 +1032,13 @@ const translations = {
     nb: "Beregn med dine eksakte tall →",
   },
   "overview.link": {
-    en: "Quick gross → net overview",
-    da: "Hurtigt brutto → netto overblik",
-    it: "Panoramica rapida lordo → netto",
-    de: "Schnelle Brutto → Netto Übersicht",
-    sv: "Snabb brutto → netto översikt",
-    es: "Resumen rápido bruto → neto",
-    nb: "Raskt brutto → netto overblikk",
+    en: "Gross → Net at a glance",
+    da: "Brutto → Netto overblik",
+    it: "Lordo → Netto in sintesi",
+    de: "Brutto → Netto auf einen Blick",
+    sv: "Brutto → Netto i överblick",
+    es: "Bruto → Neto de un vistazo",
+    nb: "Brutto → Netto overblikk",
   },
 
   /* ── Methodology page ──────────────────────────────────────────── */

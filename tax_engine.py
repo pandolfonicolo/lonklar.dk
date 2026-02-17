@@ -4,6 +4,34 @@ Tax calculation engine for Denmark (2026).
 Two public functions:
   • compute_tax()            — salary/wage earners (full-time or part-time)
   • compute_student_income() — student (SU + part-time work)
+
+ACCURACY NOTE (~±1.5%)
+─────────────────────
+This engine computes annual figures then divides by 12 for monthly values.
+Two known sources of deviation when compared to real payslips:
+
+1. Ferietillæg (1% for funktionærer / 12.5% feriepenge for hourly):
+   Ferietillæg is part of total annual income and is included in the
+   forskudsopgørelse, but it is NOT paid monthly — it is typically paid
+   out once in May (or split between May and August). Our engine spreads
+   it across 12 months, which inflates the per-month AM-bidrag basis by
+   ~1% compared to a non-May payslip. This is intentional: the monthly
+   figure is an annual average, not a prediction of a specific month.
+
+2. Fradrag (deductions / trækprocent):
+   Our engine computes the "standard" fradrag: personfradrag +
+   beskæftigelsesfradrag + jobfradrag (+ befordring/fagforening if
+   provided). In practice, each employee has a personalized trækprocent
+   set via their forskudsopgørelse (preliminary tax assessment) on
+   skat.dk. This may include additional deductions we cannot know:
+     – Rentefradrag (mortgage interest)
+     – Kapitalindkomst (capital income)
+     – Ligningsmæssige fradrag (maintenance payments, etc.)
+   The fradrag delta typically accounts for ±500–1,700 kr/month, which
+   is the main driver of deviation from real payslips.
+
+Combined, these factors typically result in ±1–2% deviation from the
+actual net pay shown on a payslip.
 """
 
 from data import (
@@ -88,6 +116,11 @@ def compute_tax(
     union_fees_annual      Annual trade union + a-kasse fees (max 7,000 deductible).
     """
     # 0) Feriepenge / ferietillæg (additional taxable income)
+    #    Hourly workers: 12.5% feriepenge (paid with each paycheck or via FerieKonto).
+    #    Salaried (funktionærer): 1% ferietillæg, paid in May (not monthly).
+    #    We include it in annual income and spread across 12 months.
+    #    This is correct for annual totals but inflates a single month's AM-basis
+    #    compared to the payslip (except May when it's actually disbursed).
     ferie_rate = FERIEPENGE_RATE if is_hourly else FERIETILLAEG_RATE
     feriepenge = gross_annual * ferie_rate
 
@@ -122,6 +155,12 @@ def compute_tax(
     lignings_fradrag = befordring + union_deduction
 
     # 4) Bundskat
+    #    NOTE: The fradrag used here (personfradrag + beskæftigelsesfradrag +
+    #    jobfradrag) is the "standard" calculation. Each employee's actual
+    #    trækprocent is determined by their forskudsopgørelse (preliminary tax
+    #    assessment on skat.dk), which may include personal deductions we don't
+    #    know about (rentefradrag, kapitalindkomst, etc.). This is the primary
+    #    source of deviation between our estimate and real payslips.
     bundskat_base = max(income_after_am - PERSONFRADRAG, 0)
     bundskat = bundskat_base * BUNDSKAT_RATE
 
