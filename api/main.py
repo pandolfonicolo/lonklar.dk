@@ -56,6 +56,8 @@ class FullTimeRequest(BaseModel):
     pretax_deductions_monthly: float = Field(0.0, description="Monthly pre-tax deductions")
     aftertax_deductions_monthly: float = Field(0.0, description="Monthly after-tax deductions")
     atp_monthly: float = Field(94.65, description="Monthly ATP contribution")
+    transport_km: float = Field(0.0, description="Round-trip daily commute in km")
+    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
 
 
 class PartTimeRequest(BaseModel):
@@ -70,6 +72,8 @@ class PartTimeRequest(BaseModel):
     pretax_deductions_monthly: float = Field(0.0)
     aftertax_deductions_monthly: float = Field(0.0)
     atp_monthly: float = Field(0.0, description="Monthly ATP (0 if <9h/week)")
+    transport_km: float = Field(0.0, description="Round-trip daily commute in km")
+    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
 
 
 class StudentRequest(BaseModel):
@@ -152,6 +156,8 @@ def compute_fulltime(req: FullTimeRequest):
         pretax_deductions_annual=req.pretax_deductions_monthly * 12,
         aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
         atp_monthly=req.atp_monthly,
+        transport_km=req.transport_km,
+        union_fees_annual=req.union_fees_annual,
     )
     return {
         "kommune": req.kommune,
@@ -184,6 +190,8 @@ def compute_parttime(req: PartTimeRequest):
         pretax_deductions_annual=req.pretax_deductions_monthly * 12,
         aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
         atp_monthly=req.atp_monthly,
+        transport_km=req.transport_km,
+        union_fees_annual=req.union_fees_annual,
     )
     return {
         "kommune": req.kommune,
@@ -232,6 +240,8 @@ class CurveRequest(BaseModel):
     is_hourly: bool = Field(False)
     atp_monthly: float = Field(94.65)
     max_gross: float = Field(1_200_000)
+    min_gross: float = Field(0)
+    step_monthly: float = Field(0)       # 0 = use legacy `points` logic
     points: int = Field(50)
 
 
@@ -251,10 +261,23 @@ def compute_curve(req: CurveRequest):
     if req.kommune not in KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
     rates = KOMMUNER[req.kommune]
-    step = req.max_gross / req.points
+
+    # Build gross-annual values list
+    if req.step_monthly > 0:
+        # Fine-grained: step in monthly DKK, converted to annual
+        step_annual = req.step_monthly * 12
+        gross_start = max(req.min_gross, 0)
+        gross_values = []
+        g = gross_start
+        while g <= req.max_gross:
+            gross_values.append(g)
+            g += step_annual
+    else:
+        step = req.max_gross / req.points
+        gross_values = [step * i for i in range(req.points + 1)]
+
     data = []
-    for i in range(req.points + 1):
-        gross = step * i
+    for gross in gross_values:
         r = compute_tax(
             gross, req.pension_pct / 100,
             rates["kommuneskat"], rates["kirkeskat"],
@@ -343,6 +366,43 @@ async def submit_accuracy_report(req: AccuracyReportRequest):
     )
     _append_jsonl("accuracy_reports.jsonl", data)
     return {"status": "ok"}
+
+
+# ── Thumbs vote ───────────────────────────────────────────────────
+
+class VoteRequest(BaseModel):
+    vote: str = Field(..., description="up | down")
+    service_type: str = Field(..., description="fulltime | parttime | student")
+    estimated_net: float = Field(0)
+
+
+@app.post("/api/vote")
+async def submit_vote(req: VoteRequest):
+    _append_jsonl("votes.jsonl", req.model_dump())
+    return {"status": "ok"}
+
+
+@app.get("/api/vote/stats")
+async def vote_stats():
+    """Return thumbs up/down counters from votes.jsonl."""
+    filepath = FEEDBACK_DIR / "votes.jsonl"
+    up = 0
+    down = 0
+    if filepath.exists():
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    rec = json.loads(line)
+                    if rec.get("vote") == "up":
+                        up += 1
+                    elif rec.get("vote") == "down":
+                        down += 1
+                except json.JSONDecodeError:
+                    pass
+    return {"up": up, "down": down, "total": up + down}
 
 
 # ═══════════════════════════════════════════════════════════════════════

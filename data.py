@@ -58,6 +58,17 @@ SU_REPAYMENT_INTEREST_RATE = 0.0975  # 9.75 % p.a. on SU to be repaid
 FERIETILLAEG_RATE = 0.01    # 1 % for salaried (månedslønnet) employees
 FERIEPENGE_RATE   = 0.125   # 12.5 % for hourly (timelønnet) workers
 
+# ── Befordringsfradrag (transport deduction, skat.dk 2026) ───────────
+# Only for >24 km round trip per day (>12 km one way)
+BEFORDRING_RATE_LOW    = 1.98  # DKK/km for 25–120 km round trip
+BEFORDRING_RATE_HIGH   = 0.99  # DKK/km above 120 km round trip
+BEFORDRING_THRESHOLD   = 24    # minimum round trip km (below → no deduction)
+BEFORDRING_HIGH_THRESHOLD = 120 # km where rate drops
+BEFORDRING_LOW_INCOME  = 375_800  # below this annual income → extra deduction
+
+# ── Fagforening / A-kasse (trade union, skat.dk 2026) ────────────────
+FAGFORENING_MAX = 7_000  # max annual deductible union + a-kasse fees
+
 # ── Exchange rate (fallback) ─────────────────────────────────────────
 DKK_PER_EUR = 7.45  # fallback; app auto-fetches live rate
 

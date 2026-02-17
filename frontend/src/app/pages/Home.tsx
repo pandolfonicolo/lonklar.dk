@@ -8,7 +8,7 @@ import { useI18n } from "../utils/i18n";
 
 export function Home() {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
 
   const services = [
     {
@@ -17,6 +17,7 @@ export function Home() {
       titleKey: "home.fulltime.title" as const,
       subtitleKey: "home.fulltime.subtitle" as const,
       descKey: "home.fulltime.desc" as const,
+      comingSoon: false,
     },
     {
       id: "parttime",
@@ -24,6 +25,7 @@ export function Home() {
       titleKey: "home.parttime.title" as const,
       subtitleKey: "home.parttime.subtitle" as const,
       descKey: "home.parttime.desc" as const,
+      comingSoon: false,
     },
     {
       id: "student",
@@ -31,6 +33,7 @@ export function Home() {
       titleKey: "home.student.title" as const,
       subtitleKey: "home.student.subtitle" as const,
       descKey: "home.student.desc" as const,
+      comingSoon: false,
     },
   ];
 
@@ -122,7 +125,7 @@ export function Home() {
           <h2 className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-6">
             {t("home.cards.heading")}
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
             {services.map((s) => (
               <ServiceCard
                 key={s.id}
@@ -131,6 +134,8 @@ export function Home() {
                 subtitle={t(s.subtitleKey)}
                 description={t(s.descKey)}
                 onClick={() => navigate(`/wizard/${s.id}`)}
+                comingSoon={s.comingSoon}
+                comingSoonLabel={lang === "da" ? "Kommer snart" : "Coming soon"}
               />
             ))}
           </div>
@@ -155,7 +160,10 @@ export function Home() {
                 </p>
                 {/* Connector arrow (desktop only, between steps) */}
                 {idx < 2 && (
-                  <ArrowRight className="hidden md:block absolute top-5 -right-4 w-4 h-4 text-muted-foreground/30" />
+                  <div className="hidden md:flex absolute top-4 -right-6 items-center">
+                    <div className="w-4 h-0.5 bg-[var(--nordic-accent)]" />
+                    <ArrowRight className="w-5 h-5 -ml-1 text-[var(--nordic-accent)]" />
+                  </div>
                 )}
               </div>
             ))}

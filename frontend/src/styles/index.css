@@ -55,6 +55,12 @@ html {
   outline: none;
 }
 
+/* Number input spinners — visible in dark mode */
+.dark input[type="number"]::-webkit-inner-spin-button,
+.dark input[type="number"]::-webkit-outer-spin-button {
+  filter: invert(0.85);
+}
+
 /* Reduce motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,

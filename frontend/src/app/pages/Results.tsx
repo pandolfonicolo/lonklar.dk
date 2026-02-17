@@ -11,6 +11,8 @@ import {
   ChevronDown,
   Umbrella,
   CheckCircle,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import {
   LineChart,
@@ -21,6 +23,8 @@ import {
   Tooltip as RTooltip,
   ResponsiveContainer,
   ReferenceDot,
+  ReferenceLine,
+  ReferenceArea,
 } from "recharts";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
@@ -118,6 +122,18 @@ const GLOSSARY: { term: string; desc: string }[] = [
     desc: "Additional employment deduction (4.50%, max 3,100 kr) also reducing your municipal tax base.",
   },
   {
+    term: "Befordringsfradrag",
+    desc: "Transport deduction for commuting >24 km round-trip: 1.98 kr/km for km 25–120, 0.99 kr/km above 120 km. A ligningsmæssigt fradrag — reduces municipal/church tax only (~26% tax value).",
+  },
+  {
+    term: "Fagforening / A-kasse",
+    desc: "Trade union and unemployment insurance fees. Up to 7,000 kr/year is deductible. A ligningsmæssigt fradrag — reduces municipal/church tax only (~26% tax value).",
+  },
+  {
+    term: "Ligningsmæssige fradrag",
+    desc: "Personal deductions (transport, union fees, etc.) that only reduce your municipal and church tax base — NOT your AM-bidrag or bundskat base. Tax value is ~26%.",
+  },
+  {
     term: "Skatteloft",
     desc: "Tax ceiling (44.57%). Caps the combined state + municipal marginal tax rate so it never exceeds this limit.",
   },
@@ -198,6 +214,18 @@ function employeeBreakdown(r: TaxResult): Row[] {
     value: r.job_fradrag,
     indent: true,
   });
+  if (r.befordring > 0)
+    rows.push({
+      label: "Befordringsfradrag",
+      value: r.befordring,
+      indent: true,
+    });
+  if (r.union_deduction > 0)
+    rows.push({
+      label: "Fagforening / A-kasse",
+      value: r.union_deduction,
+      indent: true,
+    });
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
     label: "- Bundskat (12.01%)",
@@ -209,11 +237,12 @@ function employeeBreakdown(r: TaxResult): Row[] {
     value: -r.kommuneskat,
     color: "var(--chart-4)",
   });
-  rows.push({
-    label: "- Kirkeskat",
-    value: -r.kirkeskat,
-    color: "var(--chart-5)",
-  });
+  if (r.kirkeskat > 0)
+    rows.push({
+      label: "- Kirkeskat",
+      value: -r.kirkeskat,
+      color: "var(--chart-5)",
+    });
   if (r.mellemskat > 0)
     rows.push({
       label: "- Mellemskat (7.5%)",
@@ -267,33 +296,37 @@ function studentBreakdown(r: StudentResult): Row[] {
       value: r.su_annual_gross,
       color: "var(--chart-1)",
     },
-    {
-      label: "Work annual (gross)",
-      value: r.work_gross_annual,
-      color: "var(--chart-1)",
-    },
-    {
-      label: "+ Work feriepenge (12.5%)",
-      value: r.work_feriepenge,
-      color: "var(--chart-1)",
-    },
-    {
-      label: "- Work pension",
-      value: -r.work_pension,
-      color: "var(--chart-2)",
-    },
-    {
-      label: "- AM-bidrag (work, 8%)",
-      value: -r.work_am_bidrag,
-      color: "var(--chart-3)",
-    },
-    { label: "", value: 0, spacer: true },
-    {
-      label: "Annual fribeløb",
-      value: r.aars_fribeloeb,
-      indent: true,
-    },
   ];
+  if (r.work_gross_annual > 0) {
+    rows.push(
+      {
+        label: "Work annual (gross)",
+        value: r.work_gross_annual,
+        color: "var(--chart-1)",
+      },
+      {
+        label: "+ Work feriepenge (12.5%)",
+        value: r.work_feriepenge,
+        color: "var(--chart-1)",
+      },
+      {
+        label: "- Work pension",
+        value: -r.work_pension,
+        color: "var(--chart-2)",
+      },
+      {
+        label: "- AM-bidrag (work, 8%)",
+        value: -r.work_am_bidrag,
+        color: "var(--chart-3)",
+      },
+    );
+  }
+  rows.push({ label: "", value: 0, spacer: true });
+  rows.push({
+    label: "Annual fribeløb",
+    value: r.aars_fribeloeb,
+    indent: true,
+  });
   if (r.over_fribeloeb) {
     rows.push({
       label: "Fribeløb excess",
@@ -322,11 +355,12 @@ function studentBreakdown(r: StudentResult): Row[] {
     value: -r.kommuneskat,
     color: "var(--chart-4)",
   });
-  rows.push({
-    label: "- Kirkeskat",
-    value: -r.kirkeskat,
-    color: "var(--chart-5)",
-  });
+  if (r.kirkeskat > 0)
+    rows.push({
+      label: "- Kirkeskat",
+      value: -r.kirkeskat,
+      color: "var(--chart-5)",
+    });
   if (r.mellemskat > 0)
     rows.push({ label: "- Mellemskat", value: -r.mellemskat });
   rows.push({
@@ -369,10 +403,20 @@ export function Results() {
   const [accuracyConsent, setAccuracyConsent] = useState(false);
   const [accuracyStatus, setAccuracyStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
+  // Thumbs feedback
+  const [thumbsVote, setThumbsVote] = useState<"up" | "down" | null>(null);
+  const [thumbsSending, setThumbsSending] = useState(false);
+  const [voteStats, setVoteStats] = useState<{ up: number; down: number; total: number } | null>(null);
+
   const API = import.meta.env.DEV ? "http://localhost:8000" : "";
 
   useEffect(() => {
     fetchMeta().then(setMeta).catch(console.error);
+    // Fetch vote stats
+    fetch(`${import.meta.env.DEV ? "http://localhost:8000" : ""}/api/vote/stats`)
+      .then(r => r.json())
+      .then(setVoteStats)
+      .catch(console.error);
   }, []);
 
   // Fetch curve data for charts
@@ -387,11 +431,8 @@ export function Results() {
         is_church: true,
         is_hourly: serviceId === "parttime",
         atp_monthly: 0,
-        max_gross: Math.max(
-          1_200_000,
-          (r.gross_annual || r.hourly_rate * r.hours_month * 12) * 2
-        ),
-        points: 60,
+        max_gross: 1_680_000,   // 140k monthly × 12
+        step_monthly: 500,      // 500 DKK granularity
       })
         .then(setCurveData)
         .catch(console.error);
@@ -550,7 +591,7 @@ export function Results() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Stat label="Kommune" value={r.kommune} />
           <Stat label="Kommuneskat" value={pct(r.kommune_pct)} />
-          <Stat label="Kirkeskat" value={pct(r.kirke_pct)} />
+          <Stat label="Kirkeskat" value={r.kirkeskat > 0 ? pct(r.kirke_pct) : "0 %"} />
           {!isStudent && (
             <Stat
               label={`Pension (total)${perLabel}`}
@@ -593,12 +634,14 @@ export function Results() {
                 <Wallet className="w-4 h-4 mr-1" /> {t("results.tab.pension")}
               </TabsTrigger>
             )}
+            {!(isStudent && (r as StudentResult).work_gross_annual === 0) && (
             <TabsTrigger
               value="ferie"
               className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
             >
               <Umbrella className="w-4 h-4 mr-1" /> {t("results.tab.ferie")}
             </TabsTrigger>
+            )}
             <TabsTrigger
               value="glossary"
               className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
@@ -695,17 +738,23 @@ export function Results() {
                   <p className="text-sm text-muted-foreground mb-4">
                     {t("chart.netVsGross.desc")}
                   </p>
-                  <ResponsiveContainer width="100%" height={400}>
-                    <LineChart data={curveData}>
+                  <ResponsiveContainer width="100%" height={450}>
+                    <LineChart data={curveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
                       <CartesianGrid
                         strokeDasharray="3 3"
                         stroke="var(--border)"
                       />
                       <XAxis
                         dataKey="gross_monthly"
+                        type="number"
+                        domain={[0, 140000]}
+                        ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
                         tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                         label={{
-                          value: "Gross monthly (DKK)",
+                          value:
+                            lang === "da"
+                              ? "Bruttoløn pr. måned (DKK)"
+                              : "Gross monthly salary (DKK)",
                           position: "insideBottom",
                           offset: -5,
                         }}
@@ -713,9 +762,12 @@ export function Results() {
                         fontSize={12}
                       />
                       <YAxis
+                        type="number"
                         tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                        domain={[0, 140000]}
+                        ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
                         label={{
-                          value: "DKK/month",
+                          value: "DKK/" + (lang === "da" ? "md" : "month"),
                           angle: -90,
                           position: "insideLeft",
                         }}
@@ -723,18 +775,30 @@ export function Results() {
                         fontSize={12}
                       />
                       <RTooltip
-                        formatter={(value: number, name: string) => [
-                          `${fmtDKK(value)} kr`,
-                          name,
-                        ]}
-                        labelFormatter={(v: number) =>
-                          `Gross: ${fmtDKK(v)} kr/month`
-                        }
-                        contentStyle={{
-                          background: "var(--card)",
-                          border: "1px solid var(--border)",
-                          borderRadius: 8,
-                          fontSize: 13,
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0]?.payload as CurvePoint | undefined;
+                          if (!d) return null;
+                          const tax = d.gross_monthly - d.net_monthly;
+                          const netEur = fmtEUR(d.net_monthly, eurRate);
+                          const mellemThreshold = Math.round(641200 / 12);
+                          const topThreshold = Math.round(777900 / 12);
+                          const bracket = d.gross_monthly >= topThreshold
+                            ? { label: 'Topskat', color: '#ef4444' }
+                            : d.gross_monthly >= mellemThreshold
+                              ? { label: 'Mellemskat', color: '#f59e0b' }
+                              : { label: 'Bundskat', color: '#22c55e' };
+                          return (
+                            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
+                              <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
+                                {bracket.label}
+                              </p>
+                              <p style={{ fontWeight: 500 }}>{lang === 'da' ? 'Brutto' : 'Gross'}: {fmtDKK(d.gross_monthly)} kr</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{lang === 'da' ? 'Netto' : 'Net'}: {fmtDKK(d.net_monthly)} kr <span style={{ opacity: 0.7 }}>({netEur})</span></p>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{lang === 'da' ? 'Effektiv skat' : 'Effective tax'}: {d.effective_rate.toFixed(1)}%</p>
+                            </div>
+                          );
                         }}
                       />
                       <Line
@@ -745,6 +809,7 @@ export function Results() {
                         strokeDasharray="5 5"
                         strokeWidth={1.5}
                         dot={false}
+                        tooltipType="none"
                       />
                       <Line
                         type="monotone"
@@ -767,6 +832,24 @@ export function Results() {
                         stroke="white"
                         strokeWidth={2}
                       />
+                      {/* Tax bracket zones */}
+                      <ReferenceArea x1={0} x2={Math.round(641200 / 12)} fill="#22c55e" fillOpacity={0.04} />
+                      <ReferenceArea x1={Math.round(641200 / 12)} x2={Math.round(777900 / 12)} fill="#f59e0b" fillOpacity={0.06} />
+                      <ReferenceArea x1={Math.round(777900 / 12)} x2={140000} fill="#ef4444" fillOpacity={0.06} />
+                      <ReferenceLine
+                        x={Math.round(641200 / 12)}
+                        stroke="#f59e0b"
+                        strokeDasharray="6 4"
+                        strokeWidth={1}
+                        strokeOpacity={0.6}
+                      />
+                      <ReferenceLine
+                        x={Math.round(777900 / 12)}
+                        stroke="#ef4444"
+                        strokeDasharray="6 4"
+                        strokeWidth={1}
+                        strokeOpacity={0.6}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -783,7 +866,7 @@ export function Results() {
                     {fmtDKK(r.hourly_rate)} DKK/hour
                   </p>
                   <ResponsiveContainer width="100%" height={400}>
-                    <LineChart data={hoursCurveData}>
+                    <LineChart data={hoursCurveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
                       <CartesianGrid
                         strokeDasharray="3 3"
                         stroke="var(--border)"
@@ -791,7 +874,7 @@ export function Results() {
                       <XAxis
                         dataKey="hours_month"
                         label={{
-                          value: "Hours / month",
+                          value: lang === "da" ? "Timer / måned" : "Hours / month",
                           position: "insideBottom",
                           offset: -5,
                         }}
@@ -801,7 +884,7 @@ export function Results() {
                       <YAxis
                         tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                         label={{
-                          value: "DKK/month",
+                          value: "DKK/" + (lang === "da" ? "md" : "month"),
                           angle: -90,
                           position: "insideLeft",
                         }}
@@ -809,16 +892,20 @@ export function Results() {
                         fontSize={12}
                       />
                       <RTooltip
-                        formatter={(value: number, name: string) => [
-                          `${fmtDKK(value)} kr`,
-                          name,
-                        ]}
-                        labelFormatter={(v: number) => `${v} hours/month`}
-                        contentStyle={{
-                          background: "var(--card)",
-                          border: "1px solid var(--border)",
-                          borderRadius: 8,
-                          fontSize: 13,
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0]?.payload as HoursCurvePoint | undefined;
+                          if (!d) return null;
+                          const tax = d.gross_monthly - d.net_monthly;
+                          return (
+                            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{d.hours_month} {lang === 'da' ? 'timer/md' : 'hours/month'}</p>
+                              <p style={{ fontWeight: 500 }}>{lang === 'da' ? 'Brutto' : 'Gross'}: {fmtDKK(d.gross_monthly)} kr</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{lang === 'da' ? 'Netto' : 'Net'}: {fmtDKK(d.net_monthly)} kr</p>
+                              <p style={{ color: 'var(--destructive)' }}>{lang === 'da' ? 'Skat + fradrag' : 'Tax + ded.'}: {fmtDKK(tax)} kr</p>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{lang === 'da' ? 'Effektiv skat' : 'Effective tax'}: {d.effective_rate.toFixed(1)}%</p>
+                            </div>
+                          );
                         }}
                       />
                       <Line
@@ -1072,69 +1159,152 @@ export function Results() {
           </div>
         )}
 
-        {/* ── Accuracy Report ─────────────────────────────────── */}
-        {accuracyStatus === "success" ? (
-          <div className="mt-10 flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-[var(--radius-lg)] px-5 py-3">
-            <CheckCircle className="w-4 h-4 flex-shrink-0" />
-            {t("accuracy.success")}
-          </div>
-        ) : (
-          <div className="mt-10 bg-card border border-border rounded-[var(--radius-lg)] p-6">
-            <h3 className="text-sm font-semibold text-card-foreground mb-1">{t("accuracy.title")}</h3>
-            <p className="text-xs text-muted-foreground mb-4">{t("accuracy.desc")}</p>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <label className="text-xs text-muted-foreground whitespace-nowrap">{t("accuracy.actual.label")}</label>
-                <div className="flex items-center gap-2 flex-1 max-w-[280px]">
-                  <input
-                    type="number"
-                    value={actualNet}
-                    onChange={(e) => setActualNet(e.target.value)}
-                    placeholder={t("accuracy.actual.placeholder")}
-                    className="w-full px-3 py-2 text-sm bg-[var(--input-background)] border border-border rounded-[var(--radius-md)] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
-                  <span className="text-xs text-muted-foreground whitespace-nowrap">{t("accuracy.per_month")}</span>
-                </div>
+        {/* ── Feedback & Accuracy Report ───────────────────────── */}
+        <div className="mt-10 bg-card border border-border rounded-[var(--radius-lg)] p-6 space-y-6">
+          {/* Thumbs feedback */}
+          <div>
+            <h3 className="text-sm font-semibold text-card-foreground mb-1">
+              {lang === "da" ? "Er estimatet rigtigt?" : "Does this estimate look right?"}
+            </h3>
+            <p className="text-xs text-muted-foreground mb-3">
+              {lang === "da" ? "Din feedback hjælper os med at forbedre." : "Your feedback helps us improve."}
+            </p>
+            {thumbsVote ? (
+              <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+                <CheckCircle className="w-4 h-4" />
+                {lang === "da" ? "Tak for din feedback!" : "Thanks for your feedback!"}
               </div>
-              <label className="flex items-start gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={accuracyConsent}
-                  onChange={(e) => setAccuracyConsent(e.target.checked)}
-                  className="mt-0.5 rounded border-border"
-                />
-                <span className="text-xs text-muted-foreground leading-relaxed">{t("accuracy.consent")}</span>
-              </label>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={!actualNet || !accuracyConsent || accuracyStatus === "sending"}
-                onClick={async () => {
-                  setAccuracyStatus("sending");
-                  try {
-                    const res = await fetch(`${API}/api/accuracy-report`, {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        service_type: serviceId,
-                        estimated_net_monthly: netMonthly,
-                        actual_net_monthly: parseFloat(actualNet),
-                        inputs: result,
-                      }),
-                    });
-                    if (!res.ok) throw new Error("Failed");
-                  } catch {
-                    // Still show success to the user even if API is down
-                  }
-                  setAccuracyStatus("success");
-                }}
-              >
-                {t("accuracy.submit")}
-              </Button>
-            </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <button
+                  disabled={thumbsSending}
+                  onClick={async () => {
+                    setThumbsSending(true);
+                    try {
+                      await fetch(`${API}/api/vote`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ vote: "up", service_type: serviceId, estimated_net: netMonthly }),
+                      });
+                    } catch { /* noop */ }
+                    setThumbsVote("up");
+                    setVoteStats(prev => prev ? { ...prev, up: prev.up + 1, total: prev.total + 1 } : prev);
+                    setThumbsSending(false);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-md)] border border-border text-sm hover:bg-green-50 dark:hover:bg-green-950/30 hover:border-green-400 transition-colors"
+                >
+                  <ThumbsUp className="w-4 h-4" />
+                  {lang === "da" ? "Korrekt" : "Accurate"}
+                </button>
+                <button
+                  disabled={thumbsSending}
+                  onClick={async () => {
+                    setThumbsSending(true);
+                    try {
+                      await fetch(`${API}/api/vote`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ vote: "down", service_type: serviceId, estimated_net: netMonthly }),
+                      });
+                    } catch { /* noop */ }
+                    setThumbsVote("down");
+                    setVoteStats(prev => prev ? { ...prev, down: prev.down + 1, total: prev.total + 1 } : prev);
+                    setThumbsSending(false);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-[var(--radius-md)] border border-border text-sm hover:bg-red-50 dark:hover:bg-red-950/30 hover:border-red-400 transition-colors"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                  {lang === "da" ? "Forkert" : "Not accurate"}
+                </button>
+              </div>
+            )}
+            {/* Vote counter */}
+            {voteStats && voteStats.total > 0 && (
+              <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <ThumbsUp className="w-3 h-3 text-green-500" />
+                  {voteStats.up}
+                </span>
+                <span className="flex items-center gap-1">
+                  <ThumbsDown className="w-3 h-3 text-red-400" />
+                  {voteStats.down}
+                </span>
+                <span>
+                  {voteStats.total} {lang === "da" ? "stemmer i alt" : "votes total"}
+                  {voteStats.total > 0 && (
+                    <> · {Math.round(voteStats.up / voteStats.total * 100)}% {lang === "da" ? "positive" : "positive"}</>  
+                  )}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+
+          <hr className="border-border" />
+
+          {/* Accuracy report */}
+          {accuracyStatus === "success" ? (
+            <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-[var(--radius-md)] px-5 py-3">
+              <CheckCircle className="w-4 h-4 flex-shrink-0" />
+              {t("accuracy.success")}
+            </div>
+          ) : (
+            <div>
+              <h3 className="text-sm font-semibold text-card-foreground mb-1">{t("accuracy.title")}</h3>
+              <p className="text-xs text-muted-foreground mb-4">{t("accuracy.desc")}</p>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-3">
+                  <label className="text-xs text-muted-foreground whitespace-nowrap">{t("accuracy.actual.label")}</label>
+                  <div className="flex items-center gap-2 flex-1 max-w-[280px]">
+                    <input
+                      type="number"
+                      value={actualNet}
+                      onChange={(e) => setActualNet(e.target.value)}
+                      placeholder={t("accuracy.actual.placeholder")}
+                      className="w-full px-3 py-2 text-sm bg-[var(--input-background)] border border-border rounded-[var(--radius-md)] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-ring"
+                    />
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{t("accuracy.per_month")}</span>
+                  </div>
+                </div>
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={accuracyConsent}
+                    onChange={(e) => setAccuracyConsent(e.target.checked)}
+                    className="mt-0.5 rounded border-border"
+                  />
+                  <span className="text-xs text-muted-foreground leading-relaxed">{t("accuracy.consent")}</span>
+                </label>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!actualNet || !accuracyConsent || accuracyStatus === "sending"}
+                  onClick={async () => {
+                    setAccuracyStatus("sending");
+                    try {
+                      const res = await fetch(`${API}/api/accuracy-report`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          service_type: serviceId,
+                          estimated_net_monthly: netMonthly,
+                          actual_net_monthly: parseFloat(actualNet),
+                          inputs: result,
+                        }),
+                      });
+                      if (!res.ok) throw new Error("Failed");
+                    } catch {
+                      // Still show success to the user even if API is down
+                    }
+                    setAccuracyStatus("success");
+                  }}
+                >
+                  {t("accuracy.submit")}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* ── Actions ──────────────────────────────────────────── */}
         <div className="mt-8 flex gap-3 justify-center">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import {
@@ -9,10 +9,13 @@ import {
   CartesianGrid,
   Tooltip as RTooltip,
   ResponsiveContainer,
+  ReferenceDot,
   ReferenceLine,
+  ReferenceArea,
 } from "recharts";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { fetchCurve, type CurvePoint } from "../utils/api";
 import { useI18n } from "../utils/i18n";
 
@@ -32,8 +35,8 @@ const STANDARD = {
   is_church: true,
   is_hourly: false,
   atp_monthly: 94.65,
-  max_gross: 1_800_000,
-  points: 60,
+  max_gross: 1_680_000,   // 140k monthly × 12
+  step_monthly: 500,       // 500 DKK granularity
 } as const;
 
 export function QuickOverview() {
@@ -41,6 +44,7 @@ export function QuickOverview() {
   const { t, lang } = useI18n();
   const [curveData, setCurveData] = useState<CurvePoint[]>([]);
   const [loading, setLoading] = useState(true);
+  const [grossInput, setGrossInput] = useState("42000");
 
   useEffect(() => {
     fetchCurve(STANDARD)
@@ -48,6 +52,25 @@ export function QuickOverview() {
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
+
+  // Find the closest curve point for the typed gross
+  const liveResult = useMemo(() => {
+    const gross = Number(grossInput) || 0;
+    if (!curveData.length || gross <= 0) return null;
+    // Find closest
+    let best = curveData[0];
+    let bestDist = Math.abs(best.gross_monthly - gross);
+    for (const p of curveData) {
+      const d = Math.abs(p.gross_monthly - gross);
+      if (d < bestDist) { best = p; bestDist = d; }
+    }
+    return best;
+  }, [grossInput, curveData]);
+
+  const grossNum = Number(grossInput) || 0;
+  const netNum = liveResult?.net_monthly ?? 0;
+  const taxNum = grossNum - netNum;
+  const effRate = liveResult?.effective_rate ?? 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,6 +88,65 @@ export function QuickOverview() {
         <p className="text-muted-foreground mb-8 max-w-2xl">
           {t("overview.subtitle")}
         </p>
+
+        {/* ── Live gross → net calculator ──────────────────── */}
+        <div className="bg-card border border-border rounded-[var(--radius-xl)] p-6 sm:p-8 mb-8 shadow-[var(--shadow-md)]">
+          <p className="text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
+            {lang === "da" ? "Hurtig beregning" : "Quick calculation"}
+          </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 sm:gap-6">
+            <div className="w-full sm:w-48">
+              <label className="text-sm text-muted-foreground mb-1.5 block">
+                {lang === "da" ? "Bruttoløn / md" : "Gross / month"}
+              </label>
+              <div className="relative">
+                <Input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={grossInput}
+                  onChange={(e) => setGrossInput(e.target.value)}
+                  className="h-14 text-xl font-mono pr-10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">kr</span>
+              </div>
+            </div>
+            <div className="flex-1 grid grid-cols-2 gap-4 w-full">
+              <div className="bg-secondary/60 rounded-[var(--radius-md)] p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">
+                  {lang === "da" ? "Netto / md" : "Net / month"}
+                </p>
+                <p className="text-2xl font-mono font-semibold text-[var(--nordic-accent)]">
+                  {fmtDKK(netNum)}
+                </p>
+                <p className="text-xs text-muted-foreground">kr</p>
+              </div>
+              <div className="bg-secondary/60 rounded-[var(--radius-md)] p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">
+                  {lang === "da" ? "Effektiv skat" : "Effective tax"}
+                </p>
+                <p className="text-2xl font-mono font-semibold text-foreground">
+                  {effRate.toFixed(1)}%
+                </p>
+                {grossNum > 0 && (() => {
+                  const mellem = Math.round(641200 / 12);
+                  const top = Math.round(777900 / 12);
+                  const b = grossNum >= top
+                    ? { label: 'Topskat', color: '#ef4444' }
+                    : grossNum >= mellem
+                      ? { label: 'Mellemskat', color: '#f59e0b' }
+                      : { label: 'Bundskat', color: '#22c55e' };
+                  return (
+                    <p className="text-xs mt-1.5 font-medium flex items-center justify-center gap-1" style={{ color: b.color }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: b.color, display: 'inline-block' }} />
+                      {b.label}
+                    </p>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* ── Warning card ──────────────────────────────────── */}
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-[var(--radius-lg)] p-5 mb-8 flex gap-3">
@@ -127,13 +209,16 @@ export function QuickOverview() {
               {t("overview.chartDesc")}
             </p>
             <ResponsiveContainer width="100%" height={450}>
-              <LineChart data={curveData}>
+              <LineChart data={curveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="var(--border)"
                 />
                 <XAxis
                   dataKey="gross_monthly"
+                  type="number"
+                  domain={[0, 140000]}
+                  ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
                   tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                   label={{
                     value:
@@ -147,7 +232,10 @@ export function QuickOverview() {
                   fontSize={12}
                 />
                 <YAxis
+                  type="number"
                   tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
+                  domain={[0, 140000]}
+                  ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
                   label={{
                     value: "DKK/" + (lang === "da" ? "md" : "month"),
                     angle: -90,
@@ -157,27 +245,29 @@ export function QuickOverview() {
                   fontSize={12}
                 />
                 <RTooltip
-                  formatter={(value: number, name: string) => {
-                    const label =
-                      name === "gross_monthly"
-                        ? lang === "da"
-                          ? "Brutto"
-                          : "Gross"
-                        : name === "net_monthly"
-                        ? lang === "da"
-                          ? "Netto"
-                          : "Net"
-                        : name;
-                    return [`${fmtDKK(value)} kr`, label];
-                  }}
-                  labelFormatter={(v: number) =>
-                    `${lang === "da" ? "Brutto" : "Gross"}: ${fmtDKK(v)} kr/${lang === "da" ? "md" : "month"}`
-                  }
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 13,
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0]?.payload as CurvePoint | undefined;
+                    if (!d) return null;
+                    const tax = d.gross_monthly - d.net_monthly;
+                    const mellemThreshold = Math.round(641200 / 12);
+                    const topThreshold = Math.round(777900 / 12);
+                    const bracket = d.gross_monthly >= topThreshold
+                      ? { label: 'Topskat', color: '#ef4444' }
+                      : d.gross_monthly >= mellemThreshold
+                        ? { label: 'Mellemskat', color: '#f59e0b' }
+                        : { label: 'Bundskat', color: '#22c55e' };
+                    return (
+                      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
+                        <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
+                          {bracket.label}
+                        </p>
+                        <p style={{ fontWeight: 500 }}>{lang === 'da' ? 'Brutto' : 'Gross'}: {fmtDKK(d.gross_monthly)} kr</p>
+                        <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{lang === 'da' ? 'Netto' : 'Net'}: {fmtDKK(d.net_monthly)} kr</p>
+                        <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{lang === 'da' ? 'Effektiv skat' : 'Effective tax'}: {d.effective_rate.toFixed(1)}%</p>
+                      </div>
+                    );
                   }}
                 />
                 {/* Diagonal = gross (no tax) */}
@@ -189,6 +279,7 @@ export function QuickOverview() {
                   strokeDasharray="5 5"
                   strokeWidth={1.5}
                   dot={false}
+                  tooltipType="none"
                 />
                 {/* Net curve */}
                 <Line
@@ -199,81 +290,37 @@ export function QuickOverview() {
                   strokeWidth={2.5}
                   dot={false}
                 />
-                {/* reference lines at tax thresholds (monthly) */}
+                {/* User's typed gross position */}
+                {grossNum > 0 && liveResult && (
+                  <ReferenceDot
+                    x={liveResult.gross_monthly}
+                    y={liveResult.net_monthly}
+                    r={6}
+                    fill="var(--destructive)"
+                    stroke="white"
+                    strokeWidth={2}
+                  />
+                )}
+                {/* Tax bracket zones */}
+                <ReferenceArea x1={0} x2={Math.round(641200 / 12)} fill="#22c55e" fillOpacity={0.04} />
+                <ReferenceArea x1={Math.round(641200 / 12)} x2={Math.round(777900 / 12)} fill="#f59e0b" fillOpacity={0.06} />
+                <ReferenceArea x1={Math.round(777900 / 12)} x2={140000} fill="#ef4444" fillOpacity={0.06} />
                 <ReferenceLine
                   x={Math.round(641200 / 12)}
-                  stroke="var(--chart-2)"
-                  strokeDasharray="4 4"
+                  stroke="#f59e0b"
+                  strokeDasharray="6 4"
                   strokeWidth={1}
-                  label={{
-                    value: "Mellemskat",
-                    position: "top",
-                    fontSize: 11,
-                    fill: "var(--chart-2)",
-                  }}
+                  strokeOpacity={0.6}
                 />
                 <ReferenceLine
                   x={Math.round(777900 / 12)}
-                  stroke="var(--chart-3)"
-                  strokeDasharray="4 4"
+                  stroke="#ef4444"
+                  strokeDasharray="6 4"
                   strokeWidth={1}
-                  label={{
-                    value: "Topskat",
-                    position: "top",
-                    fontSize: 11,
-                    fill: "var(--chart-3)",
-                  }}
+                  strokeOpacity={0.6}
                 />
               </LineChart>
             </ResponsiveContainer>
-
-            {/* Effective rate mini table */}
-            {curveData.length > 0 && (
-              <div className="mt-6 overflow-x-auto">
-                <p className="text-sm font-medium text-foreground mb-3">
-                  {t("overview.rateTable")}
-                </p>
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-xs text-muted-foreground uppercase tracking-wide border-b border-border">
-                      <th className="py-2 text-left font-medium">
-                        {lang === "da" ? "Brutto/md" : "Gross/month"}
-                      </th>
-                      <th className="py-2 text-right font-medium">
-                        {lang === "da" ? "Netto/md" : "Net/month"}
-                      </th>
-                      <th className="py-2 text-right font-medium">
-                        {lang === "da" ? "Effektiv skat" : "Effective tax"}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {curveData
-                      .filter(
-                        (_, i) =>
-                          i % Math.max(1, Math.floor(curveData.length / 10)) === 0 ||
-                          i === curveData.length - 1
-                      )
-                      .map((p, i) => (
-                        <tr
-                          key={i}
-                          className="border-b border-border/50"
-                        >
-                          <td className="py-2 font-mono">
-                            {fmtDKK(p.gross_monthly)} kr
-                          </td>
-                          <td className="py-2 text-right font-mono">
-                            {fmtDKK(p.net_monthly)} kr
-                          </td>
-                          <td className="py-2 text-right font-mono text-muted-foreground">
-                            {(p.effective_rate * 100).toFixed(1)}%
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
           </div>
         )}
 

@@ -57,6 +57,8 @@ export interface FullTimeRequest {
   pretax_deductions_monthly?: number;
   aftertax_deductions_monthly?: number;
   atp_monthly?: number;
+  transport_km?: number;
+  union_fees_annual?: number;
 }
 
 export interface PartTimeRequest {
@@ -71,6 +73,8 @@ export interface PartTimeRequest {
   pretax_deductions_monthly?: number;
   aftertax_deductions_monthly?: number;
   atp_monthly?: number;
+  transport_km?: number;
+  union_fees_annual?: number;
 }
 
 export interface StudentRequest {
@@ -91,6 +95,8 @@ export interface CurveRequest {
   is_hourly?: boolean;
   atp_monthly?: number;
   max_gross?: number;
+  min_gross?: number;
+  step_monthly?: number;
   points?: number;
 }
 
@@ -138,6 +144,9 @@ export interface TaxResult {
   income_after_am: number;
   beskaeft_fradrag: number;
   job_fradrag: number;
+  befordring: number;
+  union_deduction: number;
+  lignings_fradrag: number;
   bundskat: number;
   kommuneskat: number;
   kirkeskat: number;

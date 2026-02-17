@@ -20,7 +20,29 @@ from data import (
     SU_REPAYMENT_INTEREST_RATE,
     FERIETILLAEG_RATE, FERIEPENGE_RATE,
     ATP_MONTHLY,
+    BEFORDRING_RATE_LOW, BEFORDRING_RATE_HIGH,
+    BEFORDRING_THRESHOLD, BEFORDRING_HIGH_THRESHOLD,
+    FAGFORENING_MAX,
 )
+
+
+def compute_befordringsfradrag(daily_km: float, work_days: int = 218) -> float:
+    """Compute annual transport deduction (befordringsfradrag).
+
+    Parameters
+    ----------
+    daily_km    Round-trip distance home ↔ work in km.
+    work_days   Working days per year (default 218 ≈ 52w × 5d − 30 holidays/sick).
+    """
+    if daily_km <= BEFORDRING_THRESHOLD:
+        return 0.0
+    deductible_km = daily_km - BEFORDRING_THRESHOLD
+    if daily_km <= BEFORDRING_HIGH_THRESHOLD:
+        return deductible_km * BEFORDRING_RATE_LOW * work_days
+    # Split: 25–120 km at high rate, >120 km at low rate
+    km_at_low  = BEFORDRING_HIGH_THRESHOLD - BEFORDRING_THRESHOLD
+    km_at_high = daily_km - BEFORDRING_HIGH_THRESHOLD
+    return (km_at_low * BEFORDRING_RATE_LOW + km_at_high * BEFORDRING_RATE_HIGH) * work_days
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -41,6 +63,8 @@ def compute_tax(
     pretax_deductions_annual: float = 0.0,
     aftertax_deductions_annual: float = 0.0,
     atp_monthly: float = 0.0,
+    transport_km: float = 0.0,
+    union_fees_annual: float = 0.0,
 ) -> dict:
     """Full Danish tax calculation for one year.
 
@@ -60,6 +84,8 @@ def compute_tax(
     pretax_deductions_annual  Employer deductions from pay before tax (e.g. DSB card).
     aftertax_deductions_annual  Deductions after tax (canteen, clubs, etc.).
     atp_monthly            ATP employee contribution per month.
+    transport_km           Round-trip daily commute km (>24 → befordringsfradrag).
+    union_fees_annual      Annual trade union + a-kasse fees (max 7,000 deductible).
     """
     # 0) Feriepenge / ferietillæg (additional taxable income)
     ferie_rate = FERIEPENGE_RATE if is_hourly else FERIETILLAEG_RATE
@@ -76,14 +102,12 @@ def compute_tax(
     employer_pension = gross_annual * employer_pension_pct # on top, not taxed
     total_pension    = employee_pension + employer_pension
     pension = employee_pension  # only employee part reduces taxable income
-    am_basis = total_gross - pension
+    atp_annual = atp_monthly * 12
+    am_basis = total_gross - pension - atp_annual
 
     # 2) AM-bidrag
     am_bidrag = am_basis * AM_RATE if has_employment_income else 0.0
     income_after_am = am_basis - am_bidrag
-
-    # 2b) ATP (deducted from pay, but NOT from AM-base; deducted pre-tax)
-    atp_annual = atp_monthly * 12
 
     # 3) Employment deductions
     if has_employment_income:
@@ -92,19 +116,24 @@ def compute_tax(
     else:
         beskaeft = job_frad = 0.0
 
+    # 3b) Ligningsmæssige fradrag (reduce kommune/kirke base, NOT bundskat base)
+    befordring = compute_befordringsfradrag(transport_km) if transport_km > 0 else 0.0
+    union_deduction = min(union_fees_annual, FAGFORENING_MAX)
+    lignings_fradrag = befordring + union_deduction
+
     # 4) Bundskat
     bundskat_base = max(income_after_am - PERSONFRADRAG, 0)
     bundskat = bundskat_base * BUNDSKAT_RATE
 
     # 5) Kommuneskat (reduced base via fradrag)
-    kommune_base = max(income_after_am - PERSONFRADRAG - beskaeft - job_frad, 0)
+    kommune_base = max(income_after_am - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
     k_pct = kommune_pct / 100.0
     kommuneskat = kommune_base * k_pct
 
-    # 6) Kirkeskat
+    # 6) Kirkeskat (also reduced by ligningsmæssige fradrag)
     kirkeskat = 0.0
     if is_church:
-        kirke_base = max(income_after_am - PERSONFRADRAG, 0)
+        kirke_base = max(income_after_am - PERSONFRADRAG - lignings_fradrag, 0)
         kirkeskat = kirke_base * (kirke_pct / 100.0)
 
     # 7) Progressive brackets — capped by skatteloft
@@ -157,6 +186,9 @@ def compute_tax(
         "income_after_am":     income_after_am,
         "beskaeft_fradrag":    beskaeft,
         "job_fradrag":         job_frad,
+        "befordring":          befordring,
+        "union_deduction":     union_deduction,
+        "lignings_fradrag":    lignings_fradrag,
         "bundskat":            bundskat,
         "kommuneskat":         kommuneskat,
         "kirkeskat":           kirkeskat,

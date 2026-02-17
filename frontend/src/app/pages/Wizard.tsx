@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router";
 import {
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
   AlertTriangle,
   ChevronDown,
   Info,
@@ -60,11 +59,16 @@ export function Wizard() {
   const [loading, setLoading] = useState(false);
   const [extrasOpen, setExtrasOpen] = useState(false);
 
+  // Student work input mode: hourly (default) or none (SU-only, no work)
+  const [studentWorkMode, setStudentWorkMode] = useState<"hourly" | "none">("hourly");
+
   // ── Step names (i18n) ──────────────────────────────────────────
   const stepNames: Record<string, TranslationKey[]> = {
     fulltime: ["step.income", "step.location", "step.pension", "step.review"],
     parttime: ["step.work", "step.location", "step.pension", "step.review"],
-    student: ["step.education", "step.workLocation", "step.pensionOnly", "step.review"],
+    student: studentWorkMode === "none"
+      ? ["step.education", "step.workLocation", "step.review"]
+      : ["step.education", "step.workLocation", "step.pensionOnly", "step.review"],
   };
 
   const titleKeys: Record<string, TranslationKey> = {
@@ -96,10 +100,13 @@ export function Wizard() {
 
   // ── Extras (fulltime + parttime) ───────────────────────────────
   const [atpEnabled, setAtpEnabled] = useState(true);
+  const [atpCustom, setAtpCustom] = useState<string | null>(null); // null = use default
   const [otherPay, setOtherPay] = useState("0");
   const [taxBenefits, setTaxBenefits] = useState("0");
   const [pretaxDed, setPretaxDed] = useState("0");
   const [aftertaxDed, setAftertaxDed] = useState("0");
+  const [transportKm, setTransportKm] = useState("0");
+  const [unionFees, setUnionFees] = useState("0");
 
   // ── Student state ──────────────────────────────────────────────
   const [eduType, setEduType] = useState<"vid" | "ungdom">("vid");
@@ -108,16 +115,13 @@ export function Wizard() {
   const [suMonths, setSuMonths] = useState("12");
   const [optedOutMonths, setOptedOutMonths] = useState("0");
 
-  // Student work input mode
-  const [studentWorkMode, setStudentWorkMode] = useState<"hourly" | "monthly">("monthly");
-  const [workMonthly, setWorkMonthly] = useState("12000");
   const [studentHourlyRate, setStudentHourlyRate] = useState("140");
   const [studentHoursMonth, setStudentHoursMonth] = useState("40");
 
   const effectiveWorkMonthly = useMemo(() => {
-    if (studentWorkMode === "hourly") return Number(studentHourlyRate) * Number(studentHoursMonth);
-    return Number(workMonthly);
-  }, [studentWorkMode, workMonthly, studentHourlyRate, studentHoursMonth]);
+    if (studentWorkMode === "none") return 0;
+    return Number(studentHourlyRate) * Number(studentHoursMonth);
+  }, [studentWorkMode, studentHourlyRate, studentHoursMonth]);
 
   // Student periodisering
   const [studyPeriod, setStudyPeriod] = useState<"full" | "start" | "finish">("full");
@@ -174,9 +178,8 @@ export function Wizard() {
 
   const weeklyHours = Number(hoursMonth) / 4.33;
 
-  const atpMonthly = useMemo(() => {
+  const atpDefault = useMemo(() => {
     if (serviceId === "student") return 0;
-    if (!atpEnabled) return 0;
     if (serviceId === "parttime") {
       if (weeklyHours < 9) return 0;
       if (weeklyHours < 18) return 0;
@@ -185,7 +188,13 @@ export function Wizard() {
       return c?.atp_monthly_fulltime ?? 94.65;
     }
     return c?.atp_monthly_fulltime ?? 94.65;
-  }, [serviceId, atpEnabled, weeklyHours, c]);
+  }, [serviceId, weeklyHours, c]);
+
+  const atpMonthly = useMemo(() => {
+    if (!atpEnabled) return 0;
+    if (atpCustom !== null) return Number(atpCustom);
+    return atpDefault;
+  }, [atpEnabled, atpCustom, atpDefault]);
 
   // Student SU + fribeloeb
   const suMonthlyAmount = useMemo(() => {
@@ -229,6 +238,8 @@ export function Wizard() {
           taxable_benefits_monthly: Number(taxBenefits),
           pretax_deductions_monthly: Number(pretaxDed),
           aftertax_deductions_monthly: Number(aftertaxDed),
+          transport_km: Number(transportKm),
+          union_fees_annual: Number(unionFees),
         });
       } else if (serviceId === "parttime") {
         result = await computePartTime({
@@ -243,14 +254,16 @@ export function Wizard() {
           taxable_benefits_monthly: Number(taxBenefits),
           pretax_deductions_monthly: Number(pretaxDed),
           aftertax_deductions_monthly: Number(aftertaxDed),
+          transport_km: Number(transportKm),
+          union_fees_annual: Number(unionFees),
         });
       } else {
         result = await computeStudent({
           su_monthly: suMonthlyAmount,
           work_gross_monthly: effectiveWorkMonthly,
           kommune,
-          pension_pct: Number(pensionPct),
-          employer_pension_pct: Number(erPensionPct),
+          pension_pct: studentWorkMode === "none" ? 0 : Number(pensionPct),
+          employer_pension_pct: studentWorkMode === "none" ? 0 : Number(erPensionPct),
           is_church: isChurch,
           aars_fribeloeb: aarsFribeloeb,
         });
@@ -629,16 +642,6 @@ export function Wizard() {
             {/* Work input mode toggle */}
             <div className="flex items-center gap-2 p-1 bg-secondary rounded-[var(--radius-md)] w-fit">
               <button
-                onClick={() => setStudentWorkMode("monthly")}
-                className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
-                  studentWorkMode === "monthly"
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {t("input.student.workMode.monthly")}
-              </button>
-              <button
                 onClick={() => setStudentWorkMode("hourly")}
                 className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
                   studentWorkMode === "hourly"
@@ -646,21 +649,21 @@ export function Wizard() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {t("input.student.workMode.hourly")}
+                {lang === "da" ? "Timeløn" : "Hourly wage"}
+              </button>
+              <button
+                onClick={() => setStudentWorkMode("none")}
+                className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
+                  studentWorkMode === "none"
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {lang === "da" ? "Kun SU (intet arbejde)" : "SU only (no work)"}
               </button>
             </div>
 
-            {studentWorkMode === "monthly" ? (
-              <Field label={t("input.student.workGross")} tooltip={t("input.student.workGross.tip")}>
-                <Input
-                  type="number"
-                  value={workMonthly}
-                  onChange={(e) => setWorkMonthly(e.target.value)}
-                  placeholder="12000"
-                  className="text-lg h-14"
-                />
-              </Field>
-            ) : (
+            {studentWorkMode === "hourly" ? (
               <div className="space-y-4">
                 <Field label={t("input.hourlyRate")} tooltip={t("input.hourlyRate.tip")}>
                   <Input
@@ -683,8 +686,29 @@ export function Wizard() {
                 <div className="rounded-[var(--radius-md)] bg-secondary/50 p-4">
                   <p className="text-sm text-muted-foreground">
                     ≈ {fmt(effectiveWorkMonthly)} DKK gross / {t("results.monthly").toLowerCase()}
+                    {Number(studentHoursMonth) > 0 && (
+                      <span className="ml-2 text-xs">({(Number(studentHoursMonth) / 4.33).toFixed(1)} h/{lang === "da" ? "uge" : "week"})</span>
+                    )}
                   </p>
                 </div>
+                {Number(studentHoursMonth) > 0 && Number(studentHoursMonth) < 46 && (
+                  <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-amber-500/30 bg-amber-500/10 p-3">
+                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                    <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                      {lang === "da"
+                        ? "EU/EØS-borgere skal arbejde mindst 10-12 timer/uge (ca. 43-52 timer/md) for at opnå arbejdstagerstatus efter EU-retten og være berettiget til SU. Ved færre timer risikerer du at miste din SU."
+                        : "EU/EEA citizens must work at least 10-12 hours/week (~43-52 hours/month) to qualify as an EU worker and be eligible for SU. Working fewer hours may mean you lose your SU grant."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="rounded-[var(--radius-md)] bg-secondary/50 p-4">
+                <p className="text-sm text-muted-foreground">
+                  {lang === "da"
+                    ? "Du modtager kun SU uden arbejdsindkomst. Danske statsborgere er berettiget til SU under uddannelse."
+                    : "You will receive SU only, with no work income. Danish citizens are entitled to SU while studying."}
+                </p>
               </div>
             )}
 
@@ -811,16 +835,44 @@ export function Wizard() {
       <hr className="border-border" />
 
       {/* ATP */}
-      <div className="flex items-center space-x-3 p-4 border border-border rounded-[var(--radius-md)]">
-        <Switch id="atp" checked={atpEnabled} onCheckedChange={setAtpEnabled} />
-        <div className="flex-1">
-          <Label htmlFor="atp">{t("input.atp")}</Label>
-          <p className="text-xs text-muted-foreground">{t("input.atp.sub")}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {lang === "da" ? "Medarbejderandel" : "Employee share"}: {fmt(atpMonthly)} kr/{lang === "da" ? "md" : "month"}
-          </p>
+      <div className="p-4 border border-border rounded-[var(--radius-md)] space-y-3">
+        <div className="flex items-center gap-3">
+          <Switch id="atp" checked={atpEnabled} onCheckedChange={setAtpEnabled} />
+          <div className="flex-1 min-w-0">
+            <Label htmlFor="atp">{t("input.atp")}</Label>
+            <p className="text-xs text-muted-foreground">{t("input.atp.sub")}</p>
+          </div>
+          <Tip text={t("input.atp.tip")} />
         </div>
-        <Tip text={t("input.atp.tip")} />
+        {atpEnabled && (
+          <div className="flex items-center gap-3 pl-[52px]">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
+              {lang === "da" ? "Medarbejderandel" : "Employee share"}
+            </Label>
+            <div className="relative w-36">
+              <Input
+                type="number"
+                min="0"
+                step="1"
+                value={atpCustom ?? String(atpDefault)}
+                onChange={(e) => setAtpCustom(e.target.value)}
+                className="h-10 pr-14 text-sm"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                kr/{lang === "da" ? "md" : "mo"}
+              </span>
+            </div>
+            {atpCustom !== null && (
+              <button
+                type="button"
+                onClick={() => setAtpCustom(null)}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Collapsible extras */}
@@ -846,6 +898,16 @@ export function Wizard() {
           </Field>
           <Field label={t("input.aftertaxDed")} tooltip={t("input.aftertaxDed.tip")}>
             <Input type="number" min="0" step="100" value={aftertaxDed} onChange={(e) => setAftertaxDed(e.target.value)} className="h-12" />
+          </Field>
+
+          <hr className="border-border my-2" />
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("input.personalDeductions")}</p>
+
+          <Field label={t("input.transportKm")} tooltip={t("input.transportKm.tip")}>
+            <Input type="number" min="0" step="1" value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
+          </Field>
+          <Field label={t("input.unionFees")} tooltip={t("input.unionFees.tip")}>
+            <Input type="number" min="0" step="500" value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
           </Field>
         </CollapsibleContent>
       </Collapsible>
@@ -904,11 +966,16 @@ export function Wizard() {
         label: lang === "da" ? "Årligt fribeløb" : "Annual fribeløb",
         value: `${fmt(aarsFribeloeb)} DKK`,
       });
-      rows.push({
-        label: lang === "da" ? "Arbejdsindkomst / md" : "Work income / month",
-        value: `${fmt(effectiveWorkMonthly)} DKK`,
-      });
-      if (studentWorkMode === "hourly") {
+      if (studentWorkMode === "none") {
+        rows.push({
+          label: lang === "da" ? "Arbejde" : "Work",
+          value: lang === "da" ? "Kun SU (intet arbejde)" : "SU only (no work)",
+        });
+      } else {
+        rows.push({
+          label: lang === "da" ? "Arbejdsindkomst / md" : "Work income / month",
+          value: `${fmt(effectiveWorkMonthly)} DKK`,
+        });
         rows.push({
           label: `  (${t("input.hourlyRate")})`,
           value: `${studentHourlyRate} DKK × ${studentHoursMonth} h`,
@@ -921,8 +988,10 @@ export function Wizard() {
 
     rows.push({ label: t("input.kommune"), value: kommune });
     rows.push({ label: t("input.church"), value: isChurch ? yes : no });
-    rows.push({ label: t("input.pension.yours"), value: `${pensionPct} %` });
-    rows.push({ label: t("input.pension.employer"), value: `${erPensionPct} %` });
+    if (!(serviceId === "student" && studentWorkMode === "none")) {
+      rows.push({ label: t("input.pension.yours"), value: `${pensionPct} %` });
+      rows.push({ label: t("input.pension.employer"), value: `${erPensionPct} %` });
+    }
 
     if (serviceId !== "student") {
       rows.push({ label: `ATP / ${lang === "da" ? "md" : "month"}`, value: `${fmt(atpMonthly)} DKK` });
@@ -934,6 +1003,10 @@ export function Wizard() {
         rows.push({ label: t("input.pretaxDed"), value: `${pretaxDed} DKK` });
       if (Number(aftertaxDed) > 0)
         rows.push({ label: t("input.aftertaxDed"), value: `${aftertaxDed} DKK` });
+      if (Number(transportKm) > 0)
+        rows.push({ label: t("input.transportKm"), value: `${transportKm} km` });
+      if (Number(unionFees) > 0)
+        rows.push({ label: t("input.unionFees"), value: `${unionFees} DKK` });
     }
 
     return rows;
@@ -1046,13 +1119,14 @@ function Tip({ text }: { text: string }) {
         <TooltipTrigger asChild>
           <button
             type="button"
-            className="text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center justify-center w-5 h-5 rounded-full text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition-colors"
+            aria-label="More info"
           >
-            <HelpCircle className="w-4 h-4" />
+            <Info className="w-3.5 h-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent>
-          <p className="max-w-xs text-sm">{text}</p>
+        <TooltipContent side="top">
+          <p>{text}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

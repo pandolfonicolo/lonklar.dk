@@ -11,7 +11,8 @@ export type Lang = "en" | "da";
 
 const translations = {
   // ── Global / nav ───────────────────────────────────────────────
-  "nav.methodology": { en: "Methodology", da: "Metode" },
+  "nav.methodology": { en: "How we calculate", da: "Sådan beregner vi" },
+  "nav.feedback": { en: "Feedback", da: "Feedback" },
   "nav.language": { en: "DA", da: "EN" },
 
   // ── Home page ──────────────────────────────────────────────────
@@ -37,23 +38,23 @@ const translations = {
   "home.cards.heading": { en: "Choose your calculator", da: "Vælg din beregner" },
 
   // Service cards
-  "home.fulltime.title": { en: "Full-time salary", da: "Fuldtidsløn" },
+  "home.fulltime.title": { en: "Monthly salary", da: "Månedsløn" },
   "home.fulltime.subtitle": { en: "Fuldtidsløn", da: "Full-time salary" },
   "home.fulltime.desc": {
     en: "Monthly salaried position: pension, AM-bidrag, feriepenge and every tax bracket, calculated in seconds.",
     da: "Fuldtidsstilling med fast månedsløn: pension, AM-bidrag, feriepenge og alle skattetrin, beregnet på sekunder.",
   },
-  "home.parttime.title": { en: "Part-time / hourly", da: "Deltid / timeløn" },
+  "home.parttime.title": { en: "Hourly pay", da: "Timeløn" },
   "home.parttime.subtitle": { en: "Deltid / timeløn", da: "Part-time / hourly" },
   "home.parttime.desc": {
-    en: "Paid by the hour? Enter your rate and weekly hours to see take-home pay with 12.5% feriepenge.",
-    da: "Betalt pr. time? Indtast din timeløn og ugentlige timer for at se din udbetaling inkl. 12,5% feriepenge.",
+    en: "Know your hourly rate and weekly hours? See your real take-home pay including 12.5% feriepenge and all deductions.",
+    da: "Kender du din timeløn og ugentlige timer? Se din reelle udbetaling inkl. 12,5% feriepenge og alle fradrag.",
   },
-  "home.student.title": { en: "Student (SU + work)", da: "Studerende (SU + arbejde)" },
+  "home.student.title": { en: "Student job", da: "Studiejob" },
   "home.student.subtitle": { en: "Studerende (SU + arbejde)", da: "Student (SU + work)" },
   "home.student.desc": {
-    en: "SU grant plus part-time work. Track your fribeløb limit and avoid repayment surprises.",
-    da: "SU kombineret med studiejob. Hold styr på dit fribeløb og undgå tilbagebetalingsoverraskelser.",
+    en: "Combine your SU grant with a student job. See your total income and check how close you are to the fribeløb limit.",
+    da: "Kombiner din SU med et studiejob. Se din samlede indkomst og tjek hvor tæt du er på fribeløbsgrænsen.",
   },
 
   // How it works
@@ -145,23 +146,23 @@ const translations = {
   "input.mode.monthly": { en: "Monthly", da: "Månedlig" },
   "input.grossAnnual": { en: "Gross annual salary (DKK)", da: "Bruttoårsløn (DKK)" },
   "input.grossAnnual.tip": {
-    en: "Your total yearly salary before any deductions (pension, tax, etc.).",
-    da: "Din samlede årsløn før fradrag (pension, skat, osv.).",
+    en: "The number on your contract. Find it on your lønseddel as 'Årsløn' or 'Grundløn × 12'. Do NOT subtract pension or tax — we handle that.",
+    da: "Tallet i din kontrakt. Find det på din lønseddel som 'Årsløn' eller 'Grundløn × 12'. Træk IKKE pension eller skat fra — det gør vi.",
   },
   "input.grossMonthly": { en: "Gross monthly salary (DKK)", da: "Bruttomånedsløn (DKK)" },
   "input.grossMonthly.tip": {
-    en: "Your monthly salary before any deductions.",
-    da: "Din månedsløn før fradrag.",
+    en: "Your monthly salary as shown on your contract. Before pension, tax, and any other deductions. We'll multiply by 12.",
+    da: "Din månedsløn som vist i din kontrakt. Før pension, skat og andre fradrag. Vi ganger med 12.",
   },
   "input.hourlyRate": { en: "Hourly rate (DKK/hour)", da: "Timeløn (DKK/time)" },
   "input.hourlyRate.tip": {
-    en: "Your gross hourly rate before any deductions.",
-    da: "Din bruttotimeløn før fradrag.",
+    en: "Your agreed hourly pay before tax. Check your contract or lønseddel under 'Timeløn'. Typical range: 130–250 DKK.",
+    da: "Din aftalte timeløn før skat. Tjek din kontrakt eller lønseddel under 'Timeløn'. Typisk interval: 130–250 DKK.",
   },
   "input.hoursMonth": { en: "Hours per month", da: "Timer pr. måned" },
   "input.hoursMonth.tip": {
-    en: "Average working hours per month. Full-time (37 h/week) ≈ 160 h/month.",
-    da: "Gennemsnitlige arbejdstimer pr. måned. Fuldtid (37 t/uge) ≈ 160 t/måned.",
+    en: "How many hours you work per month on average. Examples: 40 h = ~10 h/week, 80 h = ~20 h/week, 160 h = full-time (37 h/week).",
+    da: "Hvor mange timer du arbejder pr. måned i gennemsnit. Eksempler: 40 t = ~10 t/uge, 80 t = ~20 t/uge, 160 t = fuldtid (37 t/uge).",
   },
 
   // Student work input mode
@@ -176,8 +177,8 @@ const translations = {
   // Student education
   "input.eduType": { en: "Education type", da: "Uddannelsestype" },
   "input.eduType.tip": {
-    en: "Determines your fribeløb rate. Videregående = university/college. Ungdomsuddannelse = gymnasium/HHX/HTX etc.",
-    da: "Bestemmer dit fribeløb. Videregående = universitet/professionshøjskole. Ungdomsuddannelse = gymnasium/HHX/HTX osv.",
+    en: "Affects how much you can earn before repaying SU. Higher education (uni, college) = lower fribeløb. Youth education (gymnasium, HHX, HTX) = higher fribeløb.",
+    da: "Påvirker hvor meget du kan tjene før du skal tilbagebetale SU. Videregående (uni, college) = lavere fribeløb. Ungdomsudd. (gymnasium, HHX, HTX) = højere fribeløb.",
   },
   "input.eduType.vid": { en: "Higher education", da: "Videregående" },
   "input.eduType.vid.sub": { en: "Videregående", da: "University, college" },
@@ -186,8 +187,8 @@ const translations = {
 
   "input.living": { en: "Living situation", da: "Bopælsforhold" },
   "input.living.tip": {
-    en: "Udeboende (living away from parents) receive higher SU.",
-    da: "Udeboende (bor ikke hos forældre) modtager højere SU.",
+    en: "Living away from parents = ~7,400 kr/month SU. Living with parents = ~2,900 kr/month. You must be registered at a separate address to qualify as udeboende.",
+    da: "Udeboende = ~7.400 kr/md i SU. Hjemmeboende = ~2.900 kr/md. Du skal være registreret på en selvstændig adresse for at være udeboende.",
   },
   "input.living.ude": { en: "Living away", da: "Udeboende" },
   "input.living.ude.sub": { en: "Udeboende", da: "Living away from parents" },
@@ -225,14 +226,14 @@ const translations = {
   // Municipality
   "input.kommune": { en: "Municipality", da: "Kommune" },
   "input.kommune.tip": {
-    en: "Determines your kommuneskat and kirkeskat rates.",
-    da: "Bestemmer din kommuneskat og kirkeskat.",
+    en: "Your tax municipality = where you live on Jan 1st. Each kommune has a different tax rate (22–27%). Check your skatteoplysninger or look at your lønseddel.",
+    da: "Din skattekommune = hvor du bor den 1. januar. Hver kommune har en forskellig skatteprocent (22–27 %). Tjek dine skatteoplysninger eller din lønseddel.",
   },
   "input.church": { en: "Church member", da: "Folkekirkemedlem" },
   "input.church.sub": { en: "Folkekirken", da: "Folkekirken" },
   "input.church.tip": {
-    en: "Uncheck to opt out of kirkeskat (church tax, 0.4–1.3%).",
-    da: "Fjern flueben for at fravælge kirkeskat (0,4–1,3%).",
+    en: "If you're a member of the Danish national church (folkekirken), you pay an extra 0.4–1.3% tax. Check your trækopgørelse — if kirkeskat is listed, you're a member.",
+    da: "Hvis du er medlem af folkekirken, betaler du 0,4–1,3 % ekstra i skat. Tjek din trækopgørelse — hvis kirkeskat er anført, er du medlem.",
   },
 
   // Pension
@@ -243,21 +244,21 @@ const translations = {
   },
   "input.pension.yours": { en: "Your contribution (%)", da: "Dit bidrag (%)" },
   "input.pension.yours.tip": {
-    en: "Deducted from gross salary before tax. Reduces taxable income and builds your pension.",
-    da: "Fratrukket bruttoløn før skat. Reducerer skattepligtig indkomst og opbygger din pension.",
+    en: "Your share, deducted from gross pay. Check your lønseddel or contract — look for 'Pensionsbidrag medarbejder'. Common: 4%. Set to 0 if you have no pension scheme.",
+    da: "Din andel, fratrukket bruttolønnen. Tjek din lønseddel eller kontrakt — se efter 'Pensionsbidrag medarbejder'. Typisk: 4 %. Sæt til 0 hvis ingen pension.",
   },
   "input.pension.employer": { en: "Employer on top (%)", da: "Arbejdsgiver oveni (%)" },
   "input.pension.employer.tip": {
-    en: "Goes to your pension fund, not part of your taxable income. It's free money for your retirement.",
-    da: "Går til din pensionskasse, ikke en del af din skattepligtige indkomst. Det er frie penge til din pension.",
+    en: "Paid by your employer on top of your salary — goes straight to your pension fund. Not taxed now. Check your lønseddel for 'Pensionsbidrag arbejdsgiver'. Common: 8%.",
+    da: "Betales af din arbejdsgiver oveni din løn — går direkte til din pensionskasse. Beskattes ikke nu. Tjek din lønseddel for 'Pensionsbidrag arbejdsgiver'. Typisk: 8 %.",
   },
 
   // ATP
   "input.atp": { en: "ATP", da: "ATP" },
   "input.atp.sub": { en: "Arbejdsmarkedets Tillægspension", da: "Labour-market supplementary pension" },
   "input.atp.tip": {
-    en: "ATP is a mandatory supplementary pension for most employees. Employee pays ~95 kr/month for full-time, employer pays 2× on top.",
-    da: "ATP er en obligatorisk tillægspension for de fleste lønmodtagere. Medarbejder betaler ~95 kr/md for fuldtid, arbejdsgiver betaler 2× oveni.",
+    en: "Mandatory pension contribution. Your share is ~95 kr/month (full-time). Check your lønseddel — look for 'ATP' in the deduction lines. Your employer also pays ~190 kr on top.",
+    da: "Obligatorisk pensionsbidrag. Din andel er ~95 kr/md (fuldtid). Tjek din lønseddel — find 'ATP' i fradragslinjerne. Din arbejdsgiver betaler også ~190 kr oveni.",
   },
 
   // Extras
@@ -265,23 +266,34 @@ const translations = {
   "input.extras.optional": { en: "Optional", da: "Valgfrit" },
   "input.otherPay": { en: "Other pay (DKK/month)", da: "Anden løn (DKK/md)" },
   "input.otherPay.tip": {
-    en: "Extra cash on top of base salary — internet/broadband allowance, average bonus, transport allowance, etc.",
-    da: "Ekstra kontant udover grundløn — internet-/bredbåndstilskud, gennemsnitlig bonus, transporttilskud, osv.",
+    en: "Monthly cash you receive on top of base salary. Examples: broadband allowance (~500 kr), regular bonus, transport allowance. Look for extra cash lines on your lønseddel.",
+    da: "Månedlig kontant udover grundløn. Eksempler: bredbåndstilskud (~500 kr), fast bonus, transporttilskud. Se efter ekstra kontantposter på din lønseddel.",
   },
   "input.taxBenefits": { en: "Taxable benefits (DKK/month)", da: "Skattepligtige personalegoder (DKK/md)" },
   "input.taxBenefits.tip": {
-    en: "Non-cash benefits: fri telefon (3,500 kr/year), sundhedsforsikring, firmabil, etc. You don't receive cash but pay tax on the value.",
-    da: "Personalegoder: fri telefon (3.500 kr/år), sundhedsforsikring, firmabil osv. Du modtager ikke kontanter, men beskattes af værdien.",
+    en: "Benefits you don't receive as cash but still pay tax on. Check your lønseddel for lines like: fri telefon (~292 kr/mo), sundhedsforsikring (~200 kr/mo), firmabil. Enter the monthly taxable value.",
+    da: "Goder du ikke modtager kontant, men stadig beskattes af. Tjek din lønseddel for poster som: fri telefon (~292 kr/md), sundhedsforsikring (~200 kr/md), firmabil. Angiv den månedlige skatteværdi.",
   },
   "input.pretaxDed": { en: "Pre-tax deductions (DKK/month)", da: "Fradrag før skat (DKK/md)" },
   "input.pretaxDed.tip": {
-    en: "Amounts deducted before tax: DSB commuter card, fagforening (union dues, up to 7,000 kr/year deductible), etc. Reduces your taxable income.",
-    da: "Beløb fratrukket før skat: DSB pendlerkort, fagforening (op til 7.000 kr/år fradragsberettiget) osv. Reducerer din skattepligtige indkomst.",
+    en: "Amounts your employer deducts from your pay BEFORE calculating tax. Examples: DSB commuter card (~988 kr), company-paid insurance. Look for 'Fradrag før skat' on your lønseddel. Reduces your taxable income.",
+    da: "Beløb din arbejdsgiver trækker fra din løn FØR skatteberegning. Eksempler: DSB pendlerkort (~988 kr), firmabetalt forsikring. Se efter 'Fradrag før skat' på din lønseddel. Reducerer din skattepligtige indkomst.",
   },
   "input.aftertaxDed": { en: "After-tax deductions (DKK/month)", da: "Fradrag efter skat (DKK/md)" },
   "input.aftertaxDed.tip": {
-    en: "Amounts deducted after tax: frokostordning (canteen, typically 300–600 kr), fitness, parking. Does not reduce tax — only take-home pay.",
-    da: "Beløb fratrukket efter skat: frokostordning (typisk 300–600 kr), fitness, parkering. Reducerer ikke skat — kun udbetaling.",
+    en: "Amounts your employer deducts AFTER tax is calculated. Examples: canteen/frokostordning (300–600 kr), gym membership, parking. Look for 'Fradrag efter skat' on your lønseddel. Does NOT save you tax — just reduces your payout.",
+    da: "Beløb din arbejdsgiver trækker EFTER skat er beregnet. Eksempler: frokostordning (300–600 kr), fitness, parkering. Se efter 'Fradrag efter skat' på din lønseddel. Sparer IKKE skat — reducerer kun din udbetaling.",
+  },
+  "input.personalDeductions": { en: "Personal tax deductions", da: "Personlige skattefradrag" },
+  "input.transportKm": { en: "Daily round-trip commute (km)", da: "Daglig transport tur/retur (km)" },
+  "input.transportKm.tip": {
+    en: "Your daily ROUND-TRIP distance home ↔ work (both ways). Use Google Maps to check. Only kicks in above 24 km. Example: 40 km round-trip → 16 km × 1.98 kr × 218 days = ~6,900 kr/year deduction → saves ~1,800 kr in tax.",
+    da: "Din daglige TUR/RETUR-afstand hjem ↔ arbejde (begge veje). Brug Google Maps til at tjekke. Gælder kun over 24 km. Eksempel: 40 km tur/retur → 16 km × 1,98 kr × 218 dage = ~6.900 kr/år fradrag → sparer ~1.800 kr i skat.",
+  },
+  "input.unionFees": { en: "Union + A-kasse fees (DKK/year)", da: "Fagforening + A-kasse (DKK/år)" },
+  "input.unionFees.tip": {
+    en: "Total yearly cost for trade union + A-kasse (unemployment insurance). Enter the combined annual amount. Max 7,000 kr is deductible. Example: IDA ~6,000 kr + A-kasse ~5,000 kr → enter 11,000 (capped at 7,000). Saves ~1,800 kr/year in tax.",
+    da: "Samlet årlig udgift til fagforening + A-kasse (arbejdsløshedsforsikring). Angiv det samlede årsbeløb. Maks 7.000 kr er fradragsberettiget. Eksempel: IDA ~6.000 kr + A-kasse ~5.000 kr → skriv 11.000 (grænse 7.000). Sparer ~1.800 kr/år i skat.",
   },
 
   // Warnings
@@ -393,6 +405,12 @@ const translations = {
   "month.10": { en: "October", da: "Oktober" },
   "month.11": { en: "November", da: "November" },
   "month.12": { en: "December", da: "December" },
+
+  // Student EU worker hours warning
+  "input.student.euWorkerWarning": {
+    en: "EU/EEA citizens must work at least 10-12 hours/week (~43-52 hours/month) to qualify as an EU worker and be eligible for SU. Working fewer hours may mean you lose your SU grant.",
+    da: "EU/EØS-borgere skal arbejde mindst 10-12 timer/uge (ca. 43-52 timer/md) for at opnå arbejdstagerstatus efter EU-retten og være berettiget til SU. Ved færre timer risikerer du at miste din SU.",
+  },
 
   // Student pension step
   "input.student.pension.desc": {
