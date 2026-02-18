@@ -471,7 +471,6 @@ export function Results() {
 
   // Accuracy report
   const [actualNet, setActualNet] = useState("");
-  const [accuracyConsent, setAccuracyConsent] = useState(false);
   const [accuracyStatus, setAccuracyStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   // Thumbs feedback
@@ -1403,19 +1402,11 @@ export function Results() {
                     <span className="text-xs text-muted-foreground whitespace-nowrap">{t("accuracy.per_month")}</span>
                   </div>
                 </div>
-                <label className="flex items-start gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={accuracyConsent}
-                    onChange={(e) => setAccuracyConsent(e.target.checked)}
-                    className="mt-0.5 rounded border-border"
-                  />
-                  <span className="text-xs text-muted-foreground leading-relaxed">{t("accuracy.consent")}</span>
-                </label>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={!actualNet || !accuracyConsent || accuracyStatus === "sending"}
+                  className="flex items-start gap-2 h-auto py-2 px-3 text-left whitespace-normal"
+                  disabled={!actualNet || accuracyStatus === "sending"}
                   onClick={async () => {
                     setAccuracyStatus("sending");
                     try {
@@ -1436,7 +1427,7 @@ export function Results() {
                     setAccuracyStatus("success");
                   }}
                 >
-                  {t("accuracy.submit")}
+                  <span className="text-xs leading-relaxed text-muted-foreground">{t("accuracy.consent")}</span>
                 </Button>
               </div>
             </div>
