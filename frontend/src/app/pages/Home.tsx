@@ -131,7 +131,7 @@ export function Home() {
             </div>
 
             {/* Right — live salary preview */}
-            <div className="flex-shrink-0 w-full max-w-xs lg:w-auto flex flex-col">
+            <div className="flex-shrink-0 w-full max-w-xs self-center lg:self-auto lg:w-auto flex flex-col">
               <SalaryPreview />
             </div>
           </div>
