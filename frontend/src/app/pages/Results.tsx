@@ -724,17 +724,18 @@ export function Results() {
 
         {/* ── Tabs ─────────────────────────────────────────────── */}
         <Tabs defaultValue="breakdown" className="w-full">
-          <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent p-0 h-auto flex-wrap">
+         <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
+          <TabsList className="w-full justify-start bg-muted/40 border-b border-border rounded-none p-1 h-auto flex-wrap gap-1">
             <TabsTrigger
               value="breakdown"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
+              className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
             >
               {t("results.tab.breakdown")}
             </TabsTrigger>
             {(serviceId === "fulltime" || serviceId === "parttime") && (
               <TabsTrigger
                 value="chart"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
+                className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
               >
                 <BarChart3 className="w-4 h-4 mr-1" /> {t("results.tab.charts")}
               </TabsTrigger>
@@ -742,7 +743,7 @@ export function Results() {
             {!isStudent && r.total_pension > 0 && (
               <TabsTrigger
                 value="pension"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
+                className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
               >
                 <Wallet className="w-4 h-4 mr-1" /> {t("results.tab.pension")}
               </TabsTrigger>
@@ -750,22 +751,22 @@ export function Results() {
             {!(isStudent && (r as StudentResult).work_gross_annual === 0) && (
             <TabsTrigger
               value="ferie"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
+              className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
             >
               <Umbrella className="w-4 h-4 mr-1" /> {t("results.tab.ferie")}
             </TabsTrigger>
             )}
             <TabsTrigger
               value="glossary"
-              className="data-[state=active]:border-b-2 data-[state=active]:border-[var(--nordic-accent)] rounded-none px-6 py-3"
+              className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
             >
               <HelpCircle className="w-4 h-4 mr-1" /> {t("results.tab.glossary")}
             </TabsTrigger>
           </TabsList>
 
           {/* ── Breakdown tab ──────────────────────────────────── */}
-          <TabsContent value="breakdown" className="mt-6">
-            <div className="bg-card border border-border rounded-[var(--radius-lg)] divide-y divide-border">
+          <TabsContent value="breakdown" className="mt-0">
+            <div className="divide-y divide-border">
               {/* Header row */}
               <div className="p-4 flex items-center justify-between text-xs text-muted-foreground font-medium uppercase tracking-wide">
                 <span>{t("results.item")}</span>
@@ -838,7 +839,7 @@ export function Results() {
 
           {/* ── Chart tab ──────────────────────────────────────── */}
           {(serviceId === "fulltime" || serviceId === "parttime") && (
-            <TabsContent value="chart" className="mt-6 space-y-8">
+            <TabsContent value="chart" className="mt-0 p-6 space-y-8">
 
               {/* Net vs Gross curve */}
               {curveData.length > 0 && (() => {
@@ -1073,8 +1074,8 @@ export function Results() {
 
           {/* ── Pension tab ────────────────────────────────────── */}
           {!isStudent && r.total_pension > 0 && (
-            <TabsContent value="pension" className="mt-6">
-              <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6 space-y-6">
+            <TabsContent value="pension" className="mt-0">
+              <div className="p-6 space-y-6">
                 <h3 className="text-foreground font-medium">
                   {t("pension.accrual")}
                 </h3>
@@ -1113,7 +1114,7 @@ export function Results() {
           )}
 
           {/* ── Ferie tab ──────────────────────────────────────── */}
-          <TabsContent value="ferie" className="mt-6">
+          <TabsContent value="ferie" className="mt-0">
             {(() => {
               const isSalaried = serviceId === "fulltime";
               const isHourly = serviceId === "parttime";
@@ -1128,7 +1129,7 @@ export function Results() {
                 : Math.round(ferieAmount / 25);
 
               return (
-                <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6 space-y-6">
+                <div className="p-6 space-y-6">
                   <h3 className="text-foreground font-medium">
                     {t("ferie.title")}
                   </h3>
@@ -1226,8 +1227,8 @@ export function Results() {
           </TabsContent>
 
           {/* ── Glossary tab ───────────────────────────────────── */}
-          <TabsContent value="glossary" className="mt-6">
-            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
+          <TabsContent value="glossary" className="mt-0">
+            <div className="p-6">
               <h3 className="text-foreground font-medium mb-4">
                 {t("glossary.title")}
               </h3>
@@ -1245,6 +1246,7 @@ export function Results() {
               </div>
             </div>
           </TabsContent>
+         </div>
         </Tabs>
 
         {/* ── Student fribeloeb indicator ───────────────────────── */}
