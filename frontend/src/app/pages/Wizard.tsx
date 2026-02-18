@@ -268,7 +268,19 @@ export function Wizard() {
           aars_fribeloeb: aarsFribeloeb,
         });
       }
-      navigate(`/results/${serviceId}`, { state: result });
+      navigate(`/results/${serviceId}`, { state: {
+        ...result,
+        _input_pension_pct: Number(pensionPct),
+        _input_employer_pension_pct: Number(erPensionPct),
+        _input_is_church: isChurch,
+        _input_atp_monthly: atpMonthly,
+        _input_other_pay_monthly: Number(otherPay),
+        _input_taxable_benefits_monthly: Number(taxBenefits),
+        _input_pretax_deductions_monthly: Number(pretaxDed),
+        _input_aftertax_deductions_monthly: Number(aftertaxDed),
+        _input_transport_km: Number(transportKm),
+        _input_union_fees_annual: Number(unionFees),
+      } });
     } catch (err) {
       console.error(err);
     } finally {

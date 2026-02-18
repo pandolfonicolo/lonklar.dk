@@ -41,6 +41,11 @@ import {
   CollapsibleTrigger,
 } from "../components/ui/collapsible";
 import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "../components/ui/tooltip";
+import {
   fetchMeta,
   fetchCurve,
   fetchHoursCurve,
@@ -74,6 +79,14 @@ function fmtAxisDKK(v: number): string {
   if (abs >= 1_000_000) return `${(v / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
   if (abs >= 1_000) return `${(v / 1_000).toFixed(0)}k`;
   return String(v);
+}
+
+function fmtAxisEUR(v: number, rate: number): string {
+  const eur = v / rate;
+  const abs = Math.abs(eur);
+  if (abs >= 1_000_000) return `€${(eur / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+  if (abs >= 1_000) return `€${(eur / 1_000).toFixed(0)}k`;
+  return `€${Math.round(eur)}`;
 }
 
 function pct(n: number): string {
@@ -481,14 +494,33 @@ export function Results() {
   useEffect(() => {
     if (!result || !serviceId) return;
     const r = result as any;
+    const pensionPct = r._input_pension_pct ?? 0;
+    const erPensionPct = r._input_employer_pension_pct ?? 0;
+    const isChurch = r._input_is_church ?? (r.kirkeskat > 0);
+    const atpMonthly = r._input_atp_monthly ?? 0;
+    const otherPayMonthly = r._input_other_pay_monthly ?? 0;
+    const taxBenefitsMonthly = r._input_taxable_benefits_monthly ?? 0;
+    const pretaxDedMonthly = r._input_pretax_deductions_monthly ?? 0;
+    const aftertaxDedMonthly = r._input_aftertax_deductions_monthly ?? 0;
+    const transportKm = r._input_transport_km ?? 0;
+    const unionFeesAnnual = r._input_union_fees_annual ?? 0;
+    const extraParams = {
+      other_pay_monthly: otherPayMonthly,
+      taxable_benefits_monthly: taxBenefitsMonthly,
+      pretax_deductions_monthly: pretaxDedMonthly,
+      aftertax_deductions_monthly: aftertaxDedMonthly,
+      transport_km: transportKm,
+      union_fees_annual: unionFeesAnnual,
+    };
     if (serviceId === "fulltime" || serviceId === "parttime") {
       fetchCurve({
         kommune: r.kommune,
-        pension_pct: 0, // simplified: just use raw to show the curve shape
-        employer_pension_pct: 0,
-        is_church: true,
+        pension_pct: pensionPct,
+        employer_pension_pct: erPensionPct,
+        is_church: isChurch,
         is_hourly: serviceId === "parttime",
-        atp_monthly: 0,
+        atp_monthly: atpMonthly,
+        ...extraParams,
         max_gross: 1_680_000,   // 140k monthly × 12
         step_monthly: 500,      // 500 DKK granularity
       })
@@ -499,10 +531,11 @@ export function Results() {
       fetchHoursCurve({
         hourly_rate: r.hourly_rate,
         kommune: r.kommune,
-        pension_pct: 0,
-        employer_pension_pct: 0,
-        is_church: true,
-        atp_monthly: 0,
+        pension_pct: pensionPct,
+        employer_pension_pct: erPensionPct,
+        is_church: isChurch,
+        atp_monthly: atpMonthly,
+        ...extraParams,
         max_hours: 300,
       })
         .then(setHoursCurveData)
@@ -573,9 +606,31 @@ export function Results() {
               <p className="text-sm opacity-90 mb-2">
                 {period === "annual" ? t("results.netAnnual") : t("results.netMonthly")}
               </p>
-              <h1 className="text-5xl font-mono">
-                {fmtDKK(displayAmount)} kr
-              </h1>
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <h1 className="text-5xl font-mono">
+                  {fmtDKK(displayAmount)} kr
+                </h1>
+                {/* ±1.5% margin indicator */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span
+                      className="inline-flex items-center gap-1.5 text-xl font-mono cursor-help transition-opacity hover:opacity-100"
+                      style={{
+                        color: 'rgba(255,255,255,0.55)',
+                      }}
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                      ±{showEur
+                        ? fmtEUR(Math.round(displayAmount * 0.015), eurRate)
+                        : `${fmtDKK(Math.round(displayAmount * 0.015))} kr`
+                      }
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs">
+                    {t("results.marginTooltip" as any)}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               {showEur && (
                 <p className="text-lg opacity-90 mt-1 font-mono">
                   {fmtEUR(displayAmount, eurRate)}
@@ -809,9 +864,11 @@ export function Results() {
                         type="number"
                         domain={[0, 140000]}
                         ticks={ticks}
-                        tickFormatter={(v: number) => fmtAxisDKK(v * cMul)}
+                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
                         label={{
-                          value: period === "annual" ? t('chart.grossAnnual' as any) : t('chart.grossMonth'),
+                          value: showEur
+                            ? (period === "annual" ? t('chart.grossAnnualEur' as any) : t('chart.grossMonthEur' as any))
+                            : (period === "annual" ? t('chart.grossAnnual' as any) : t('chart.grossMonth')),
                           position: "insideBottom",
                           offset: -5,
                         }}
@@ -820,13 +877,17 @@ export function Results() {
                       />
                       <YAxis
                         type="number"
-                        tickFormatter={(v: number) => fmtAxisDKK(v * cMul)}
+                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
                         domain={[0, 140000]}
                         ticks={ticks}
                         label={{
-                          value: "DKK/" + (period === "annual" ? t('chart.dkkYear' as any) : t('chart.dkkMonth')),
+                          value: showEur
+                            ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
+                            : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
                           angle: -90,
                           position: "insideLeft",
+                          style: { textAnchor: 'middle' },
+                          dx: -5,
                         }}
                         stroke="var(--muted-foreground)"
                         fontSize={12}
@@ -852,8 +913,8 @@ export function Results() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
                                 {bracket.label}
                               </p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {fmtDKK(gVal)} kr</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {fmtDKK(nVal)} kr <span style={{ opacity: 0.7 }}>({netEur})</span></p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}{showEur ? '' : ` (${netEur})`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -943,11 +1004,15 @@ export function Results() {
                         fontSize={12}
                       />
                       <YAxis
-                        tickFormatter={(v: number) => fmtAxisDKK(v * hMul)}
+                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * hMul, eurRate) : fmtAxisDKK(v * hMul)}
                         label={{
-                          value: "DKK/" + (period === "annual" ? t('chart.dkkYear' as any) : t('chart.dkkMonth')),
+                          value: showEur
+                            ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
+                            : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
                           angle: -90,
                           position: "insideLeft",
+                          style: { textAnchor: 'middle' },
+                          dx: -5,
                         }}
                         stroke="var(--muted-foreground)"
                         fontSize={12}
@@ -963,9 +1028,9 @@ export function Results() {
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{d.hours_month} {t('chart.hoursMonth')}</p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {fmtDKK(gVal)} kr</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {fmtDKK(nVal)} kr</p>
-                              <p style={{ color: 'var(--destructive)' }}>{t('chart.taxDed')}: {fmtDKK(tax)} kr</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {fmtDKK(gVal)} kr{showEur ? ` (${fmtEUR(gVal, eurRate)})` : ''}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {fmtDKK(nVal)} kr{showEur ? ` (${fmtEUR(nVal, eurRate)})` : ''}</p>
+                              <p style={{ color: 'var(--destructive)' }}>{t('chart.taxDed')}: {fmtDKK(tax)} kr{showEur ? ` (${fmtEUR(tax, eurRate)})` : ''}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );

@@ -148,6 +148,12 @@ def compute_curve(req: CurveRequest):
             employer_pension_pct=req.employer_pension_pct / 100,
             is_hourly=req.is_hourly,
             atp_monthly=req.atp_monthly,
+            other_pay_annual=req.other_pay_monthly * 12,
+            taxable_benefits_annual=req.taxable_benefits_monthly * 12,
+            pretax_deductions_annual=req.pretax_deductions_monthly * 12,
+            aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
+            transport_km=req.transport_km,
+            union_fees_annual=req.union_fees_annual,
         )
         data.append({
             "gross_annual": round(gross),
@@ -174,6 +180,12 @@ def compute_hours_curve(req: HoursCurveRequest):
             employer_pension_pct=req.employer_pension_pct / 100,
             is_hourly=True,
             atp_monthly=req.atp_monthly,
+            other_pay_annual=req.other_pay_monthly * 12,
+            taxable_benefits_annual=req.taxable_benefits_monthly * 12,
+            pretax_deductions_annual=req.pretax_deductions_monthly * 12,
+            aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
+            transport_km=req.transport_km,
+            union_fees_annual=req.union_fees_annual,
         )
         data.append({
             "hours_month": h,

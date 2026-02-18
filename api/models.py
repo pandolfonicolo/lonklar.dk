@@ -61,6 +61,12 @@ class CurveRequest(BaseModel):
     is_church: bool = Field(True)
     is_hourly: bool = Field(False)
     atp_monthly: float = Field(94.65)
+    other_pay_monthly: float = Field(0.0)
+    taxable_benefits_monthly: float = Field(0.0)
+    pretax_deductions_monthly: float = Field(0.0)
+    aftertax_deductions_monthly: float = Field(0.0)
+    transport_km: float = Field(0.0)
+    union_fees_annual: float = Field(0.0)
     max_gross: float = Field(1_200_000)
     min_gross: float = Field(0)
     step_monthly: float = Field(0)       # 0 = use legacy `points` logic
@@ -74,6 +80,12 @@ class HoursCurveRequest(BaseModel):
     employer_pension_pct: float = Field(0.0)
     is_church: bool = Field(True)
     atp_monthly: float = Field(0.0)
+    other_pay_monthly: float = Field(0.0)
+    taxable_benefits_monthly: float = Field(0.0)
+    pretax_deductions_monthly: float = Field(0.0)
+    aftertax_deductions_monthly: float = Field(0.0)
+    transport_km: float = Field(0.0)
+    union_fees_annual: float = Field(0.0)
     max_hours: int = Field(300)
 
 

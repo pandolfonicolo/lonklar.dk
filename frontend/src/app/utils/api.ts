@@ -94,6 +94,12 @@ export interface CurveRequest {
   is_church: boolean;
   is_hourly?: boolean;
   atp_monthly?: number;
+  other_pay_monthly?: number;
+  taxable_benefits_monthly?: number;
+  pretax_deductions_monthly?: number;
+  aftertax_deductions_monthly?: number;
+  transport_km?: number;
+  union_fees_annual?: number;
   max_gross?: number;
   min_gross?: number;
   step_monthly?: number;
@@ -107,6 +113,12 @@ export interface HoursCurveRequest {
   employer_pension_pct: number;
   is_church: boolean;
   atp_monthly?: number;
+  other_pay_monthly?: number;
+  taxable_benefits_monthly?: number;
+  pretax_deductions_monthly?: number;
+  aftertax_deductions_monthly?: number;
+  transport_km?: number;
+  union_fees_annual?: number;
   max_hours?: number;
 }
 
