@@ -1,5 +1,5 @@
 import React from "react";
-import { Lock } from "lucide-react";
+import { Lock, ArrowRight } from "lucide-react";
 
 interface ServiceCardProps {
   icon: React.ReactNode;
@@ -9,30 +9,41 @@ interface ServiceCardProps {
   onClick: () => void;
   comingSoon?: boolean;
   comingSoonLabel?: string;
+  /** Accent hue override — e.g. "var(--nordic-accent)" or a hex color */
+  accentColor?: string;
+  ctaLabel?: string;
 }
 
-export function ServiceCard({ icon, title, subtitle, description, onClick, comingSoon, comingSoonLabel }: ServiceCardProps) {
+export function ServiceCard({
+  icon,
+  title,
+  subtitle,
+  description,
+  onClick,
+  comingSoon,
+  comingSoonLabel,
+  accentColor = "var(--nordic-accent)",
+  ctaLabel = "Get started",
+}: ServiceCardProps) {
   if (comingSoon) {
     return (
-      <div
-        className="relative w-full h-full text-left bg-card/60 border border-border rounded-[var(--radius-xl)] flex flex-col overflow-hidden opacity-60 select-none"
-      >
+      <div className="relative w-full h-full text-left bg-card/50 border border-border/60 rounded-[var(--radius-xl)] flex flex-col overflow-hidden select-none">
         {/* Faded accent bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-muted-foreground/20 to-muted-foreground/10" />
+        <div className="h-1 w-full bg-gradient-to-r from-muted-foreground/15 to-transparent" />
 
         <div className="p-6 pt-5 flex flex-col flex-1">
-          <div className="flex-shrink-0 w-11 h-11 mb-5 rounded-xl bg-muted/60 text-muted-foreground/50 flex items-center justify-center">
+          <div className="flex-shrink-0 w-12 h-12 mb-5 rounded-xl bg-muted/50 text-muted-foreground/40 flex items-center justify-center">
             {icon}
           </div>
-          <h3 className="text-lg font-semibold text-muted-foreground mb-0.5">{title}</h3>
+          <h3 className="text-lg font-semibold text-muted-foreground/70 mb-0.5">{title}</h3>
           {subtitle && (
-            <span className="text-xs text-muted-foreground/40 italic mb-3 block">{subtitle}</span>
+            <span className="text-xs text-muted-foreground/30 italic mb-3 block">{subtitle}</span>
           )}
-          <p className="text-sm text-muted-foreground/50 leading-relaxed flex-1">{description}</p>
+          <p className="text-sm text-muted-foreground/40 leading-relaxed flex-1">{description}</p>
 
           {/* Coming soon badge */}
-          <div className="mt-4 flex items-center gap-1.5">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted text-xs font-medium text-muted-foreground">
+          <div className="mt-5 flex items-center gap-1.5">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/80 text-xs font-medium text-muted-foreground/70 border border-border/40">
               <Lock className="w-3 h-3" />
               {comingSoonLabel || "Coming soon"}
             </span>
@@ -45,25 +56,56 @@ export function ServiceCard({ icon, title, subtitle, description, onClick, comin
   return (
     <button
       onClick={onClick}
-      className="group relative w-full h-full text-left bg-card border border-border rounded-[var(--radius-xl)] transition-all duration-300 hover:shadow-lg hover:border-[var(--nordic-accent)]/50 hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex flex-col overflow-hidden"
+      className="group relative w-full h-full text-left bg-card border border-border rounded-[var(--radius-xl)] shadow-[var(--shadow-sm)] transition-all duration-300 hover:shadow-xl hover:border-[var(--nordic-accent)]/40 hover:-translate-y-1.5 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 flex flex-col overflow-hidden"
     >
-      {/* Accent gradient bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-[var(--nordic-accent)] to-[var(--nordic-accent-light)] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      {/* Accent gradient bar — always visible */}
+      <div
+        className="h-1 w-full transition-opacity duration-300"
+        style={{
+          background: `linear-gradient(to right, ${accentColor}, ${accentColor}40)`,
+          opacity: 0.5,
+        }}
+      />
+      {/* Full-opacity overlay on hover */}
+      <div
+        className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+        style={{
+          background: `linear-gradient(to right, ${accentColor}, ${accentColor}80)`,
+        }}
+      />
 
       <div className="p-6 pt-5 flex flex-col flex-1">
-        <div className="flex-shrink-0 w-11 h-11 mb-5 rounded-xl bg-[var(--nordic-accent)]/10 text-[var(--nordic-accent)] flex items-center justify-center transition-all duration-300 group-hover:bg-[var(--nordic-accent)] group-hover:text-white group-hover:shadow-md group-hover:shadow-[var(--nordic-accent)]/20 group-hover:scale-110">
-          {icon}
+        {/* Icon — larger, tinted with card accent, fills on hover */}
+        <div className="relative flex-shrink-0 w-12 h-12 mb-5 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:shadow-md overflow-hidden">
+          {/* Tinted bg (resting) */}
+          <div
+            className="absolute inset-0 transition-opacity duration-300 group-hover:opacity-0 rounded-xl"
+            style={{ backgroundColor: `${accentColor}15` }}
+          />
+          {/* Solid bg (hover) */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"
+            style={{ backgroundColor: accentColor, boxShadow: `0 4px 12px ${accentColor}30` }}
+          />
+          <div className="relative z-10 transition-colors duration-300" style={{ color: accentColor }}>
+            <div className="group-hover:text-white transition-colors duration-300">
+              {icon}
+            </div>
+          </div>
         </div>
-        <h3 className="text-lg font-semibold text-card-foreground mb-0.5 group-hover:text-[var(--nordic-accent)] transition-colors duration-200">{title}</h3>
+
+        <h3 className="text-lg font-semibold text-card-foreground mb-0.5 group-hover:text-[var(--nordic-accent)] transition-colors duration-200">
+          {title}
+        </h3>
         {subtitle && (
           <span className="text-xs text-muted-foreground/60 italic mb-3 block">{subtitle}</span>
         )}
         <p className="text-sm text-muted-foreground leading-relaxed flex-1">{description}</p>
 
-        {/* Arrow hint */}
-        <div className="mt-4 flex items-center gap-1.5 text-xs font-medium text-[var(--nordic-accent)] opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-0 group-hover:translate-x-1">
-          <span>Get started</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+        {/* CTA — always visible, animates on hover */}
+        <div className="mt-5 flex items-center gap-1.5 text-xs font-semibold transition-all duration-300 group-hover:translate-x-1" style={{ color: accentColor }}>
+          <span>{ctaLabel}</span>
+          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
         </div>
       </div>
     </button>

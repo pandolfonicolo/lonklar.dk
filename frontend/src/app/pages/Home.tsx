@@ -18,6 +18,7 @@ export function Home() {
       subtitleKey: "home.fulltime.subtitle" as const,
       descKey: "home.fulltime.desc" as const,
       comingSoon: false,
+      accent: "#D4A843",       // warm gold
     },
     {
       id: "parttime",
@@ -26,6 +27,7 @@ export function Home() {
       subtitleKey: "home.parttime.subtitle" as const,
       descKey: "home.parttime.desc" as const,
       comingSoon: true,
+      accent: "#5B7A9E",       // nordic blue (default)
     },
     {
       id: "student",
@@ -34,6 +36,7 @@ export function Home() {
       subtitleKey: "home.student.subtitle" as const,
       descKey: "home.student.desc" as const,
       comingSoon: false,
+      accent: "#6B9E7B",       // sage green
     },
   ];
 
@@ -145,17 +148,26 @@ export function Home() {
             {t("home.cards.heading")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
-            {services.map((s) => (
-              <ServiceCard
+            {services.map((s, idx) => (
+              <motion.div
                 key={s.id}
-                icon={s.icon}
-                title={t(s.titleKey)}
-                subtitle={t(s.subtitleKey)}
-                description={t(s.descKey)}
-                onClick={() => navigate(`/wizard/${s.id}`)}
-                comingSoon={s.comingSoon}
-                comingSoonLabel={t("home.comingSoon")}
-              />
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.45, delay: 0.15 + idx * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className="flex"
+              >
+                <ServiceCard
+                  icon={s.icon}
+                  title={t(s.titleKey)}
+                  subtitle={t(s.subtitleKey)}
+                  description={t(s.descKey)}
+                  onClick={() => navigate(`/wizard/${s.id}`)}
+                  comingSoon={s.comingSoon}
+                  comingSoonLabel={t("home.comingSoon")}
+                  accentColor={s.accent}
+                  ctaLabel={t("home.cards.cta")}
+                />
+              </motion.div>
             ))}
           </div>
         </div>

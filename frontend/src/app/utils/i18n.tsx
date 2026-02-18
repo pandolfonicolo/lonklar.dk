@@ -62,6 +62,7 @@ const translations = {
 
   // Section heading above cards
   "home.cards.heading": { en: "Choose your calculator", da: "Vælg din beregner", it: "Scegli il calcolatore", de: "Wähle deinen Rechner", sv: "Välj din kalkylator", es: "Elige tu calculadora", nb: "Velg din kalkulator" },
+  "home.cards.cta": { en: "Get started", da: "Kom i gang", it: "Inizia", de: "Los geht's", sv: "Kom igång", es: "Empezar", nb: "Kom i gang" },
 
   // Service cards
   "home.fulltime.title": { en: "Full-time job", da: "Fuldtidsjob", it: "Lavoro full-time", de: "Vollzeitjob", sv: "Heltidsjobb", es: "Trabajo a tiempo completo", nb: "Fulltidsjobb" },
