@@ -26,7 +26,7 @@ export function Home() {
       titleKey: "home.parttime.title" as const,
       subtitleKey: "home.parttime.subtitle" as const,
       descKey: "home.parttime.desc" as const,
-      comingSoon: true,
+      comingSoon: false,
       accent: "#5B7A9E",       // nordic blue (default)
     },
     {
