@@ -108,6 +108,7 @@ export function Wizard() {
   const [transportKm, setTransportKm] = useState("0");
   const [unionFees, setUnionFees] = useState("0");
   const [feriefridage, setFeriefridage] = useState("0");
+  const [ferieEnabled, setFerieEnabled] = useState(false);
 
   // ── Student state ──────────────────────────────────────────────
   const [eduType, setEduType] = useState<"vid" | "ungdom">("vid");
@@ -934,8 +935,12 @@ export function Wizard() {
             <div className="flex items-center gap-3">
               <Switch
                 id="feriefridage"
-                checked={Number(feriefridage) > 0}
-                onCheckedChange={(on) => setFeriefridage(on ? "5" : "0")}
+                checked={ferieEnabled}
+                onCheckedChange={(on) => {
+                  setFerieEnabled(on);
+                  if (on) setFeriefridage("5");
+                  else setFeriefridage("0");
+                }}
               />
               <div className="flex-1 min-w-0">
                 <Label htmlFor="feriefridage">{t("input.feriefridage")}</Label>
@@ -943,7 +948,7 @@ export function Wizard() {
               </div>
               <Tip text={t("input.feriefridage.tip")} />
             </div>
-            {Number(feriefridage) > 0 && (
+            {ferieEnabled && (
               <div className="flex items-center gap-3 pl-[52px]">
                 <Label className="text-sm text-muted-foreground whitespace-nowrap">
                   {lang === "da" ? "Antal dage" : "Number of days"}
@@ -955,7 +960,14 @@ export function Wizard() {
                     max="10"
                     step="1"
                     value={feriefridage}
-                    onChange={(e) => setFeriefridage(e.target.value)}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setFeriefridage(v);
+                    }}
+                    onBlur={() => {
+                      // If user leaves field empty or 0, default to 5
+                      if (feriefridage === "" || feriefridage === "0") setFeriefridage("5");
+                    }}
                     className="h-10 text-sm"
                   />
                 </div>

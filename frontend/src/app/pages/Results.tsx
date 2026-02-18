@@ -378,7 +378,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
   return (
     <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
       <h3 className="text-foreground font-medium mb-1">{t("chart.pie.title" as any)}</h3>
-      <p className="text-sm text-muted-foreground mb-6">{fmtDKK(grossVal)} kr/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}{showEur ? ` (${fmtEUR(grossVal, eurRate)})` : ''}</p>
+      <p className="text-sm text-muted-foreground mb-6">{showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}</p>
 
       <div className="flex flex-col sm:flex-row items-center gap-6">
         {/* Donut */}
@@ -408,7 +408,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
                   return (
                     <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '8px 12px', lineHeight: 1.6 }}>
                       <p style={{ fontWeight: 600 }}>{t(d.key as any)}</p>
-                      <p>{fmtDKK(d.value)} kr{showEur ? ` (${fmtEUR(d.value, eurRate)})` : ''} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
+                      <p>{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
                     </div>
                   );
                 }}
@@ -430,8 +430,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
                 <span className="text-muted-foreground">{t(d.key as any)}</span>
                 <span className="text-muted-foreground/60 text-xs ml-1">({pctVal}%)</span>
                 <span className="font-medium text-foreground ml-auto tabular-nums">
-                  {fmtDKK(d.value)} kr
-                  {showEur && <span className="text-muted-foreground/60 text-xs ml-1">{fmtEUR(d.value, eurRate)}</span>}
+                  {showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`}
                 </span>
               </div>
             );
@@ -440,8 +439,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
             <span className="w-3 h-3 flex-shrink-0" />
             <span className="text-muted-foreground font-medium">Total</span>
             <span className="font-semibold text-foreground ml-auto tabular-nums">
-              {fmtDKK(grossVal)} kr
-              {showEur && <span className="text-muted-foreground/60 text-xs ml-1">{fmtEUR(grossVal, eurRate)}</span>}
+              {showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}
             </span>
           </div>
         </div>
@@ -580,9 +578,8 @@ export function Results() {
 
   const formatVal = (v: number): string => {
     const display = period === "annual" ? v : v / 12;
-    const dkk = fmtDKK(display);
-    if (showEur) return `${dkk} kr (${fmtEUR(display, eurRate)})`;
-    return `${dkk} kr`;
+    if (showEur) return fmtEUR(display, eurRate);
+    return `${fmtDKK(display)} kr`;
   };
 
   return (
@@ -607,7 +604,10 @@ export function Results() {
               </p>
               <div className="flex items-baseline gap-3 flex-wrap">
                 <h1 className="text-5xl font-mono">
-                  {fmtDKK(displayAmount)} kr
+                  {showEur
+                    ? fmtEUR(displayAmount, eurRate)
+                    : `${fmtDKK(displayAmount)} kr`
+                  }
                 </h1>
                 {/* ±1.5% margin indicator */}
                 <Tooltip>
@@ -630,15 +630,6 @@ export function Results() {
                   </TooltipContent>
                 </Tooltip>
               </div>
-              {showEur && (
-                <p className="text-lg opacity-90 mt-1 font-mono">
-                  {fmtEUR(displayAmount, eurRate)}
-                </p>
-              )}
-              <p className="text-sm opacity-75 mt-1">
-                {fmtDKK(period === "annual" ? netMonthly : netAnnual)} kr{" "}
-                {period === "annual" ? t("perLabel.month" as any) : t("perLabel.year" as any)}
-              </p>
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-[var(--radius-md)]">
               <TrendingDown className="w-4 h-4" />
@@ -660,42 +651,53 @@ export function Results() {
         </div>
 
         {/* ── Toggle controls ──────────────────────────────────── */}
-        <div className="flex flex-wrap items-center gap-6 mb-6 px-2">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-muted-foreground" />
-            <Label
-              htmlFor="period"
-              className="text-sm text-muted-foreground cursor-pointer"
+        <div className="flex flex-wrap items-center gap-3 mb-6">
+          {/* Period toggle */}
+          <div className="inline-flex items-center rounded-[var(--radius-lg)] bg-muted p-1 gap-0.5">
+            <button
+              onClick={() => setPeriod("monthly")}
+              className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
+                period === "monthly"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
               {t("results.monthly")}
-            </Label>
-            <Switch
-              id="period"
-              checked={period === "annual"}
-              onCheckedChange={(v) => setPeriod(v ? "annual" : "monthly")}
-            />
-            <Label className="text-sm text-muted-foreground cursor-pointer">
-              {t("results.annual")}
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Euro className="w-4 h-4 text-muted-foreground" />
-            <Label
-              htmlFor="eur"
-              className="text-sm text-muted-foreground cursor-pointer"
+            </button>
+            <button
+              onClick={() => setPeriod("annual")}
+              className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
+                period === "annual"
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
             >
-              {t("results.showEur")}
-            </Label>
-            <Switch
-              id="eur"
-              checked={showEur}
-              onCheckedChange={setShowEur}
-            />
-            {showEur && (
-              <span className="text-xs text-muted-foreground">
-                (1 EUR ≈ {eurRate} DKK)
-              </span>
-            )}
+              {t("results.annual")}
+            </button>
+          </div>
+
+          {/* Currency toggle */}
+          <div className="inline-flex items-center rounded-[var(--radius-lg)] bg-muted p-1 gap-0.5">
+            <button
+              onClick={() => setShowEur(false)}
+              className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
+                !showEur
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              DKK
+            </button>
+            <button
+              onClick={() => setShowEur(true)}
+              className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
+                showEur
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              EUR
+            </button>
           </div>
         </div>
 
@@ -707,8 +709,7 @@ export function Results() {
           {!isStudent && (
             <Stat
               label={`Pension (total)${perLabel}`}
-              value={`${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
-              eurSub={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
+              value={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
             />
           )}
           {isStudent && (
@@ -770,9 +771,9 @@ export function Results() {
               {/* Header row */}
               <div className="p-4 flex items-center justify-between text-xs text-muted-foreground font-medium uppercase tracking-wide">
                 <span>{t("results.item")}</span>
-                <div className="flex gap-8">
-                  <span className="w-28 text-right">{t("results.annualDKK")}</span>
-                  <span className="w-28 text-right">{t("results.monthlyDKK")}</span>
+                <div className="flex gap-3 sm:gap-8">
+                  <span className="w-20 sm:w-28 text-right">{showEur ? t("results.annualDKK" as any).replace('DKK','EUR') : t("results.annualDKK")}</span>
+                  <span className="w-20 sm:w-28 text-right">{showEur ? t("results.monthlyDKK" as any).replace('DKK','EUR') : t("results.monthlyDKK")}</span>
                 </div>
               </div>
               {breakdown.map((item, i) =>
@@ -781,11 +782,11 @@ export function Results() {
                 ) : (
                   <div
                     key={i}
-                    className={`p-4 flex items-center justify-between ${
-                      item.indent ? "pl-10" : ""
+                    className={`p-3 sm:p-4 flex items-center justify-between gap-2 ${
+                      item.indent ? "pl-6 sm:pl-10" : ""
                     } ${item.bold ? "bg-secondary/30" : ""}`}
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                       {item.color && (
                         <div
                           className="w-1 h-6 rounded-full shrink-0"
@@ -793,7 +794,7 @@ export function Results() {
                         />
                       )}
                       <p
-                        className={`text-sm truncate ${
+                        className={`text-xs sm:text-sm ${
                           item.bold
                             ? "font-semibold text-foreground"
                             : "text-foreground"
@@ -802,14 +803,12 @@ export function Results() {
                         {item.label}
                       </p>
                     </div>
-                    <div className="flex gap-8 shrink-0">
-                      <div className={`w-28 text-right font-mono text-sm ${item.bold ? "font-semibold" : ""}`}>
-                        <p>{fmtDKK(item.value)}</p>
-                        {showEur && <p className="text-xs text-muted-foreground/70">{fmtEUR(item.value, eurRate)}</p>}
+                    <div className="flex gap-3 sm:gap-8 shrink-0">
+                      <div className={`w-16 sm:w-28 text-right font-mono text-xs sm:text-sm ${item.bold ? "font-semibold" : ""}`}>
+                        <p>{showEur ? fmtEUR(item.value, eurRate) : fmtDKK(item.value)}</p>
                       </div>
-                      <div className={`w-28 text-right font-mono text-sm text-muted-foreground ${item.bold ? "font-semibold" : ""}`}>
-                        <p>{fmtDKK(item.value / 12)}</p>
-                        {showEur && <p className="text-xs text-muted-foreground/70">{fmtEUR(item.value / 12, eurRate)}</p>}
+                      <div className={`w-16 sm:w-28 text-right font-mono text-xs sm:text-sm text-muted-foreground ${item.bold ? "font-semibold" : ""}`}>
+                        <p>{showEur ? fmtEUR(item.value / 12, eurRate) : fmtDKK(item.value / 12)}</p>
                       </div>
                     </div>
                   </div>
@@ -819,10 +818,8 @@ export function Results() {
 
             {showEur && (
               <div className="mt-4 p-4 bg-secondary/30 rounded-[var(--radius-md)]">
-                <p className="text-sm text-muted-foreground">
-                  Net in EUR: {fmtEUR(netAnnual, eurRate)}/year ·{" "}
-                  {fmtEUR(netMonthly, eurRate)}/month (at 1 EUR = {eurRate}{" "}
-                  DKK)
+                <p className="text-xs text-muted-foreground">
+                  Exchange rate: 1 EUR = {eurRate} DKK
                 </p>
               </div>
             )}
@@ -840,6 +837,9 @@ export function Results() {
           {/* ── Chart tab ──────────────────────────────────────── */}
           {(serviceId === "fulltime" || serviceId === "parttime") && (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
+
+              {/* ── Salary breakdown pie ── */}
+              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
 
               {/* Net vs Gross curve */}
               {curveData.length > 0 && (() => {
@@ -899,7 +899,6 @@ export function Results() {
                           if (!d) return null;
                           const gVal = d.gross_monthly * cMul;
                           const nVal = d.net_monthly * cMul;
-                          const netEur = fmtEUR(nVal, eurRate);
                           const mellemThreshold = Math.round(641200 / 12);
                           const topThreshold = Math.round(777900 / 12);
                           const bracket = d.gross_monthly >= topThreshold
@@ -914,7 +913,7 @@ export function Results() {
                                 {bracket.label}
                               </p>
                               <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}{showEur ? '' : ` (${netEur})`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -1028,9 +1027,9 @@ export function Results() {
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{d.hours_month} {t('chart.hoursMonth')}</p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {fmtDKK(gVal)} kr{showEur ? ` (${fmtEUR(gVal, eurRate)})` : ''}</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {fmtDKK(nVal)} kr{showEur ? ` (${fmtEUR(nVal, eurRate)})` : ''}</p>
-                              <p style={{ color: 'var(--destructive)' }}>{t('chart.taxDed')}: {fmtDKK(tax)} kr{showEur ? ` (${fmtEUR(tax, eurRate)})` : ''}</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
+                              <p style={{ color: 'var(--destructive)' }}>{t('chart.taxDed')}: {showEur ? fmtEUR(tax, eurRate) : `${fmtDKK(tax)} kr`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -1067,8 +1066,6 @@ export function Results() {
                 );
               })()}
 
-              {/* ── Salary breakdown pie ── */}
-              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
             </TabsContent>
           )}
 
@@ -1082,33 +1079,24 @@ export function Results() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <PensionStat
                     label={`${t("pension.yours")}${perLabel}`}
-                    value={fmtDKK(r.employee_pension / (period === "annual" ? 1 : 12))}
-                    eurSub={showEur ? fmtEUR(r.employee_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
+                    value={showEur ? fmtEUR(r.employee_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.employee_pension / (period === "annual" ? 1 : 12))} kr`}
                   />
                   <PensionStat
                     label={`${t("pension.employer")}${perLabel}`}
-                    value={fmtDKK(r.employer_pension / (period === "annual" ? 1 : 12))}
-                    eurSub={showEur ? fmtEUR(r.employer_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
+                    value={showEur ? fmtEUR(r.employer_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.employer_pension / (period === "annual" ? 1 : 12))} kr`}
                   />
                   <PensionStat
                     label={`${t("pension.total")}${perLabel}`}
-                    value={fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))}
+                    value={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
                     highlight
-                    eurSub={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : undefined}
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Monthly: {fmtDKK(r.employee_pension / 12)} (you) +{" "}
-                  {fmtDKK(r.employer_pension / 12)} (employer) ={" "}
-                  <strong>{fmtDKK(r.total_pension / 12)} DKK/month</strong>{" "}
+                  Monthly: {showEur ? fmtEUR(r.employee_pension / 12, eurRate) : `${fmtDKK(r.employee_pension / 12)} kr`} (you) +{" "}
+                  {showEur ? fmtEUR(r.employer_pension / 12, eurRate) : `${fmtDKK(r.employer_pension / 12)} kr`} (employer) ={" "}
+                  <strong>{showEur ? fmtEUR(r.total_pension / 12, eurRate) : `${fmtDKK(r.total_pension / 12)} DKK`}/month</strong>{" "}
                   to pension
                 </p>
-                {showEur && (
-                  <p className="text-xs text-muted-foreground">
-                    ≈ {fmtEUR(r.total_pension, eurRate)}/year pension
-                    accrual
-                  </p>
-                )}
               </div>
             </TabsContent>
           )}
@@ -1164,26 +1152,16 @@ export function Results() {
                           : t("ferie.feriepenge")}
                       </p>
                       <p className="text-2xl font-mono text-foreground">
-                        {fmtDKK(ferieAmount)} kr
+                        {showEur ? fmtEUR(ferieAmount, eurRate) : `${fmtDKK(ferieAmount)} kr`}
                       </p>
-                      {showEur && (
-                        <p className="text-xs text-muted-foreground mt-1 font-mono">
-                          {fmtEUR(ferieAmount, eurRate)}
-                        </p>
-                      )}
                     </div>
                     <div className="bg-[var(--nordic-accent-light)] border border-[var(--nordic-accent)] rounded-[var(--radius-md)] p-4">
                       <p className="text-xs text-muted-foreground mb-1">
                         {t("ferie.dailyRate")}
                       </p>
                       <p className="text-2xl font-mono text-foreground">
-                        {fmtDKK(dailyRate)} kr
+                        {showEur ? fmtEUR(dailyRate, eurRate) : `${fmtDKK(dailyRate)} kr`}
                       </p>
-                      {showEur && (
-                        <p className="text-xs text-muted-foreground mt-1 font-mono">
-                          {fmtEUR(dailyRate, eurRate)}
-                        </p>
-                      )}
                     </div>
                     {feriefridageDays > 0 && (
                       <div className="bg-secondary/50 border border-[var(--nordic-accent)]/50 rounded-[var(--radius-md)] p-4">
@@ -1191,16 +1169,11 @@ export function Results() {
                           {t("ferie.feriefridage")}
                         </p>
                         <p className="text-2xl font-mono text-foreground">
-                          {fmtDKK(feriefridageValue)} kr
+                          {showEur ? fmtEUR(feriefridageValue, eurRate) : `${fmtDKK(feriefridageValue)} kr`}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {feriefridageDays} × {fmtDKK(dailyRate)} kr
+                          {feriefridageDays} × {showEur ? fmtEUR(dailyRate, eurRate) : `${fmtDKK(dailyRate)} kr`}
                         </p>
-                        {showEur && (
-                          <p className="text-xs text-muted-foreground mt-0.5 font-mono">
-                            {fmtEUR(feriefridageValue, eurRate)}
-                          </p>
-                        )}
                       </div>
                     )}
                   </div>
@@ -1221,19 +1194,19 @@ export function Results() {
                         style={{ width: "100%" }}
                       />
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                    <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground mt-2 overflow-x-auto">
                       {Array.from({ length: 12 }, (_, i) => (
-                        <span key={i} className="font-mono">
+                        <span key={i} className="font-mono min-w-[2rem] text-center">
                           {((i + 1) * 2.08).toFixed(1)}
                         </span>
                       ))}
                     </div>
-                    <div className="flex justify-between text-xs text-muted-foreground mt-0.5">
+                    <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground mt-0.5 overflow-x-auto">
                       {Array.from({ length: 12 }, (_, i) => {
                         const months = lang === "da"
                           ? ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"]
                           : ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-                        return <span key={i}>{months[i]}</span>;
+                        return <span key={i} className="min-w-[2rem] text-center">{months[i]}</span>;
                       })}
                     </div>
                   </div>
@@ -1493,12 +1466,11 @@ export function Results() {
 
 // ── Small components ─────────────────────────────────────────────────
 
-function Stat({ label, value, eurSub }: { label: string; value: string; eurSub?: string }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-card border border-border rounded-[var(--radius-md)] p-4">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="text-foreground font-mono text-sm">{value}</p>
-      {eurSub && <p className="text-xs text-muted-foreground font-mono mt-0.5">{eurSub}</p>}
     </div>
   );
 }
@@ -1507,12 +1479,10 @@ function PensionStat({
   label,
   value,
   highlight,
-  eurSub,
 }: {
   label: string;
   value: string;
   highlight?: boolean;
-  eurSub?: string;
 }) {
   return (
     <div
@@ -1523,8 +1493,7 @@ function PensionStat({
       }`}
     >
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-lg font-mono text-foreground">{value} kr</p>
-      {eurSub && <p className="text-xs text-muted-foreground font-mono mt-0.5">{eurSub}</p>}
+      <p className="text-lg font-mono text-foreground">{value}</p>
     </div>
   );
 }

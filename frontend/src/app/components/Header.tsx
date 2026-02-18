@@ -1,17 +1,32 @@
 import React from "react";
 import { Link } from "react-router";
-import { Sun, Moon, ChevronDown } from "lucide-react";
+import { Sun, Moon, ChevronDown, Menu, X } from "lucide-react";
 import { useI18n, type Lang } from "../utils/i18n";
 
 /* shared styles — every item uses the same size / shape */
 const navBtn =
   "h-8 px-3 text-sm text-muted-foreground hover:text-foreground rounded-[var(--radius-md)] hover:bg-secondary/80 transition-colors flex items-center gap-1.5";
+const navBtnMobile =
+  "w-full px-4 py-3 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary/80 transition-colors flex items-center gap-2 rounded-[var(--radius-md)]";
 const iconBtn =
   "h-8 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-[var(--radius-md)] hover:bg-secondary/80 transition-colors";
 const divider = "w-px h-4 bg-border";
 
 export function Header() {
   const { t } = useI18n();
+  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const mobileRef = React.useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!mobileOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (mobileRef.current && !mobileRef.current.contains(e.target as Node)) setMobileOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [mobileOpen]);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -27,13 +42,13 @@ export function Header() {
             </span>
           </Link>
 
-          {/* Unified nav bar */}
-          <nav className="flex items-center gap-1 rounded-[var(--radius-lg)] bg-secondary/40 p-1">
-            <Link to="/how-it-works" className={navBtn}>
+          {/* Desktop nav */}
+          <nav className="hidden sm:flex items-center gap-1 rounded-[var(--radius-lg)] bg-secondary/40 p-1">
+            <Link to="/how-it-works" className={`${navBtn} whitespace-nowrap`}>
               {t("nav.methodology")}
             </Link>
             <div className={divider} />
-            <Link to="/feedback" className={navBtn}>
+            <Link to="/feedback" className={`${navBtn} whitespace-nowrap`}>
               {t("nav.feedback")}
             </Link>
             <div className={divider} />
@@ -41,6 +56,42 @@ export function Header() {
             <div className={divider} />
             <DarkModeToggle />
           </nav>
+
+          {/* Mobile hamburger button */}
+          <div ref={mobileRef} className="sm:hidden relative">
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={iconBtn}
+              aria-label="Toggle menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            {/* Mobile dropdown */}
+            {mobileOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-[var(--radius-lg)] shadow-lg z-50 p-2 space-y-1">
+                <Link
+                  to="/how-it-works"
+                  onClick={() => setMobileOpen(false)}
+                  className={navBtnMobile}
+                >
+                  {t("nav.methodology")}
+                </Link>
+                <Link
+                  to="/feedback"
+                  onClick={() => setMobileOpen(false)}
+                  className={navBtnMobile}
+                >
+                  {t("nav.feedback")}
+                </Link>
+                <div className="border-t border-border my-1" />
+                <div className="flex items-center justify-between px-4 py-2">
+                  <LangSwitcher />
+                  <DarkModeToggle />
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>
