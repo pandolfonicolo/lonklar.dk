@@ -109,7 +109,7 @@ const GLOSSARY_KEYS = [
   "am", "bundskat", "kommuneskat", "kirkeskat", "mellemskat",
   "topskat", "toptopskat", "personfradrag", "beskfradrag", "jobfradrag",
   "befordring", "fagforening", "ligningsfradrag", "skatteloft",
-  "feriepenge", "ferietillaeg", "atp", "fribeloeb",
+  "feriepenge", "ferietillaeg", "feriefridage", "atp", "fribeloeb",
 ] as const;
 
 // ── Build breakdown rows ─────────────────────────────────────────────
@@ -1127,6 +1127,9 @@ export function Results() {
               const dailyRate = isSalaried
                 ? Math.round(grossAnnual / 260)
                 : Math.round(ferieAmount / 25);
+              const feriefridageDays = (r as any)._input_feriefridage ?? 0;
+              const totalDays = 25 + feriefridageDays;
+              const feriefridageValue = feriefridageDays * dailyRate;
 
               return (
                 <div className="p-6 space-y-6">
@@ -1135,14 +1138,23 @@ export function Results() {
                   </h3>
 
                   {/* Stat cards */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className={`grid grid-cols-1 gap-4 ${feriefridageDays > 0 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
                     <div className="bg-secondary/50 border border-border rounded-[var(--radius-md)] p-4">
                       <p className="text-xs text-muted-foreground mb-1">
-                        {t("ferie.daysPerYear")}
+                        {feriefridageDays > 0 ? t("ferie.totalDays") : t("ferie.daysPerYear")}
                       </p>
-                      <p className="text-2xl font-mono text-foreground">25</p>
+                      <p className="text-2xl font-mono text-foreground">
+                        {totalDays}
+                        {feriefridageDays > 0 && (
+                          <span className="text-sm text-muted-foreground ml-1">
+                            (25 + {feriefridageDays})
+                          </span>
+                        )}
+                      </p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        2.08 {t("ferie.daysPerMonth")}
+                        {feriefridageDays > 0
+                          ? `2.08 ${t("ferie.daysPerMonth")} + ${feriefridageDays} feriefridage`
+                          : `2.08 ${t("ferie.daysPerMonth")}`}
                       </p>
                     </div>
                     <div className="bg-secondary/50 border border-border rounded-[var(--radius-md)] p-4">
@@ -1173,6 +1185,24 @@ export function Results() {
                         </p>
                       )}
                     </div>
+                    {feriefridageDays > 0 && (
+                      <div className="bg-secondary/50 border border-[var(--nordic-accent)]/50 rounded-[var(--radius-md)] p-4">
+                        <p className="text-xs text-muted-foreground mb-1">
+                          {t("ferie.feriefridage")}
+                        </p>
+                        <p className="text-2xl font-mono text-foreground">
+                          {fmtDKK(feriefridageValue)} kr
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {feriefridageDays} × {fmtDKK(dailyRate)} kr
+                        </p>
+                        {showEur && (
+                          <p className="text-xs text-muted-foreground mt-0.5 font-mono">
+                            {fmtEUR(feriefridageValue, eurRate)}
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Monthly accrual progress */}
@@ -1220,6 +1250,13 @@ export function Results() {
                     <p className="text-xs text-muted-foreground">
                       {t("ferie.rule")}
                     </p>
+                    {feriefridageDays > 0 && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-sm text-muted-foreground">
+                          {t("ferie.feriefridageNote")}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

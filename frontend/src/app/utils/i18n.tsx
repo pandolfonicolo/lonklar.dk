@@ -665,6 +665,73 @@ const translations = {
     nb: "Alle opptjener 2,08 feriedager per arbeidsmåned (25 dager/år) i henhold til den danske ferieloven (Ferieloven).",
   },
 
+  // Feriefridage (6th holiday week)
+  "ferie.feriefridage": {
+    en: "Feriefridage (extra days)",
+    da: "Feriefridage (ekstra dage)",
+    it: "Feriefridage (giorni extra)",
+    de: "Feriefridage (Extratage)",
+    sv: "Feriefridage (extradagar)",
+    es: "Feriefridage (días extra)",
+    nb: "Feriefridage (ekstradager)",
+  },
+  "ferie.feriefridageValue": {
+    en: "Daily value (gross)",
+    da: "Daglig værdi (brutto)",
+    it: "Valore giornaliero (lordo)",
+    de: "Tageswert (brutto)",
+    sv: "Dagligt värde (brutto)",
+    es: "Valor diario (bruto)",
+    nb: "Daglig verdi (brutto)",
+  },
+  "ferie.totalDays": {
+    en: "Total paid leave",
+    da: "Samlet betalt ferie",
+    it: "Ferie totali retribuite",
+    de: "Gesamter bezahlter Urlaub",
+    sv: "Total betald ledighet",
+    es: "Total vacaciones pagadas",
+    nb: "Samlet betalt ferie",
+  },
+  "ferie.feriefridageNote": {
+    en: "Feriefridage (the \"6th holiday week\") are NOT part of the Holiday Act (Ferieloven). They are granted by collective agreements (overenskomst) or individual contracts. Public sector: \"den 6. ferieuge\" (accrued at 18.5 hours/month). State sector: \"særlige feriedage\" (0.42 days/month, payout = 2.5% of salary). Private sector: depends entirely on your contract.",
+    da: "Feriefridage (\"den 6. ferieuge\") er IKKE en del af Ferieloven. De tildeles via overenskomst eller individuel aftale. Offentligt ansatte: \"den 6. ferieuge\" (optjent med 18,5 timer/md). Statsansatte: \"særlige feriedage\" (0,42 dage/md, udbetaling = 2,5 % af løn). Privat sektor: afhænger helt af din kontrakt.",
+    it: "I feriefridage (la \"6ª settimana di ferie\") NON fanno parte della legge sulle ferie (Ferieloven). Sono concessi da contratti collettivi (overenskomst) o individuali. Settore pubblico: \"den 6. ferieuge\" (maturati a 18,5 ore/mese). Settore statale: \"særlige feriedage\" (0,42 giorni/mese, pagamento = 2,5% dello stipendio). Settore privato: dipende interamente dal contratto.",
+    de: "Feriefridage (die \"6. Urlaubswoche\") sind NICHT Teil des Urlaubsgesetzes (Ferieloven). Sie werden durch Tarifverträge (overenskomst) oder individuelle Verträge gewährt. Öffentlicher Sektor: \"den 6. ferieuge\" (18,5 Std./Monat angesammelt). Staatssektor: \"særlige feriedage\" (0,42 Tage/Monat, Auszahlung = 2,5 % des Gehalts). Privatsektor: hängt vollständig vom Vertrag ab.",
+    sv: "Feriefridage (den \"6:e semesterveckan\") är INTE en del av semesterlagen (Ferieloven). De beviljas genom kollektivavtal (overenskomst) eller individuella avtal. Offentlig sektor: \"den 6. ferieuge\" (intjänade med 18,5 tim/mån). Statlig sektor: \"særlige feriedage\" (0,42 dagar/mån, utbetalning = 2,5 % av lönen). Privat sektor: beror helt på ditt avtal.",
+    es: "Los feriefridage (la \"6ª semana de vacaciones\") NO forman parte de la ley de vacaciones (Ferieloven). Se otorgan mediante convenios colectivos (overenskomst) o contratos individuales. Sector público: \"den 6. ferieuge\" (acumulados a 18,5 h/mes). Sector estatal: \"særlige feriedage\" (0,42 días/mes, pago = 2,5% del salario). Sector privado: depende totalmente de tu contrato.",
+    nb: "Feriefridage (den \"6. ferieuken\") er IKKE en del av ferieloven (Ferieloven). De tildeles via tariffavtaler (overenskomst) eller individuelle avtaler. Offentlig sektor: \"den 6. ferieuge\" (opptjent med 18,5 timer/mnd). Statlig sektor: \"særlige feriedage\" (0,42 dager/mnd, utbetaling = 2,5 % av lønn). Privat sektor: avhenger helt av din kontrakt.",
+  },
+
+  // Wizard input for feriefridage
+  "input.feriefridage": {
+    en: "Feriefridage (6th week)",
+    da: "Feriefridage (6. ferieuge)",
+    it: "Feriefridage (6ª settimana)",
+    de: "Feriefridage (6. Woche)",
+    sv: "Feriefridage (6:e veckan)",
+    es: "Feriefridage (6ª semana)",
+    nb: "Feriefridage (6. uke)",
+  },
+  "input.feriefridage.tip": {
+    en: "Extra paid days off beyond the 25 statutory days. Typically 5 days from a collective agreement (overenskomst). Not part of Ferieloven — depends on your contract.",
+    da: "Ekstra betalte fridage ud over de 25 lovbestemte dage. Typisk 5 dage fra overenskomst. Ikke en del af Ferieloven — afhænger af din kontrakt.",
+    it: "Giorni di ferie retribuiti extra oltre i 25 giorni previsti dalla legge. Tipicamente 5 giorni da contratto collettivo (overenskomst). Non fanno parte della Ferieloven — dipende dal tuo contratto.",
+    de: "Zusätzliche bezahlte freie Tage über die 25 gesetzlichen Tage hinaus. Typischerweise 5 Tage aus einem Tarifvertrag (overenskomst). Nicht Teil des Ferieloven — hängt von Ihrem Vertrag ab.",
+    sv: "Extra betalda lediga dagar utöver de 25 lagstadgade dagarna. Vanligtvis 5 dagar från ett kollektivavtal (overenskomst). Inte en del av Ferieloven — beror på ditt avtal.",
+    es: "Días libres pagados extra más allá de los 25 días legales. Normalmente 5 días de un convenio colectivo (overenskomst). No forman parte de la Ferieloven — depende de tu contrato.",
+    nb: "Ekstra betalte fridager utover de 25 lovbestemte dagene. Typisk 5 dager fra tariffavtale (overenskomst). Ikke en del av Ferieloven — avhenger av din kontrakt.",
+  },
+  "input.feriefridage.sub": {
+    en: "From collective agreement or contract",
+    da: "Fra overenskomst eller kontrakt",
+    it: "Da contratto collettivo o individuale",
+    de: "Aus Tarifvertrag oder Vertrag",
+    sv: "Från kollektivavtal eller kontrakt",
+    es: "De convenio colectivo o contrato",
+    nb: "Fra tariffavtale eller kontrakt",
+  },
+
   // Glossary
   "glossary.title": { en: "Tax glossary — what each term means", da: "Skatteordliste — hvad hvert begreb betyder", it: "Glossario fiscale — cosa significa ogni termine", de: "Steuer-Glossar — was jeder Begriff bedeutet", sv: "Skatteordlista — vad varje begrepp betyder", es: "Glosario fiscal — qué significa cada término", nb: "Skatteordliste — hva hvert begrep betyr" },
 
@@ -842,6 +909,17 @@ const translations = {
     sv: "Semestertillägg (1 %) som betalas till tjänstemän utöver den ordinarie lönen.",
     es: "Complemento vacacional (1%) pagado a los empleados asalariados además del salario regular.",
     nb: "Ferietillegg (1 %) utbetalt til funksjonærer i tillegg til vanlig lønn.",
+  },
+
+  "glossary.feriefridage.term": { en: "Feriefridage", da: "Feriefridage", it: "Feriefridage", de: "Feriefridage", sv: "Feriefridage", es: "Feriefridage", nb: "Feriefridage" },
+  "glossary.feriefridage.desc": {
+    en: "Extra paid days off (the \"6th holiday week\"), NOT part of Ferieloven. Granted by collective agreements or individual contracts. Typically 5 days. Public sector: \"den 6. ferieuge\" (18.5 h/month). State: \"særlige feriedage\" (0.42 days/month, 2.5% payout). Private sector: varies.",
+    da: "Ekstra betalte fridage (\"den 6. ferieuge\"), IKKE en del af Ferieloven. Tildeles via overenskomst eller individuel aftale. Typisk 5 dage. Offentlig sektor: \"den 6. ferieuge\" (18,5 timer/md). Stat: \"særlige feriedage\" (0,42 dage/md, 2,5 % udbetaling). Privat sektor: varierer.",
+    it: "Giorni di ferie extra retribuiti (la \"6ª settimana di ferie\"), NON fanno parte della Ferieloven. Concessi da contratti collettivi o individuali. Tipicamente 5 giorni. Settore pubblico: \"den 6. ferieuge\" (18,5 ore/mese). Stato: \"særlige feriedage\" (0,42 giorni/mese, 2,5% di pagamento). Settore privato: varia.",
+    de: "Zusätzliche bezahlte freie Tage (die \"6. Urlaubswoche\"), NICHT Teil des Ferieloven. Gewährt durch Tarifverträge oder individuelle Verträge. Typischerweise 5 Tage. Öffentlicher Sektor: \"den 6. ferieuge\" (18,5 Std./Monat). Staat: \"særlige feriedage\" (0,42 Tage/Monat, 2,5 % Auszahlung). Privatsektor: variiert.",
+    sv: "Extra betalda lediga dagar (den \"6:e semesterveckan\"), INTE en del av Ferieloven. Beviljas genom kollektivavtal eller individuella avtal. Vanligtvis 5 dagar. Offentlig sektor: \"den 6. ferieuge\" (18,5 tim/mån). Stat: \"særlige feriedage\" (0,42 dagar/mån, 2,5 % utbetalning). Privat sektor: varierar.",
+    es: "Días libres pagados extra (la \"6ª semana de vacaciones\"), NO forman parte de la Ferieloven. Otorgados por convenios colectivos o contratos individuales. Normalmente 5 días. Sector público: \"den 6. ferieuge\" (18,5 h/mes). Estado: \"særlige feriedage\" (0,42 días/mes, 2,5% de pago). Sector privado: varía.",
+    nb: "Ekstra betalte fridager (den \"6. ferieuken\"), IKKE en del av Ferieloven. Tildeles via tariffavtaler eller individuelle avtaler. Typisk 5 dager. Offentlig sektor: \"den 6. ferieuge\" (18,5 timer/mnd). Stat: \"særlige feriedage\" (0,42 dager/mnd, 2,5 % utbetaling). Privat sektor: varierer.",
   },
 
   "glossary.atp.term": { en: "ATP", da: "ATP", it: "ATP", de: "ATP", sv: "ATP", es: "ATP", nb: "ATP" },

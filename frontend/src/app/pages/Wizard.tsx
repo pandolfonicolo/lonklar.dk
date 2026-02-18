@@ -107,6 +107,7 @@ export function Wizard() {
   const [aftertaxDed, setAftertaxDed] = useState("0");
   const [transportKm, setTransportKm] = useState("0");
   const [unionFees, setUnionFees] = useState("0");
+  const [feriefridage, setFeriefridage] = useState("0");
 
   // ── Student state ──────────────────────────────────────────────
   const [eduType, setEduType] = useState<"vid" | "ungdom">("vid");
@@ -280,6 +281,7 @@ export function Wizard() {
         _input_aftertax_deductions_monthly: Number(aftertaxDed),
         _input_transport_km: Number(transportKm),
         _input_union_fees_annual: Number(unionFees),
+        _input_feriefridage: Number(feriefridage),
       } });
     } catch (err) {
       console.error(err);
@@ -925,6 +927,43 @@ export function Wizard() {
           </Field>
 
           <hr className="border-border my-2" />
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("input.feriefridage")}</p>
+
+          {/* Feriefridage (6th holiday week) */}
+          <div className="p-4 border border-border rounded-[var(--radius-md)] space-y-3">
+            <div className="flex items-center gap-3">
+              <Switch
+                id="feriefridage"
+                checked={Number(feriefridage) > 0}
+                onCheckedChange={(on) => setFeriefridage(on ? "5" : "0")}
+              />
+              <div className="flex-1 min-w-0">
+                <Label htmlFor="feriefridage">{t("input.feriefridage")}</Label>
+                <p className="text-xs text-muted-foreground">{t("input.feriefridage.sub")}</p>
+              </div>
+              <Tip text={t("input.feriefridage.tip")} />
+            </div>
+            {Number(feriefridage) > 0 && (
+              <div className="flex items-center gap-3 pl-[52px]">
+                <Label className="text-sm text-muted-foreground whitespace-nowrap">
+                  {lang === "da" ? "Antal dage" : "Number of days"}
+                </Label>
+                <div className="relative w-28">
+                  <Input
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={feriefridage}
+                    onChange={(e) => setFeriefridage(e.target.value)}
+                    className="h-10 text-sm"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <hr className="border-border my-2" />
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("input.personalDeductions")}</p>
 
           <Field label={t("input.transportKm")} tooltip={t("input.transportKm.tip")}>
@@ -1031,6 +1070,8 @@ export function Wizard() {
         rows.push({ label: t("input.transportKm"), value: `${transportKm} km` });
       if (Number(unionFees) > 0)
         rows.push({ label: t("input.unionFees"), value: `${unionFees} DKK` });
+      if (Number(feriefridage) > 0)
+        rows.push({ label: t("input.feriefridage"), value: `${feriefridage} ${lang === "da" ? "dage" : "days"}` });
     }
 
     return rows;
