@@ -14,6 +14,7 @@ import {
   ThumbsUp,
   ThumbsDown,
   Info,
+  Smartphone,
 } from "lucide-react";
 import {
   LineChart,
@@ -1076,6 +1077,10 @@ export function Results() {
                       />
                     </LineChart>
                   </ResponsiveContainer>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
+                    <Smartphone className="w-3.5 h-3.5 rotate-90" />
+                    {lang === "da" ? "Tip: vend telefonen for bedre visning" : "Tip: rotate your phone for a better view"}
+                  </p>
                 </div>
                 );
               })()}
@@ -1212,6 +1217,10 @@ export function Results() {
                       })()}
                     </LineChart>
                   </ResponsiveContainer>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
+                    <Smartphone className="w-3.5 h-3.5 rotate-90" />
+                    {lang === "da" ? "Tip: vend telefonen for bedre visning" : "Tip: rotate your phone for a better view"}
+                  </p>
                 </div>
                 );
               })()}
@@ -1348,6 +1357,10 @@ export function Results() {
                     )}
                   </LineChart>
                 </ResponsiveContainer>
+                <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
+                  <Smartphone className="w-3.5 h-3.5 rotate-90" />
+                  {lang === "da" ? "Tip: vend telefonen for bedre visning" : "Tip: rotate your phone for a better view"}
+                </p>
               </div>
             </TabsContent>
             );

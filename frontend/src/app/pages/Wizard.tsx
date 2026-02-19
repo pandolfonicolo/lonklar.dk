@@ -122,16 +122,17 @@ export function Wizard() {
   const [optedOutMonths, setOptedOutMonths] = useState("0");
 
   // ── Multiple student jobs ──────────────────────────────────────
-  type StudentJob = { id: number; hourlyRate: string; hours: string; hoursMode: "monthly" | "weekly" };
+  type StudentJob = { id: number; name: string; hourlyRate: string; hours: string; hoursMode: "monthly" | "weekly" };
   const [studentJobs, setStudentJobs] = useState<StudentJob[]>([
-    { id: 1, hourlyRate: "140", hours: "40", hoursMode: "monthly" },
+    { id: 1, name: "Job 1", hourlyRate: "140", hours: "40", hoursMode: "monthly" },
   ]);
   const nextJobId = useRef(2);
 
   const addStudentJob = () => {
+    const n = nextJobId.current++;
     setStudentJobs((prev) => [
       ...prev,
-      { id: nextJobId.current++, hourlyRate: "130", hours: "20", hoursMode: "monthly" },
+      { id: n, name: `Job ${prev.length + 1}`, hourlyRate: "130", hours: "20", hoursMode: "monthly" },
     ]);
   };
   const removeStudentJob = (id: number) => {
@@ -140,6 +141,11 @@ export function Wizard() {
   const updateStudentJob = (id: number, field: keyof Omit<StudentJob, "id">, value: string) => {
     setStudentJobs((prev) =>
       prev.map((j) => (j.id === id ? { ...j, [field]: value } : j))
+    );
+  };
+  const renameStudentJob = (id: number, name: string) => {
+    setStudentJobs((prev) =>
+      prev.map((j) => (j.id === id ? { ...j, name } : j))
     );
   };
 
@@ -324,7 +330,7 @@ export function Wizard() {
         _input_student_hours_month: serviceId === "student" && studentWorkMode !== "none" && studentJobs.length === 1 ? jobMonthlyHours(studentJobs[0]) : 0,
         _input_student_work_mode: serviceId === "student" ? studentWorkMode : undefined,
         _input_student_jobs: serviceId === "student" && studentWorkMode !== "none" ? studentJobs.map((j, i) => ({
-          label: `Job ${i + 1}`,
+          label: j.name || `Job ${i + 1}`,
           hourlyRate: Number(j.hourlyRate),
           hoursMonth: jobMonthlyHours(j),
           grossMonthly: Number(j.hourlyRate) * jobMonthlyHours(j),
@@ -747,14 +753,18 @@ export function Wizard() {
                       className={`space-y-4 ${studentJobs.length > 1 ? "p-4 border border-border rounded-[var(--radius-lg)] relative" : ""}`}
                     >
                       {studentJobs.length > 1 && (
-                        <div className="flex items-center justify-between mb-1">
-                          <p className="text-sm font-medium text-foreground">
-                            {lang === "da" ? `Job ${idx + 1}` : `Job ${idx + 1}`}
-                          </p>
+                        <div className="flex items-center justify-between mb-1 gap-2">
+                          <input
+                            type="text"
+                            value={job.name}
+                            onChange={(e) => renameStudentJob(job.id, e.target.value)}
+                            className="text-sm font-medium text-foreground bg-transparent border-b border-transparent hover:border-muted-foreground/40 focus:border-[var(--nordic-accent)] focus:outline-none transition-colors w-full max-w-[200px] py-0.5"
+                            placeholder={`Job ${idx + 1}`}
+                          />
                           <button
                             type="button"
                             onClick={() => removeStudentJob(job.id)}
-                            className="p-1.5 rounded-[var(--radius-sm)] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            className="p-1.5 rounded-[var(--radius-sm)] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
                             aria-label="Remove job"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -847,7 +857,7 @@ export function Wizard() {
                     <p className="text-xs text-muted-foreground mt-1">
                       {studentJobs.map((job, i) => {
                         const mh = jobMonthlyHours(job);
-                        return `Job ${i + 1}: ${job.hourlyRate} kr × ${mh.toFixed(0)} h = ${fmt(Number(job.hourlyRate) * mh)} kr`;
+                        return `${job.name || `Job ${i + 1}`}: ${job.hourlyRate} kr × ${mh.toFixed(0)} h = ${fmt(Number(job.hourlyRate) * mh)} kr`;
                       }).join(" + ")}
                     </p>
                   </div>
@@ -1204,7 +1214,7 @@ export function Wizard() {
           studentJobs.forEach((job, i) => {
             const mh = jobMonthlyHours(job);
             rows.push({
-              label: `  Job ${i + 1}`,
+              label: `  ${job.name || `Job ${i + 1}`}`,
               value: `${job.hourlyRate} DKK × ${mh.toFixed(0)} h = ${fmt(Number(job.hourlyRate) * mh)} DKK/${lang === "da" ? "md" : "month"}`,
             });
           });
@@ -1250,10 +1260,10 @@ export function Wizard() {
         {reviewRows().map((r, i) => (
           <div
             key={i}
-            className="flex items-center justify-between p-4 bg-secondary/50 rounded-[var(--radius-md)]"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 p-4 bg-secondary/50 rounded-[var(--radius-md)]"
           >
             <p className="text-sm text-muted-foreground">{r.label}</p>
-            <p className="text-foreground font-mono">{r.value}</p>
+            <p className="text-foreground font-mono text-right sm:text-right shrink-0">{r.value}</p>
           </div>
         ))}
       </div>
