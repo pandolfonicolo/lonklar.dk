@@ -1,5 +1,6 @@
+import React from "react";
 import { Header } from "../components/Header";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router";
 import { useI18n } from "../utils/i18n";
@@ -42,6 +43,10 @@ net_annual      = gross + feriepenge − pension − atp
 export function HowItWorks() {
   const navigate = useNavigate();
   const { t } = useI18n();
+
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -124,14 +129,65 @@ export function HowItWorks() {
           {/* ── Data sources ── */}
           <section className="mb-10">
             <h2 className="text-2xl mb-4 text-foreground">{t("method.sources.title")}</h2>
-            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
-              <ul className="list-disc list-inside space-y-1 ml-2 text-sm text-muted-foreground">
-                <li>{t("method.sources.skat")}</li>
-                <li>{t("method.sources.skm")}</li>
-                <li>{t("method.sources.su")}</li>
-                <li>{t("method.sources.life")}</li>
-              </ul>
-              <p className="mt-4 text-xs text-muted-foreground">
+            <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6 space-y-4">
+              {[
+                {
+                  label: t("method.sources.skat"),
+                  url: "https://skat.dk/hjaelp/satser",
+                  desc: t("method.sources.skat.desc"),
+                },
+                {
+                  label: t("method.sources.skm"),
+                  url: "https://skm.dk/tal-og-metode/satser/kommuneskatteprocenter",
+                  desc: t("method.sources.skm.desc"),
+                },
+                {
+                  label: t("method.sources.su"),
+                  url: "https://su.dk/satser",
+                  desc: t("method.sources.su.desc"),
+                },
+                {
+                  label: t("method.sources.fribeloeb"),
+                  url: "https://su.dk/su/naar-du-faar-su/saa-meget-maa-du-tjene/beregn-fribeloeb",
+                  desc: t("method.sources.fribeloeb.desc"),
+                },
+                {
+                  label: t("method.sources.ferielov"),
+                  url: "https://www.retsinformation.dk/eli/lta/2018/1025",
+                  desc: t("method.sources.ferielov.desc"),
+                },
+                {
+                  label: t("method.sources.atp"),
+                  url: "https://www.atp.dk/atp-livslang-pension/satser-og-bidrag",
+                  desc: t("method.sources.atp.desc"),
+                },
+                {
+                  label: t("method.sources.exchange"),
+                  url: "https://api.frankfurter.app/",
+                  desc: t("method.sources.exchange.desc"),
+                },
+                {
+                  label: t("method.sources.life"),
+                  url: "https://lifeindenmark.borger.dk",
+                  desc: t("method.sources.life.desc"),
+                },
+              ].map((s, i) => (
+                <div key={i} className="flex items-start gap-3">
+                  <ExternalLink className="w-4 h-4 mt-0.5 shrink-0 text-[var(--nordic-accent)]" />
+                  <div>
+                    <a
+                      href={s.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-foreground hover:text-[var(--nordic-accent)] transition-colors"
+                    >
+                      {s.label}
+                    </a>
+                    <p className="text-xs text-muted-foreground mt-0.5">{s.desc}</p>
+                  </div>
+                </div>
+              ))}
+              <p className="mt-4 pt-3 border-t border-border text-xs text-muted-foreground">
                 {t("method.sources.updated")}
               </p>
             </div>

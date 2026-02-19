@@ -49,7 +49,7 @@ FRIBELOEB_LAVESTE_VID    = 20_749   # kr/month — SU months, videregående (inc
 FRIBELOEB_MELLEMSTE      = 23_598   # kr/month — enrolled but opted out of SU / leave / paid internship / inactive
 FRIBELOEB_HOEJESTE       = 45_420   # kr/month — not enrolled / no SU right / no more clips / other public support
 FRIBELOEB_NEDSAT         = 3_921    # kr/month — months with handicap supplement
-FRIBELOEB_PARENT_BONUS   = 34_921   # kr/child/year — forhøjelse for children under 18
+FRIBELOEB_PARENT_BONUS   = 34_129   # kr/child/year — forhøjelse for children under 18
 
 # SU repayment interest (lifeindenmark.borger.dk, Jan 2026)
 SU_REPAYMENT_INTEREST_RATE = 0.0975  # 9.75 % p.a. on SU to be repaid

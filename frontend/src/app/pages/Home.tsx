@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router";
-import { Briefcase, Clock, GraduationCap, ArrowRight, Shield, FileText, Lock, MessageSquare } from "lucide-react";
+import { Briefcase, Clock, GraduationCap, ArrowRight, ChevronRight, Shield, FileText, Lock, MessageSquare } from "lucide-react";
 import { motion } from "motion/react";
 import { Header } from "../components/Header";
 import { ServiceCard } from "../components/ServiceCard";
@@ -139,7 +139,7 @@ export function Home() {
       </section>
 
       {/* ── Service Cards ────────────────────────────────── */}
-      <section className="relative px-4 sm:px-6 lg:px-8 py-14 -mt-2">
+      <section id="calculators" className="relative px-4 sm:px-6 lg:px-8 py-14 -mt-2">
         {/* Accent background band */}
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--nordic-accent)]/[0.07] via-[var(--nordic-accent)]/[0.05] to-transparent border-y border-[var(--nordic-accent)]/15 pointer-events-none" />
 
@@ -191,13 +191,23 @@ export function Home() {
                 </p>
                 {/* Connector arrow (desktop only, between steps) */}
                 {idx < 2 && (
-                  <div className="hidden md:flex absolute top-4 -right-6 items-center">
-                    <div className="w-4 h-0.5 bg-[var(--nordic-accent)]" />
-                    <ArrowRight className="w-5 h-5 -ml-1 text-[var(--nordic-accent)]" />
+                  <div className="hidden md:flex absolute top-5 -right-5 items-center">
+                    <div className="w-6 border-t-2 border-dashed border-[var(--nordic-accent)]/40" />
+                    <ChevronRight className="w-4 h-4 -ml-1 text-[var(--nordic-accent)]/60" />
                   </div>
                 )}
               </div>
             ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Link
+              to="/how-it-works"
+              onClick={() => window.scrollTo(0, 0)}
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--nordic-accent)] hover:text-[var(--nordic-accent-dark)] transition-colors font-medium"
+            >
+              {t("home.how.learnMore")}
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
       </section>

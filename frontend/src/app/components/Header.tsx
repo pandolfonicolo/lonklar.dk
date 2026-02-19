@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import { Sun, Moon, ChevronDown, Menu, X } from "lucide-react";
 import { useI18n, type Lang } from "../utils/i18n";
 
@@ -14,8 +14,23 @@ const divider = "w-px h-4 bg-border";
 
 export function Header() {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const mobileRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollToCalculators = () => {
+    const doScroll = () => {
+      const el = document.getElementById("calculators");
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    if (location.pathname === "/") {
+      doScroll();
+    } else {
+      navigate("/");
+      setTimeout(doScroll, 300);
+    }
+  };
 
   // Close on outside click
   React.useEffect(() => {
@@ -44,6 +59,10 @@ export function Header() {
 
           {/* Desktop nav */}
           <nav className="hidden sm:flex items-center gap-1 rounded-[var(--radius-lg)] bg-secondary/40 p-1">
+            <button onClick={scrollToCalculators} className={`${navBtn} whitespace-nowrap`}>
+              {t("nav.calculators")}
+            </button>
+            <div className={divider} />
             <Link to="/how-it-works" className={`${navBtn} whitespace-nowrap`}>
               {t("nav.methodology")}
             </Link>
@@ -70,6 +89,12 @@ export function Header() {
             {/* Mobile dropdown */}
             {mobileOpen && (
               <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-[var(--radius-lg)] shadow-lg z-50 p-2 space-y-1">
+                <button
+                  onClick={() => { setMobileOpen(false); scrollToCalculators(); }}
+                  className={navBtnMobile}
+                >
+                  {t("nav.calculators")}
+                </button>
                 <Link
                   to="/how-it-works"
                   onClick={() => setMobileOpen(false)}
