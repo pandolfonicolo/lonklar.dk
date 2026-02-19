@@ -49,11 +49,13 @@ import {
   fetchMeta,
   fetchCurve,
   fetchHoursCurve,
+  fetchStudentHoursCurve,
   type Meta,
   type TaxResult,
   type StudentResult,
   type CurvePoint,
   type HoursCurvePoint,
+  type StudentHoursCurvePoint,
 } from "../utils/api";
 import { useI18n } from "../utils/i18n";
 
@@ -351,10 +353,83 @@ const PIE_COLORS = [
 function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: TaxResult | StudentResult; isStudent: boolean; period: "monthly" | "annual"; showEur: boolean; eurRate: number }) {
   const { t } = useI18n();
 
-  if (isStudent) return null;
+  const div = period === "annual" ? 1 : 12;
+
+  // Student pie
+  if (isStudent) {
+    const sr = r as StudentResult;
+    // Total gross = SU gross + work gross
+    const grossVal = Math.round(((sr.su_annual_gross || sr.su_annual) + sr.work_gross_annual) / div);
+    if (grossVal <= 0) return null;
+
+    const netVal = Math.round(sr.net_annual / div);
+    const incomeTax = Math.round(sr.total_income_tax / div);
+    const am = Math.round(sr.work_am_bidrag / div);
+    const pension = Math.round((sr.work_employee_pension || 0) / div);
+    const suRepay = Math.round((sr.su_repayment || 0) / div);
+
+    type Slice = { key: string; value: number };
+    const data: Slice[] = [
+      { key: "chart.pie.net", value: netVal },
+    ];
+    if (incomeTax > 0) data.push({ key: "chart.pie.incomeTax", value: incomeTax });
+    if (am > 0) data.push({ key: "chart.pie.am", value: am });
+    if (pension > 0) data.push({ key: "chart.pie.pension", value: pension });
+    if (suRepay > 0) data.push({ key: "chart.pie.suRepay", value: suRepay });
+
+    return (
+      <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
+        <h3 className="text-foreground font-medium mb-1">{t("chart.pie.title" as any)}</h3>
+        <p className="text-sm text-muted-foreground mb-6">{showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}</p>
+
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="w-52 h-52 flex-shrink-0">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={data} dataKey="value" cx="50%" cy="50%" innerRadius={50} outerRadius={90} paddingAngle={2} stroke="none">
+                  {data.map((_, i) => (<Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />))}
+                </Pie>
+                <RTooltip
+                  content={({ active, payload }) => {
+                    if (!active || !payload?.length) return null;
+                    const d = payload[0]?.payload as Slice | undefined;
+                    if (!d) return null;
+                    const pctVal = ((d.value / grossVal) * 100).toFixed(1);
+                    return (
+                      <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '8px 12px', lineHeight: 1.6 }}>
+                        <p style={{ fontWeight: 600 }}>{d.key === "chart.pie.suRepay" ? "SU repayment" : t(d.key as any)}</p>
+                        <p>{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
+                      </div>
+                    );
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="flex flex-col gap-2.5 text-sm flex-1">
+            {data.map((d, i) => {
+              const pctVal = ((d.value / grossVal) * 100).toFixed(1);
+              return (
+                <div key={d.key} className="flex items-center gap-2.5">
+                  <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                  <span className="text-muted-foreground">{d.key === "chart.pie.suRepay" ? "SU repayment" : t(d.key as any)}</span>
+                  <span className="text-muted-foreground/60 text-xs ml-1">({pctVal}%)</span>
+                  <span className="font-medium text-foreground ml-auto tabular-nums">{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`}</span>
+                </div>
+              );
+            })}
+            <div className="border-t border-border pt-2 mt-1 flex items-center gap-2.5">
+              <span className="w-3 h-3 flex-shrink-0" />
+              <span className="text-muted-foreground font-medium">Total</span>
+              <span className="font-semibold text-foreground ml-auto tabular-nums">{showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const tr = r as TaxResult;
-  const div = period === "annual" ? 1 : 12;
   const grossVal = Math.round((tr.gross_annual + tr.feriepenge) / div);
   const netVal = Math.round(tr.net_annual / div);
   const incomeTax = Math.round(tr.total_income_tax / div);
@@ -457,6 +532,8 @@ export function Results() {
   const result = location.state as TaxResult | StudentResult | null;
   const { t, lang } = useI18n();
 
+  React.useEffect(() => { document.title = "Results — lønklar.dk"; }, []);
+
   // Toggle state
   const [period, setPeriod] = useState<"monthly" | "annual">("monthly");
   const [showEur, setShowEur] = useState(false);
@@ -466,6 +543,7 @@ export function Results() {
   // Chart data
   const [curveData, setCurveData] = useState<CurvePoint[]>([]);
   const [hoursCurveData, setHoursCurveData] = useState<HoursCurvePoint[]>([]);
+  const [studentHoursCurveData, setStudentHoursCurveData] = useState<StudentHoursCurvePoint[]>([]);
 
   // Accuracy report
   const [actualNet, setActualNet] = useState("");
@@ -533,9 +611,24 @@ export function Results() {
         is_church: isChurch,
         atp_monthly: atpMonthly,
         ...extraParams,
-        max_hours: 300,
+        max_hours: 220,
       })
         .then(setHoursCurveData)
+        .catch(console.error);
+    }
+    if (serviceId === "student" && r._input_student_hourly_rate > 0) {
+      fetchStudentHoursCurve({
+        hourly_rate: r._input_student_hourly_rate,
+        su_monthly: r.su_monthly,
+        kommune: r.kommune,
+        pension_pct: pensionPct,
+        employer_pension_pct: erPensionPct,
+        is_church: isChurch,
+        aars_fribeloeb: r.aars_fribeloeb,
+        max_hours: 220,
+        step: 5,
+      })
+        .then(setStudentHoursCurveData)
         .catch(console.error);
     }
   }, [result, serviceId]);
@@ -724,7 +817,7 @@ export function Results() {
         </div>
 
         {/* ── Tabs ─────────────────────────────────────────────── */}
-        <Tabs defaultValue="breakdown" className="w-full">
+        <Tabs defaultValue="chart" className="w-full">
          <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
           <TabsList className="w-full justify-start bg-muted/40 border-b border-border rounded-none p-1 h-auto flex-wrap gap-1">
             <TabsTrigger
@@ -733,14 +826,12 @@ export function Results() {
             >
               {t("results.tab.breakdown")}
             </TabsTrigger>
-            {(serviceId === "fulltime" || serviceId === "parttime") && (
-              <TabsTrigger
-                value="chart"
-                className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
-              >
-                <BarChart3 className="w-4 h-4 mr-1" /> {t("results.tab.charts")}
-              </TabsTrigger>
-            )}
+            <TabsTrigger
+              value="chart"
+              className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
+            >
+              <BarChart3 className="w-4 h-4 mr-1" /> {t("results.tab.charts")}
+            </TabsTrigger>
             {!isStudent && r.total_pension > 0 && (
               <TabsTrigger
                 value="pension"
@@ -836,7 +927,7 @@ export function Results() {
 
           {/* ── Chart tab ──────────────────────────────────────── */}
           {(serviceId === "fulltime" || serviceId === "parttime") && (
-            <TabsContent value="chart" className="mt-0 p-6 space-y-8">
+            <TabsContent value="chart" className="mt-0 p-6 space-y-8" forceMount={undefined}>
 
               {/* ── Salary breakdown pie ── */}
               <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
@@ -994,6 +1085,8 @@ export function Results() {
                       />
                       <XAxis
                         dataKey="hours_month"
+                        type="number"
+                        domain={[0, 220]}
                         label={{
                           value: t('chart.hoursPerMonth'),
                           position: "insideBottom",
@@ -1023,13 +1116,21 @@ export function Results() {
                           if (!d) return null;
                           const gVal = d.gross_monthly * hMul;
                           const nVal = d.net_monthly * hMul;
-                          const tax = gVal - nVal;
+                          const mellemH = Math.round(641200 / 12);
+                          const topH = Math.round(777900 / 12);
+                          const bracket = d.gross_monthly >= topH
+                            ? { label: 'Topskat', color: '#ef4444' }
+                            : d.gross_monthly >= mellemH
+                              ? { label: 'Mellemskat', color: '#f59e0b' }
+                              : { label: 'Bundskat', color: '#22c55e' };
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
-                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{d.hours_month} {t('chart.hoursMonth')}</p>
+                              <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
+                                {bracket.label}
+                              </p>
                               <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
                               <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
-                              <p style={{ color: 'var(--destructive)' }}>{t('chart.taxDed')}: {showEur ? fmtEUR(tax, eurRate) : `${fmtDKK(tax)} kr`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -1052,6 +1153,15 @@ export function Results() {
                         strokeWidth={2.5}
                         dot={false}
                       />
+                      {/* Current position marker */}
+                      <ReferenceLine
+                        x={r.hours_month}
+                        stroke="var(--nordic-accent)"
+                        strokeDasharray="6 4"
+                        strokeWidth={1}
+                        strokeOpacity={0.7}
+                        label={{ value: `${r.hours_month}h`, position: "top", fontSize: 11, fill: "var(--nordic-accent)" }}
+                      />
                       <ReferenceDot
                         x={r.hours_month}
                         y={netMonthly}
@@ -1060,12 +1170,175 @@ export function Results() {
                         stroke="white"
                         strokeWidth={2}
                       />
+                      {/* Tax bracket zones based on hourly rate */}
+                      {(() => {
+                        const mellemHrs = Math.round(641200 / 12 / r.hourly_rate);
+                        const topHrs = Math.round(777900 / 12 / r.hourly_rate);
+                        return (
+                          <>
+                            {mellemHrs <= 220 && (
+                              <>
+                                <ReferenceArea x1={0} x2={mellemHrs} fill="#22c55e" fillOpacity={0.04} />
+                                <ReferenceArea x1={mellemHrs} x2={Math.min(topHrs, 220)} fill="#f59e0b" fillOpacity={0.06} />
+                                <ReferenceLine x={mellemHrs} stroke="#f59e0b" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                              </>
+                            )}
+                            {topHrs <= 220 && (
+                              <>
+                                <ReferenceArea x1={topHrs} x2={220} fill="#ef4444" fillOpacity={0.06} />
+                                <ReferenceLine x={topHrs} stroke="#ef4444" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                              </>
+                            )}
+                          </>
+                        );
+                      })()}
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
                 );
               })()}
 
+            </TabsContent>
+          )}
+
+          {/* ── Student chart tab ─────────────────────────────── */}
+          {isStudent && studentHoursCurveData.length > 0 && (() => {
+            const studentHourlyRate = r._input_student_hourly_rate;
+            const studentHoursMonth = r._input_student_hours_month;
+            const sMul = period === "annual" ? 12 : 1;
+
+            // Find the fribeløb boundary hour (first point where over_fribeloeb becomes true)
+            const fribeloebHour = studentHoursCurveData.find(d => d.over_fribeloeb)?.hours_month;
+
+            return (
+            <TabsContent value="chart" className="mt-0 p-6 space-y-8">
+              {/* ── Salary breakdown pie ── */}
+              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
+
+              <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
+                <h3 className="text-foreground font-medium mb-1">
+                  {t("chart.studentNetVsHours" as any)}
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  {t("chart.studentNetVsHours.desc" as any)?.replace("{rate}", showEur ? fmtEUR(studentHourlyRate, eurRate) : `${fmtDKK(studentHourlyRate)} kr`)}
+                </p>
+                <ResponsiveContainer width="100%" height={450}>
+                  <LineChart data={studentHoursCurveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                    <XAxis
+                      dataKey="hours_month"
+                      type="number"
+                      domain={[0, 220]}
+                      label={{
+                        value: t("chart.hoursPerMonth"),
+                        position: "insideBottom",
+                        offset: -5,
+                      }}
+                      stroke="var(--muted-foreground)"
+                      fontSize={12}
+                    />
+                    <YAxis
+                      tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * sMul, eurRate) : fmtAxisDKK(v * sMul)}
+                      label={{
+                        value: showEur
+                          ? (period === "annual" ? t("chart.netAnnualEur" as any) : t("chart.netMonthEur" as any))
+                          : (period === "annual" ? t("chart.netAnnual" as any) : t("chart.netMonth" as any)),
+                        angle: -90,
+                        position: "insideLeft",
+                        style: { textAnchor: "middle" },
+                        dx: -5,
+                      }}
+                      stroke="var(--muted-foreground)"
+                      fontSize={12}
+                    />
+                    <RTooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null;
+                        const d = payload[0]?.payload as StudentHoursCurvePoint | undefined;
+                        if (!d) return null;
+                        const nVal = (period === "annual" ? d.net_annual : d.net_monthly);
+                        const suVal = d.su_kept_monthly * sMul;
+                        const workVal = d.work_net_monthly * sMul;
+                        const grossWork = d.hours_month * studentHourlyRate * sMul;
+                        const effectiveRate = grossWork > 0 ? ((grossWork - workVal) / grossWork * 100) : 0;
+                        return (
+                          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, padding: "10px 14px", lineHeight: 1.6 }}>
+                            {d.over_fribeloeb && (
+                              <p style={{ fontSize: 11, color: '#ef4444', fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
+                                ⚠ {t("chart.overFribeloeb" as any)}
+                              </p>
+                            )}
+                            <p style={{ fontWeight: 500 }}>{t("chart.gross")}: {showEur ? fmtEUR(grossWork, eurRate) : `${fmtDKK(grossWork)} kr`}</p>
+                            <p style={{ color: "var(--nordic-accent)", fontWeight: 500 }}>{t("chart.net")}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
+                            <p style={{ fontWeight: 500 }}>SU: {showEur ? fmtEUR(suVal, eurRate) : `${fmtDKK(suVal)} kr`}</p>
+                            <p style={{ fontWeight: 500 }}>{t("chart.workIncome" as any)}: {showEur ? fmtEUR(workVal, eurRate) : `${fmtDKK(workVal)} kr`}</p>
+                            <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {effectiveRate.toFixed(1)}%</p>
+                          </div>
+                        );
+                      }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey={period === "annual" ? "net_annual" : "net_monthly"}
+                      name="Total net"
+                      stroke="var(--nordic-accent)"
+                      strokeWidth={2.5}
+                      dot={false}
+                    />
+                    {/* Current position marker */}
+                    {studentHoursMonth > 0 && (() => {
+                      const currentPoint = studentHoursCurveData.reduce((prev, curr) =>
+                        Math.abs(curr.hours_month - studentHoursMonth) < Math.abs(prev.hours_month - studentHoursMonth) ? curr : prev
+                      );
+                      const yVal = period === "annual" ? currentPoint.net_annual : currentPoint.net_monthly;
+                      return (
+                        <>
+                          <ReferenceLine
+                            x={currentPoint.hours_month}
+                            stroke="var(--nordic-accent)"
+                            strokeDasharray="6 4"
+                            strokeWidth={1}
+                            strokeOpacity={0.7}
+                            label={{ value: `${currentPoint.hours_month}h`, position: "top", fontSize: 11, fill: "var(--nordic-accent)" }}
+                          />
+                          <ReferenceDot
+                            x={currentPoint.hours_month}
+                            y={yVal}
+                            r={6}
+                            fill="var(--destructive)"
+                            stroke="white"
+                            strokeWidth={2}
+                          />
+                        </>
+                      );
+                    })()}
+                    {/* Fribeløb boundary */}
+                    {fribeloebHour && (
+                      <>
+                        <ReferenceArea x1={0} x2={fribeloebHour} fill="#22c55e" fillOpacity={0.04} />
+                        <ReferenceArea x1={fribeloebHour} x2={220} fill="#ef4444" fillOpacity={0.04} />
+                        <ReferenceLine
+                          x={fribeloebHour}
+                          stroke="var(--destructive)"
+                          strokeDasharray="6 4"
+                          strokeWidth={1}
+                          strokeOpacity={0.6}
+                          label={{ value: t("chart.fribeloebLine" as any), position: "top", fontSize: 11, fill: "var(--destructive)" }}
+                        />
+                      </>
+                    )}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </TabsContent>
+            );
+          })()}
+
+          {/* Student with no work (SU only) — pie chart only */}
+          {isStudent && studentHoursCurveData.length === 0 && (
+            <TabsContent value="chart" className="mt-0 p-6 space-y-8">
+              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
             </TabsContent>
           )}
 

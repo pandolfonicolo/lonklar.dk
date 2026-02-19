@@ -1,3 +1,4 @@
+import React from "react";
 import { useNavigate, Link } from "react-router";
 import { Briefcase, Clock, GraduationCap, ArrowRight, ChevronRight, Shield, FileText, Lock, MessageSquare } from "lucide-react";
 import { motion } from "motion/react";
@@ -9,6 +10,8 @@ import { useI18n } from "../utils/i18n";
 export function Home() {
   const navigate = useNavigate();
   const { t, lang } = useI18n();
+
+  React.useEffect(() => { document.title = "lønklar.dk — Danish Income Calculator"; }, []);
 
   const services = [
     {

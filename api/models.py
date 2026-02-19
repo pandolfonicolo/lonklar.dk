@@ -86,7 +86,19 @@ class HoursCurveRequest(BaseModel):
     aftertax_deductions_monthly: float = Field(0.0)
     transport_km: float = Field(0.0)
     union_fees_annual: float = Field(0.0)
-    max_hours: int = Field(300)
+    max_hours: int = Field(220)
+
+
+class StudentHoursCurveRequest(BaseModel):
+    hourly_rate: float = Field(..., description="Student hourly wage in DKK")
+    su_monthly: float = Field(7426.0, description="Monthly SU before tax")
+    kommune: str = Field("København")
+    pension_pct: float = Field(0.0)
+    employer_pension_pct: float = Field(0.0)
+    is_church: bool = Field(True)
+    aars_fribeloeb: float | None = Field(None)
+    max_hours: int = Field(220)
+    step: int = Field(5)
 
 
 # ═══════════════════════════════════════════════════════════════════════

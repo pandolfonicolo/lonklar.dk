@@ -12,6 +12,7 @@ from ..models import (
     StudentRequest,
     CurveRequest,
     HoursCurveRequest,
+    StudentHoursCurveRequest,
 )
 
 router = APIRouter(prefix="/api")
@@ -192,5 +193,36 @@ def compute_hours_curve(req: HoursCurveRequest):
             "gross_monthly": round(gross_annual / 12),
             "net_monthly": round(r["net_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
+        })
+    return data
+
+
+@router.post("/compute/student-hours-curve")
+def compute_student_hours_curve(req: StudentHoursCurveRequest):
+    """Return net-vs-hours curve data for student (SU + work) charts."""
+    if req.kommune not in KOMMUNER:
+        return {"error": f"Unknown kommune: {req.kommune}"}
+    rates = KOMMUNER[req.kommune]
+    data = []
+    for h in range(0, req.max_hours + 1, req.step):
+        work_gross_monthly = req.hourly_rate * h
+        r = compute_student_income(
+            su_monthly=req.su_monthly,
+            work_gross_monthly=work_gross_monthly,
+            pension_pct=req.pension_pct / 100,
+            kommune_pct=rates["kommuneskat"],
+            kirke_pct=rates["kirkeskat"],
+            is_church=req.is_church,
+            employer_pension_pct=req.employer_pension_pct / 100,
+            aars_fribeloeb=req.aars_fribeloeb,
+        )
+        data.append({
+            "hours_month": h,
+            "net_monthly": round(r["net_monthly"]),
+            "net_annual": round(r["net_annual"]),
+            "su_kept_monthly": round(r["su_annual"] / 12),
+            "work_net_monthly": round(r["work_after_am"] / 12),
+            "over_fribeloeb": r["over_fribeloeb"],
+            "total_deductions": round(r["total_deductions"]),
         })
     return data

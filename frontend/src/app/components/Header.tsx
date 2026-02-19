@@ -48,12 +48,12 @@ export function Header() {
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-7 h-7 shrink-0" aria-hidden="true">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-9 h-9 shrink-0" aria-hidden="true">
               <rect width="32" height="32" rx="6" fill="var(--nordic-accent)" />
-              <text x="16" y="24" textAnchor="middle" fontFamily="'SF Mono','Monaco','Menlo','Consolas',monospace" fontSize="20" fontWeight="600" fill="#FFFFFF">u</text>
+              <text x="16" y="24" textAnchor="middle" fontFamily="'SF Mono','Monaco','Menlo','Consolas',monospace" fontSize="20" fontWeight="600" fill="#FFFFFF">l</text>
             </svg>
-            <span className="font-mono text-[17px] leading-none tracking-tight text-foreground">
-              udbetalt<span className="text-[var(--nordic-accent)]">.dk</span>
+            <span className="font-mono text-2xl leading-none tracking-tight text-foreground">
+              lønklar<span className="text-[var(--nordic-accent)]">.dk</span>
             </span>
           </Link>
 

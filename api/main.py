@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .routers import compute, meta, feedback
 
-app = FastAPI(title="DK Income Calculator API", version="1.0.0")
+app = FastAPI(title="lønklar.dk API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,

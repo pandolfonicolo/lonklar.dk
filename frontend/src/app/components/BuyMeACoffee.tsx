@@ -10,7 +10,7 @@ export function BuyMeACoffeeTab() {
       target="_blank"
       rel="noopener noreferrer"
       className="fixed right-0 top-1/2 -translate-y-1/2 z-40 group hidden sm:flex"
-      aria-label="Support udbetalt.dk"
+      aria-label="Support lønklar.dk"
     >
       <span
         className="flex items-center gap-0 group-hover:gap-2 h-10 pl-2.5 pr-2.5 group-hover:pr-4 rounded-l-xl shadow-lg transition-all duration-300 ease-out overflow-hidden"
@@ -58,7 +58,7 @@ export function BuyMeACoffeeTab() {
         background: "linear-gradient(135deg, #FFDD00 0%, #FFB800 100%)",
         color: "#000",
       }}
-      aria-label="Support udbetalt.dk"
+      aria-label="Support lønklar.dk"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"

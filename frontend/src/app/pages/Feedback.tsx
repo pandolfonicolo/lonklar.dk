@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, Send, CheckCircle, AlertCircle } from "lucide-react";
 import { Header } from "../components/Header";
@@ -12,6 +12,8 @@ type FeedbackType = "bug" | "feature" | "general";
 export function Feedback() {
   const navigate = useNavigate();
   const { t } = useI18n();
+
+  React.useEffect(() => { document.title = "Feedback — lønklar.dk"; }, []);
 
   const [type, setType] = useState<FeedbackType>("general");
   const [message, setMessage] = useState("");

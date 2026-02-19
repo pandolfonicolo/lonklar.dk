@@ -54,6 +54,8 @@ export function Wizard() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
   const { t, lang } = useI18n();
+
+  React.useEffect(() => { document.title = "Calculator — lønklar.dk"; }, []);
   const [step, setStep] = useState(0);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);
@@ -283,6 +285,9 @@ export function Wizard() {
         _input_transport_km: Number(transportKm),
         _input_union_fees_annual: Number(unionFees),
         _input_feriefridage: Number(feriefridage),
+        _input_student_hourly_rate: serviceId === "student" && studentWorkMode !== "none" ? Number(studentHourlyRate) : 0,
+        _input_student_hours_month: serviceId === "student" && studentWorkMode !== "none" ? Number(studentHoursMonth) : 0,
+        _input_student_work_mode: serviceId === "student" ? studentWorkMode : undefined,
       } });
     } catch (err) {
       console.error(err);

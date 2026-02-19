@@ -46,6 +46,7 @@ export function HowItWorks() {
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
+    document.title = "How It Works — lønklar.dk";
   }, []);
 
   return (

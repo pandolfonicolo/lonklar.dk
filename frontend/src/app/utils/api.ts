@@ -122,6 +122,18 @@ export interface HoursCurveRequest {
   max_hours?: number;
 }
 
+export interface StudentHoursCurveRequest {
+  hourly_rate: number;
+  su_monthly: number;
+  kommune: string;
+  pension_pct: number;
+  employer_pension_pct: number;
+  is_church: boolean;
+  aars_fribeloeb?: number | null;
+  max_hours?: number;
+  step?: number;
+}
+
 export interface CurvePoint {
   gross_annual: number;
   gross_monthly: number;
@@ -134,6 +146,16 @@ export interface HoursCurvePoint {
   gross_monthly: number;
   net_monthly: number;
   effective_rate: number;
+}
+
+export interface StudentHoursCurvePoint {
+  hours_month: number;
+  net_monthly: number;
+  net_annual: number;
+  su_kept_monthly: number;
+  work_net_monthly: number;
+  over_fribeloeb: boolean;
+  total_deductions: number;
 }
 
 export interface TaxResult {
@@ -249,6 +271,10 @@ export async function fetchCurve(req: CurveRequest): Promise<CurvePoint[]> {
 
 export async function fetchHoursCurve(req: HoursCurveRequest): Promise<HoursCurvePoint[]> {
   return post("/api/compute/hours-curve", req);
+}
+
+export async function fetchStudentHoursCurve(req: StudentHoursCurveRequest): Promise<StudentHoursCurvePoint[]> {
+  return post("/api/compute/student-hours-curve", req);
 }
 
 // ── Exchange Rates ─────────────────────────────────────────────────
