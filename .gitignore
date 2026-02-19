@@ -29,3 +29,6 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Documentation
+INFRASTRUCTURE.md

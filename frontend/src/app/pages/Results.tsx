@@ -248,7 +248,7 @@ function employeeBreakdown(r: TaxResult): Row[] {
   return rows;
 }
 
-function studentBreakdown(r: StudentResult): Row[] {
+function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourlyRate: number; hoursMonth: number; grossMonthly: number }>): Row[] {
   const rows: Row[] = [
     {
       label: "SU annual (gross)",
@@ -257,6 +257,16 @@ function studentBreakdown(r: StudentResult): Row[] {
     },
   ];
   if (r.work_gross_annual > 0) {
+    if (jobs && jobs.length > 1) {
+      // Show each job separately
+      jobs.forEach((job) => {
+        rows.push({
+          label: `  ${job.label}: ${fmtDKK(job.hourlyRate)} kr × ${Math.round(job.hoursMonth)} h`,
+          value: job.grossMonthly * 12,
+          indent: true,
+        });
+      });
+    }
     rows.push(
       {
         label: "Work annual (gross)",
@@ -616,7 +626,7 @@ export function Results() {
         .then(setHoursCurveData)
         .catch(console.error);
     }
-    if (serviceId === "student" && r._input_student_hourly_rate > 0) {
+    if (serviceId === "student" && r._input_student_hourly_rate > 0 && (!r._input_student_jobs || r._input_student_jobs.length <= 1)) {
       fetchStudentHoursCurve({
         hourly_rate: r._input_student_hourly_rate,
         su_monthly: r.su_monthly,
@@ -659,15 +669,15 @@ export function Results() {
     : (r.gross_annual || 0) / (period === "annual" ? 1 : 12);
 
   const breakdown: Row[] = isStudent
-    ? studentBreakdown(result as StudentResult)
+    ? studentBreakdown(result as StudentResult, r._input_student_jobs)
     : employeeBreakdown(result as TaxResult);
 
   const serviceTitle =
     serviceId === "fulltime"
-      ? t("wizard.fulltime.title")
+      ? t("home.fulltime.title")
       : serviceId === "parttime"
-      ? t("wizard.parttime.title")
-      : t("wizard.student.title");
+      ? t("home.parttime.title")
+      : t("home.student.title");
 
   const formatVal = (v: number): string => {
     const display = period === "annual" ? v : v / 12;
@@ -1343,10 +1353,33 @@ export function Results() {
             );
           })()}
 
-          {/* Student with no work (SU only) — pie chart only */}
+          {/* Student with no work (SU only) or multi-job — pie chart only */}
           {isStudent && studentHoursCurveData.length === 0 && (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
               <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
+              {r._input_student_jobs && r._input_student_jobs.length > 1 && r.work_gross_annual > 0 && (
+                <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
+                  <h3 className="text-foreground font-medium mb-3">
+                    {lang === "da" ? "Oversigt over dine jobs" : "Your jobs overview"}
+                  </h3>
+                  <div className="space-y-2">
+                    {r._input_student_jobs.map((job: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-3 bg-secondary/50 rounded-[var(--radius-md)]">
+                        <span className="text-sm text-muted-foreground">{job.label}</span>
+                        <span className="text-sm font-mono text-foreground">
+                          {fmtDKK(job.hourlyRate)} kr/h × {Math.round(job.hoursMonth)} h = {fmtDKK(job.grossMonthly)} kr/{lang === "da" ? "md" : "mo"}
+                        </span>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-between p-3 bg-[var(--nordic-accent-light)] rounded-[var(--radius-md)] font-medium">
+                      <span className="text-sm text-foreground">Total</span>
+                      <span className="text-sm font-mono text-foreground">
+                        {fmtDKK(r._input_student_jobs.reduce((s: number, j: any) => s + j.grossMonthly, 0))} kr/{lang === "da" ? "md" : "mo"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           )}
 

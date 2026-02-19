@@ -241,6 +241,7 @@ const translations = {
   // Income input
   "input.mode.annual": { en: "Annual", da: "Årlig", it: "Annuale", de: "Jährlich", sv: "Årlig", es: "Anual", nb: "Årlig" },
   "input.mode.monthly": { en: "Monthly", da: "Månedlig", it: "Mensile", de: "Monatlich", sv: "Månatlig", es: "Mensual", nb: "Månedlig" },
+  "input.mode.weekly": { en: "Weekly", da: "Ugentlig", it: "Settimanale", de: "Wöchentlich", sv: "Veckovis", es: "Semanal", nb: "Ukentlig" },
   "input.grossAnnual": { en: "Gross annual salary (DKK)", da: "Bruttoårsløn (DKK)", it: "Stipendio annuo lordo (DKK)", de: "Bruttojahresgehalt (DKK)", sv: "Bruttoårslön (DKK)", es: "Salario bruto anual (DKK)", nb: "Bruttoårslønn (DKK)" },
   "input.grossAnnual.tip": {
     en: "The number on your contract. Find it on your lønseddel as 'Årsløn' or 'Grundløn × 12'. Do NOT subtract pension or tax — we handle that.",
@@ -419,7 +420,7 @@ const translations = {
     es: "Tu parte, deducida del salario bruto. Consulta tu lønseddel o contrato — busca 'Pensionsbidrag medarbejder'. Habitual: 4 %. Pon 0 si no tienes plan de pensión.",
     nb: "Din andel, trukket fra bruttolønnen. Sjekk lønseddelen eller kontrakten — se etter 'Pensionsbidrag medarbejder'. Typisk: 4 %. Sett til 0 hvis ingen pensjon.",
   },
-  "input.pension.employer": { en: "Employer on top (%)", da: "Arbejdsgiver oveni (%)", it: "Datore di lavoro in aggiunta (%)", de: "Arbeitgeber obendrauf (%)", sv: "Arbetsgivare utöver (%)", es: "Empleador adicional (%)", nb: "Arbeidsgiver i tillegg (%)" },
+  "input.pension.employer": { en: "Employer's contribution (%)", da: "Arbejdsgivers bidrag (%)", it: "Contributo del datore (%)", de: "Arbeitgeberbeitrag (%)", sv: "Arbetsgivarens bidrag (%)", es: "Contribución del empleador (%)", nb: "Arbeidsgivers bidrag (%)" },
   "input.pension.employer.tip": {
     en: "Paid by your employer on top of your salary — goes straight to your pension fund. Not taxed now. Check your lønseddel for 'Pensionsbidrag arbejdsgiver'. Common: 8%.",
     da: "Betales af din arbejdsgiver oveni din løn — går direkte til din pensionskasse. Beskattes ikke nu. Tjek din lønseddel for 'Pensionsbidrag arbejdsgiver'. Typisk: 8 %.",
@@ -540,6 +541,7 @@ const translations = {
   "btn.adjust": { en: "Adjust & recalculate", da: "Justér & genberegn", it: "Modifica e ricalcola", de: "Anpassen & neu berechnen", sv: "Justera & beräkna om", es: "Ajustar y recalcular", nb: "Juster & beregn på nytt" },
   "btn.new": { en: "New calculation", da: "Ny beregning", it: "Nuovo calcolo", de: "Neue Berechnung", sv: "Ny beräkning", es: "Nuevo cálculo", nb: "Ny beregning" },
   "btn.backHome": { en: "Back to home", da: "Tilbage til forsiden", it: "Torna alla home", de: "Zurück zur Startseite", sv: "Tillbaka till startsidan", es: "Volver al inicio", nb: "Tilbake til forsiden" },
+  "btn.backWizard": { en: "Back to calculator", da: "Tilbage til beregner", it: "Torna al calcolatore", de: "Zurück zum Rechner", sv: "Tillbaka till kalkylatorn", es: "Volver a la calculadora", nb: "Tilbake til kalkulatoren" },
 
   // 404
   "notFound.title": { en: "Page not found", da: "Side ikke fundet", it: "Pagina non trovata", de: "Seite nicht gefunden", sv: "Sidan hittades inte", es: "Página no encontrada", nb: "Siden ble ikke funnet" },
@@ -645,7 +647,7 @@ const translations = {
   // Pension tab
   "pension.accrual": { en: "Pension accrual", da: "Pensionsopsparing", it: "Maturazione pensione", de: "Rentenansammlung", sv: "Pensionsuppbyggnad", es: "Acumulación de pensión", nb: "Pensjonsopptjening" },
   "pension.yours": { en: "Your contribution", da: "Dit bidrag", it: "Il tuo contributo", de: "Dein Beitrag", sv: "Ditt bidrag", es: "Tu contribución", nb: "Ditt bidrag" },
-  "pension.employer": { en: "Employer on top", da: "Arbejdsgiver oveni", it: "Datore di lavoro in aggiunta", de: "Arbeitgeber obendrauf", sv: "Arbetsgivare utöver", es: "Empleador adicional", nb: "Arbeidsgiver i tillegg" },
+  "pension.employer": { en: "Employer's contribution", da: "Arbejdsgivers bidrag", it: "Contributo del datore", de: "Arbeitgeberbeitrag", sv: "Arbetsgivarens bidrag", es: "Contribución del empleador", nb: "Arbeidsgivers bidrag" },
   "pension.total": { en: "Total pension", da: "Samlet pension", it: "Pensione totale", de: "Gesamte Rente", sv: "Total pension", es: "Pensión total", nb: "Samlet pensjon" },
 
   // Ferie tab

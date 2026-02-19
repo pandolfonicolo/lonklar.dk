@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
   ChevronLeft,
@@ -7,6 +7,8 @@ import {
   ChevronDown,
   Info,
   BarChart3,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { Header } from "../components/Header";
 import { Stepper } from "../components/Stepper";
@@ -81,12 +83,12 @@ export function Wizard() {
 
   // ── Shared state ───────────────────────────────────────────────
   const [kommune, setKommune] = useState("København");
-  const [isChurch, setIsChurch] = useState(true);
+  const [isChurch, setIsChurch] = useState(false);
   const [pensionPct, setPensionPct] = useState("4");
   const [erPensionPct, setErPensionPct] = useState("8");
 
   // ── Full-time state ────────────────────────────────────────────
-  const [salaryMode, setSalaryMode] = useState<"annual" | "monthly">("annual");
+  const [salaryMode, setSalaryMode] = useState<"annual" | "monthly">("monthly");
   const [grossAnnual, setGrossAnnual] = useState("504000");
   const [grossMonthly, setGrossMonthly] = useState("42000");
 
@@ -119,13 +121,46 @@ export function Wizard() {
   const [suMonths, setSuMonths] = useState("12");
   const [optedOutMonths, setOptedOutMonths] = useState("0");
 
-  const [studentHourlyRate, setStudentHourlyRate] = useState("140");
-  const [studentHoursMonth, setStudentHoursMonth] = useState("40");
+  // ── Multiple student jobs ──────────────────────────────────────
+  type StudentJob = { id: number; hourlyRate: string; hours: string; hoursMode: "monthly" | "weekly" };
+  const [studentJobs, setStudentJobs] = useState<StudentJob[]>([
+    { id: 1, hourlyRate: "140", hours: "40", hoursMode: "monthly" },
+  ]);
+  const nextJobId = useRef(2);
+
+  const addStudentJob = () => {
+    setStudentJobs((prev) => [
+      ...prev,
+      { id: nextJobId.current++, hourlyRate: "130", hours: "20", hoursMode: "monthly" },
+    ]);
+  };
+  const removeStudentJob = (id: number) => {
+    setStudentJobs((prev) => prev.filter((j) => j.id !== id));
+  };
+  const updateStudentJob = (id: number, field: keyof Omit<StudentJob, "id">, value: string) => {
+    setStudentJobs((prev) =>
+      prev.map((j) => (j.id === id ? { ...j, [field]: value } : j))
+    );
+  };
+
+  // Compute per-job monthly hours
+  const jobMonthlyHours = (job: StudentJob) => {
+    if (job.hoursMode === "weekly") return Number(job.hours) * 4.33;
+    return Number(job.hours);
+  };
+
+  // Total monthly gross across all jobs
+  const totalStudentWorkMonthly = useMemo(() => {
+    if (studentWorkMode === "none") return 0;
+    return studentJobs.reduce((sum, job) => {
+      return sum + Number(job.hourlyRate) * jobMonthlyHours(job);
+    }, 0);
+  }, [studentWorkMode, studentJobs]);
 
   const effectiveWorkMonthly = useMemo(() => {
     if (studentWorkMode === "none") return 0;
-    return Number(studentHourlyRate) * Number(studentHoursMonth);
-  }, [studentWorkMode, studentHourlyRate, studentHoursMonth]);
+    return totalStudentWorkMonthly;
+  }, [studentWorkMode, totalStudentWorkMonthly]);
 
   // Student periodisering
   const [studyPeriod, setStudyPeriod] = useState<"full" | "start" | "finish">("full");
@@ -285,9 +320,15 @@ export function Wizard() {
         _input_transport_km: Number(transportKm),
         _input_union_fees_annual: Number(unionFees),
         _input_feriefridage: Number(feriefridage),
-        _input_student_hourly_rate: serviceId === "student" && studentWorkMode !== "none" ? Number(studentHourlyRate) : 0,
-        _input_student_hours_month: serviceId === "student" && studentWorkMode !== "none" ? Number(studentHoursMonth) : 0,
+        _input_student_hourly_rate: serviceId === "student" && studentWorkMode !== "none" && studentJobs.length === 1 ? Number(studentJobs[0].hourlyRate) : 0,
+        _input_student_hours_month: serviceId === "student" && studentWorkMode !== "none" && studentJobs.length === 1 ? jobMonthlyHours(studentJobs[0]) : 0,
         _input_student_work_mode: serviceId === "student" ? studentWorkMode : undefined,
+        _input_student_jobs: serviceId === "student" && studentWorkMode !== "none" ? studentJobs.map((j, i) => ({
+          label: `Job ${i + 1}`,
+          hourlyRate: Number(j.hourlyRate),
+          hoursMonth: jobMonthlyHours(j),
+          grossMonthly: Number(j.hourlyRate) * jobMonthlyHours(j),
+        })) : undefined,
       } });
     } catch (err) {
       console.error(err);
@@ -696,43 +737,139 @@ export function Wizard() {
             </div>
 
             {studentWorkMode === "hourly" ? (
-              <div className="space-y-4">
-                <Field label={t("input.hourlyRate")} tooltip={t("input.hourlyRate.tip")}>
-                  <Input
-                    type="number"
-                    value={studentHourlyRate}
-                    onChange={(e) => setStudentHourlyRate(e.target.value)}
-                    placeholder="140"
-                    className="text-lg h-14"
-                  />
-                </Field>
-                <Field label={t("input.hoursMonth")} tooltip={t("input.hoursMonth.tip")}>
-                  <Input
-                    type="number"
-                    value={studentHoursMonth}
-                    onChange={(e) => setStudentHoursMonth(e.target.value)}
-                    placeholder="40"
-                    className="text-lg h-14"
-                  />
-                </Field>
-                <div className="rounded-[var(--radius-md)] bg-secondary/50 p-4">
-                  <p className="text-sm text-muted-foreground">
-                    ≈ {fmt(effectiveWorkMonthly)} DKK gross / {t("results.monthly").toLowerCase()}
-                    {Number(studentHoursMonth) > 0 && (
-                      <span className="ml-2 text-xs">({(Number(studentHoursMonth) / 4.33).toFixed(1)} h/{lang === "da" ? "uge" : "week"})</span>
-                    )}
-                  </p>
-                </div>
-                {Number(studentHoursMonth) > 0 && Number(studentHoursMonth) < 46 && (
-                  <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-amber-500/30 bg-amber-500/10 p-3">
-                    <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
-                      {lang === "da"
-                        ? "EU/EØS-borgere skal arbejde mindst 10-12 timer/uge (ca. 43-52 timer/md) for at opnå arbejdstagerstatus efter EU-retten og være berettiget til SU. Ved færre timer risikerer du at miste din SU."
-                        : "EU/EEA citizens must work at least 10-12 hours/week (~43-52 hours/month) to qualify as an EU worker and be eligible for SU. Working fewer hours may mean you lose your SU grant."}
+              <div className="space-y-6">
+                {studentJobs.map((job, idx) => {
+                  const monthlyH = jobMonthlyHours(job);
+                  const jobGrossMonthly = Number(job.hourlyRate) * monthlyH;
+                  return (
+                    <div
+                      key={job.id}
+                      className={`space-y-4 ${studentJobs.length > 1 ? "p-4 border border-border rounded-[var(--radius-lg)] relative" : ""}`}
+                    >
+                      {studentJobs.length > 1 && (
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {lang === "da" ? `Job ${idx + 1}` : `Job ${idx + 1}`}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => removeStudentJob(job.id)}
+                            className="p-1.5 rounded-[var(--radius-sm)] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            aria-label="Remove job"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+
+                      <Field label={t("input.hourlyRate")} tooltip={t("input.hourlyRate.tip")}>
+                        <Input
+                          type="number"
+                          value={job.hourlyRate}
+                          onChange={(e) => updateStudentJob(job.id, "hourlyRate", e.target.value)}
+                          placeholder="140"
+                          className="text-lg h-14"
+                        />
+                      </Field>
+
+                      {/* Monthly / Weekly toggle for hours */}
+                      <div className="flex items-center gap-2 p-1 bg-secondary rounded-[var(--radius-md)] w-fit">
+                        <button
+                          onClick={() => updateStudentJob(job.id, "hoursMode", "monthly")}
+                          className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
+                            job.hoursMode === "monthly"
+                              ? "bg-background text-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {t("input.mode.monthly")}
+                        </button>
+                        <button
+                          onClick={() => updateStudentJob(job.id, "hoursMode", "weekly")}
+                          className={`px-4 py-2 text-sm rounded-[var(--radius-sm)] transition-colors ${
+                            job.hoursMode === "weekly"
+                              ? "bg-background text-foreground shadow-sm"
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          {t("input.mode.weekly")}
+                        </button>
+                      </div>
+
+                      <Field
+                        label={job.hoursMode === "weekly"
+                          ? (lang === "da" ? "Timer pr. uge" : "Hours per week")
+                          : t("input.hoursMonth")}
+                        tooltip={t("input.hoursMonth.tip")}
+                      >
+                        <Input
+                          type="number"
+                          value={job.hours}
+                          onChange={(e) => updateStudentJob(job.id, "hours", e.target.value)}
+                          placeholder={job.hoursMode === "weekly" ? "10" : "40"}
+                          className="text-lg h-14"
+                        />
+                      </Field>
+                      <div className="rounded-[var(--radius-md)] bg-secondary/50 p-4">
+                        <p className="text-sm text-muted-foreground">
+                          ≈ {fmt(jobGrossMonthly)} DKK gross / {t("results.monthly").toLowerCase()}
+                          {monthlyH > 0 && (
+                            <span className="ml-2 text-xs">
+                              ({job.hoursMode === "weekly"
+                                ? `${Number(job.hours)} h/${lang === "da" ? "uge" : "week"} ≈ ${monthlyH.toFixed(0)} h/${lang === "da" ? "md" : "month"}`
+                                : `${(monthlyH / 4.33).toFixed(1)} h/${lang === "da" ? "uge" : "week"}`
+                              })
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {/* Add job button */}
+                <button
+                  type="button"
+                  onClick={addStudentJob}
+                  className="flex items-center gap-2 w-full p-3 text-sm font-medium text-[var(--nordic-accent)] border border-dashed border-[var(--nordic-accent)]/40 rounded-[var(--radius-md)] hover:bg-[var(--nordic-accent-light)] transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  {lang === "da" ? "Tilføj endnu et job" : "Add another job"}
+                </button>
+
+                {/* Total summary across all jobs */}
+                {studentJobs.length > 1 && (
+                  <div className="rounded-[var(--radius-md)] bg-[var(--nordic-accent-light)] border border-[var(--nordic-accent)]/30 p-4">
+                    <p className="text-sm font-medium text-foreground">
+                      {lang === "da" ? "Samlet arbejdsindkomst" : "Total work income"}:{" "}
+                      <span className="font-mono">{fmt(totalStudentWorkMonthly)} DKK</span> / {t("results.monthly").toLowerCase()}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {studentJobs.map((job, i) => {
+                        const mh = jobMonthlyHours(job);
+                        return `Job ${i + 1}: ${job.hourlyRate} kr × ${mh.toFixed(0)} h = ${fmt(Number(job.hourlyRate) * mh)} kr`;
+                      }).join(" + ")}
                     </p>
                   </div>
                 )}
+
+                {/* EU warning — based on total monthly hours across all jobs */}
+                {(() => {
+                  const totalMonthlyHours = studentJobs.reduce((sum, job) => sum + jobMonthlyHours(job), 0);
+                  if (totalMonthlyHours > 0 && totalMonthlyHours < 46) {
+                    return (
+                      <div className="flex items-start gap-2 rounded-[var(--radius-md)] border border-amber-500/30 bg-amber-500/10 p-3">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                          {lang === "da"
+                            ? "EU/EØS-borgere skal arbejde mindst 10-12 timer/uge (ca. 43-52 timer/md) for at opnå arbejdstagerstatus efter EU-retten og være berettiget til SU. Ved færre timer risikerer du at miste din SU."
+                            : "EU/EEA citizens must work at least 10-12 hours/week (~43-52 hours/month) to qualify as an EU worker and be eligible for SU. Working fewer hours may mean you lose your SU grant."}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
               </div>
             ) : (
               <div className="rounded-[var(--radius-md)] bg-secondary/50 p-4">
@@ -1056,10 +1193,22 @@ export function Wizard() {
           label: lang === "da" ? "Arbejdsindkomst / md" : "Work income / month",
           value: `${fmt(effectiveWorkMonthly)} DKK`,
         });
-        rows.push({
-          label: `  (${t("input.hourlyRate")})`,
-          value: `${studentHourlyRate} DKK × ${studentHoursMonth} h`,
-        });
+        if (studentJobs.length === 1) {
+          const job = studentJobs[0];
+          const mh = jobMonthlyHours(job);
+          rows.push({
+            label: `  (${t("input.hourlyRate")})`,
+            value: `${job.hourlyRate} DKK × ${mh.toFixed(0)} h/${lang === "da" ? "md" : "month"}`,
+          });
+        } else {
+          studentJobs.forEach((job, i) => {
+            const mh = jobMonthlyHours(job);
+            rows.push({
+              label: `  Job ${i + 1}`,
+              value: `${job.hourlyRate} DKK × ${mh.toFixed(0)} h = ${fmt(Number(job.hourlyRate) * mh)} DKK/${lang === "da" ? "md" : "month"}`,
+            });
+          });
+        }
       }
       if (Number(children) > 0) {
         rows.push({ label: t("input.children"), value: children });
