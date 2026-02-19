@@ -1,0 +1,41 @@
+# Umami Analytics — self-hosted, privacy-friendly visitor tracking
+# Runs alongside the main lonklar app on the same server.
+#
+# Usage:
+#   sudo docker compose -f docker-compose.umami.yml up -d
+#
+# Dashboard: https://analytics.lonklar.dk (after DNS + Caddy setup)
+
+services:
+  umami:
+    image: ghcr.io/umami-software/umami:postgresql-latest
+    container_name: umami
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://umami:umami@umami-db:5432/umami
+      # Generate your own: openssl rand -base64 32
+      APP_SECRET: CHANGE_ME_BEFORE_DEPLOYING
+    depends_on:
+      umami-db:
+        condition: service_healthy
+
+  umami-db:
+    image: postgres:16-alpine
+    container_name: umami-db
+    restart: unless-stopped
+    volumes:
+      - umami-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: umami
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  umami-data:
