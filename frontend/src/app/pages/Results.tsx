@@ -637,7 +637,7 @@ export function Results() {
         is_church: isChurch,
         aars_fribeloeb: r.aars_fribeloeb,
         max_hours: 220,
-        step: 5,
+        step: 1,
       })
         .then(setStudentHoursCurveData)
         .catch(console.error);
@@ -1271,6 +1271,7 @@ export function Results() {
                       dataKey="hours_month"
                       type="number"
                       domain={[0, 220]}
+                      ticks={Array.from({ length: 45 }, (_, i) => i * 5)}
                       label={{
                         value: t("chart.hoursPerMonth"),
                         position: "insideBottom",
@@ -1303,6 +1304,7 @@ export function Results() {
                         const workVal = d.work_net_monthly * sMul;
                         const grossWork = d.hours_month * studentHourlyRate * sMul;
                         const effectiveRate = grossWork > 0 ? ((grossWork - workVal) / grossWork * 100) : 0;
+                        const hrsWeek = (d.hours_month / 4.33).toFixed(1);
                         return (
                           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, padding: "10px 14px", lineHeight: 1.6 }}>
                             {d.over_fribeloeb && (
@@ -1311,6 +1313,7 @@ export function Results() {
                                 ⚠ {t("chart.overFribeloeb" as any)}
                               </p>
                             )}
+                            <p style={{ fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>{d.hours_month} {t("chart.hoursMonth" as any)} ({hrsWeek} {t("chart.hoursWeek" as any)})</p>
                             <p style={{ fontWeight: 500 }}>{t("chart.gross")}: {showEur ? fmtEUR(grossWork, eurRate) : `${fmtDKK(grossWork)} kr`}</p>
                             <p style={{ color: "var(--nordic-accent)", fontWeight: 500 }}>{t("chart.net")}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
                             <p style={{ fontWeight: 500 }}>SU: {showEur ? fmtEUR(suVal, eurRate) : `${fmtDKK(suVal)} kr`}</p>
@@ -1377,6 +1380,16 @@ export function Results() {
                   {t("tip.rotateMobile" as any)}
                 </p>
               </div>
+
+              {/* Fribeløb inflection explanation */}
+              {fribeloebHour && (
+                <div className="flex gap-3 items-start rounded-[var(--radius)] border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-4">
+                  <span className="text-amber-600 dark:text-amber-400 text-lg leading-none mt-0.5">💡</span>
+                  <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
+                    {t("chart.fribeloebExplain" as any)?.replace("{hours}", String(fribeloebHour)).replace("{fribeloeb}", showEur ? fmtEUR(r.aars_fribeloeb, eurRate) : `${fmtDKK(r.aars_fribeloeb)} kr`)}
+                  </p>
+                </div>
+              )}
             </TabsContent>
             );
           })()}
