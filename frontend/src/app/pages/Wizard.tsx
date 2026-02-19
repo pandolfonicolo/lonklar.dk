@@ -9,6 +9,7 @@ import {
   BarChart3,
   Plus,
   Trash2,
+  Pencil,
 } from "lucide-react";
 import { Header } from "../components/Header";
 import { Stepper } from "../components/Stepper";
@@ -728,7 +729,7 @@ export function Wizard() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {lang === "da" ? "Timeløn" : "Hourly wage"}
+                {t("jobs.hourlyWage" as any)}
               </button>
               <button
                 onClick={() => setStudentWorkMode("none")}
@@ -738,7 +739,7 @@ export function Wizard() {
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {lang === "da" ? "Kun SU (intet arbejde)" : "SU only (no work)"}
+                {t("jobs.suOnly" as any)}
               </button>
             </div>
 
@@ -754,13 +755,16 @@ export function Wizard() {
                     >
                       {studentJobs.length > 1 && (
                         <div className="flex items-center justify-between mb-1 gap-2">
-                          <input
-                            type="text"
-                            value={job.name}
-                            onChange={(e) => renameStudentJob(job.id, e.target.value)}
-                            className="text-sm font-medium text-foreground bg-transparent border-b border-transparent hover:border-muted-foreground/40 focus:border-[var(--nordic-accent)] focus:outline-none transition-colors w-full max-w-[200px] py-0.5"
-                            placeholder={`Job ${idx + 1}`}
-                          />
+                          <div className="flex items-center gap-1.5 group">
+                            <input
+                              type="text"
+                              value={job.name}
+                              onChange={(e) => renameStudentJob(job.id, e.target.value)}
+                              className="text-sm font-medium text-foreground bg-secondary/60 border border-border rounded-[var(--radius-sm)] px-2 py-1 focus:border-[var(--nordic-accent)] focus:outline-none transition-colors max-w-[200px]"
+                              placeholder={`Job ${idx + 1}`}
+                            />
+                            <Pencil className="w-3 h-3 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors shrink-0" />
+                          </div>
                           <button
                             type="button"
                             onClick={() => removeStudentJob(job.id)}
@@ -808,7 +812,7 @@ export function Wizard() {
 
                       <Field
                         label={job.hoursMode === "weekly"
-                          ? (lang === "da" ? "Timer pr. uge" : "Hours per week")
+                          ? t("jobs.hoursPerWeek" as any)
                           : t("input.hoursMonth")}
                         tooltip={t("input.hoursMonth.tip")}
                       >
@@ -844,14 +848,14 @@ export function Wizard() {
                   className="flex items-center gap-2 w-full p-3 text-sm font-medium text-[var(--nordic-accent)] border border-dashed border-[var(--nordic-accent)]/40 rounded-[var(--radius-md)] hover:bg-[var(--nordic-accent-light)] transition-colors"
                 >
                   <Plus className="w-4 h-4" />
-                  {lang === "da" ? "Tilføj endnu et job" : "Add another job"}
+                  {t("jobs.add" as any)}
                 </button>
 
                 {/* Total summary across all jobs */}
                 {studentJobs.length > 1 && (
                   <div className="rounded-[var(--radius-md)] bg-[var(--nordic-accent-light)] border border-[var(--nordic-accent)]/30 p-4">
                     <p className="text-sm font-medium text-foreground">
-                      {lang === "da" ? "Samlet arbejdsindkomst" : "Total work income"}:{" "}
+                      {t("jobs.totalIncome" as any)}:{" "}
                       <span className="font-mono">{fmt(totalStudentWorkMonthly)} DKK</span> / {t("results.monthly").toLowerCase()}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -1196,7 +1200,7 @@ export function Wizard() {
       if (studentWorkMode === "none") {
         rows.push({
           label: lang === "da" ? "Arbejde" : "Work",
-          value: lang === "da" ? "Kun SU (intet arbejde)" : "SU only (no work)",
+          value: t("jobs.suOnly" as any),
         });
       } else {
         rows.push({

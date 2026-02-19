@@ -543,6 +543,24 @@ const translations = {
   "btn.backHome": { en: "Back to home", da: "Tilbage til forsiden", it: "Torna alla home", de: "Zurück zur Startseite", sv: "Tillbaka till startsidan", es: "Volver al inicio", nb: "Tilbake til forsiden" },
   "btn.backWizard": { en: "Back to calculator", da: "Tilbage til beregner", it: "Torna al calcolatore", de: "Zurück zum Rechner", sv: "Tillbaka till kalkylatorn", es: "Volver a la calculadora", nb: "Tilbake til kalkulatoren" },
 
+  // Multi-job & mobile hints
+  "tip.rotateMobile": { en: "Tip: rotate your phone for a better view", da: "Tip: vend telefonen for bedre visning", it: "Suggerimento: ruota il telefono per una visione migliore", de: "Tipp: Drehe dein Handy für eine bessere Ansicht", sv: "Tips: rotera telefonen för bättre visning", es: "Consejo: gira el teléfono para una mejor vista", nb: "Tips: roter telefonen for bedre visning" },
+  "jobs.overview": { en: "Your jobs overview", da: "Oversigt over dine jobs", it: "Riepilogo dei tuoi lavori", de: "Übersicht deiner Jobs", sv: "Översikt av dina jobb", es: "Resumen de tus empleos", nb: "Oversikt over jobbene dine" },
+  "jobs.add": { en: "Add another job", da: "Tilføj endnu et job", it: "Aggiungi un altro lavoro", de: "Weiteren Job hinzufügen", sv: "Lägg till ett jobb till", es: "Añadir otro empleo", nb: "Legg til en jobb til" },
+  "jobs.totalIncome": { en: "Total work income", da: "Samlet arbejdsindkomst", it: "Reddito da lavoro totale", de: "Gesamtes Arbeitseinkommen", sv: "Total arbetsinkomst", es: "Ingreso laboral total", nb: "Samlet arbeidsinntekt" },
+  "jobs.hourlyWage": { en: "Hourly wage", da: "Timeløn", it: "Paga oraria", de: "Stundenlohn", sv: "Timlön", es: "Salario por hora", nb: "Timelønn" },
+  "jobs.suOnly": { en: "SU only (no work)", da: "Kun SU (intet arbejde)", it: "Solo SU (nessun lavoro)", de: "Nur SU (keine Arbeit)", sv: "Bara SU (inget arbete)", es: "Solo SU (sin trabajo)", nb: "Kun SU (ingen jobb)" },
+  "jobs.hoursPerWeek": { en: "Hours per week", da: "Timer pr. uge", it: "Ore a settimana", de: "Stunden pro Woche", sv: "Timmar per vecka", es: "Horas por semana", nb: "Timer per uke" },
+  "chart.suEffectDisclaimer": {
+    en: "This chart does not yet show the effect of SU repayment (fribeløb threshold). We're working on it.",
+    da: "Denne graf viser endnu ikke effekten af SU-tilbagebetaling (fribeløbsgrænsen). Vi arbejder på det.",
+    it: "Questo grafico non mostra ancora l'effetto del rimborso SU (soglia fribeløb). Ci stiamo lavorando.",
+    de: "Dieses Diagramm zeigt noch nicht die Auswirkung der SU-Rückzahlung (Freibetragsgrenze). Wir arbeiten daran.",
+    sv: "Det här diagrammet visar ännu inte effekten av SU-återbetalning (fribeløb-gränsen). Vi arbetar på det.",
+    es: "Este gráfico aún no muestra el efecto del reembolso SU (límite fribeløb). Estamos trabajando en ello.",
+    nb: "Denne grafen viser ennå ikke effekten av SU-tilbakebetaling (fribeløb-grensen). Vi jobber med det."
+  },
+
   // 404
   "notFound.title": { en: "Page not found", da: "Side ikke fundet", it: "Pagina non trovata", de: "Seite nicht gefunden", sv: "Sidan hittades inte", es: "Página no encontrada", nb: "Siden ble ikke funnet" },
   "notFound.desc": {

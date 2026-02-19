@@ -642,6 +642,21 @@ export function Results() {
         .then(setStudentHoursCurveData)
         .catch(console.error);
     }
+    // Multi-job students: fetch a net-vs-gross curve (like fulltime)
+    if (serviceId === "student" && r._input_student_jobs && r._input_student_jobs.length > 1) {
+      fetchCurve({
+        kommune: r.kommune,
+        pension_pct: pensionPct,
+        employer_pension_pct: erPensionPct,
+        is_church: isChurch,
+        is_hourly: false,
+        atp_monthly: 0,
+        max_gross: 1_680_000,
+        step_monthly: 500,
+      })
+        .then(setCurveData)
+        .catch(console.error);
+    }
   }, [result, serviceId]);
 
   if (!result) {
@@ -1079,7 +1094,7 @@ export function Results() {
                   </ResponsiveContainer>
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
                     <Smartphone className="w-3.5 h-3.5 rotate-90" />
-                    {lang === "da" ? "Tip: vend telefonen for bedre visning" : "Tip: rotate your phone for a better view"}
+                    {t("tip.rotateMobile" as any)}
                   </p>
                 </div>
                 );
@@ -1219,7 +1234,7 @@ export function Results() {
                   </ResponsiveContainer>
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
                     <Smartphone className="w-3.5 h-3.5 rotate-90" />
-                    {lang === "da" ? "Tip: vend telefonen for bedre visning" : "Tip: rotate your phone for a better view"}
+                    {t("tip.rotateMobile" as any)}
                   </p>
                 </div>
                 );
@@ -1359,40 +1374,116 @@ export function Results() {
                 </ResponsiveContainer>
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
                   <Smartphone className="w-3.5 h-3.5 rotate-90" />
-                  {lang === "da" ? "Tip: vend telefonen for bedre visning" : "Tip: rotate your phone for a better view"}
+                  {t("tip.rotateMobile" as any)}
                 </p>
               </div>
             </TabsContent>
             );
           })()}
 
-          {/* Student with no work (SU only) or multi-job — pie chart only */}
+          {/* Student with no work (SU only) or multi-job */}
           {isStudent && studentHoursCurveData.length === 0 && (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
               <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
-              {r._input_student_jobs && r._input_student_jobs.length > 1 && r.work_gross_annual > 0 && (
+
+              {/* Net vs Gross curve for multi-job students */}
+              {r._input_student_jobs && r._input_student_jobs.length > 1 && curveData.length > 0 && (() => {
+                const cMul = period === "annual" ? 12 : 1;
+                const ticks = Array.from({ length: 15 }, (_, i) => i * 10000);
+                const workGrossMonthly = r.work_gross_monthly || Math.round(r.work_gross_annual / 12);
+                const mellemThreshold = Math.round(641200 / 12);
+                const topThreshold = Math.round(777900 / 12);
+                return (
                 <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
-                  <h3 className="text-foreground font-medium mb-3">
-                    {lang === "da" ? "Oversigt over dine jobs" : "Your jobs overview"}
+                  <h3 className="text-foreground font-medium mb-1">
+                    {t("chart.netVsGross")}
                   </h3>
-                  <div className="space-y-2">
-                    {r._input_student_jobs.map((job: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-secondary/50 rounded-[var(--radius-md)]">
-                        <span className="text-sm text-muted-foreground">{job.label}</span>
-                        <span className="text-sm font-mono text-foreground">
-                          {fmtDKK(job.hourlyRate)} kr/h × {Math.round(job.hoursMonth)} h = {fmtDKK(job.grossMonthly)} kr/{lang === "da" ? "md" : "mo"}
-                        </span>
-                      </div>
-                    ))}
-                    <div className="flex items-center justify-between p-3 bg-[var(--nordic-accent-light)] rounded-[var(--radius-md)] font-medium">
-                      <span className="text-sm text-foreground">Total</span>
-                      <span className="text-sm font-mono text-foreground">
-                        {fmtDKK(r._input_student_jobs.reduce((s: number, j: any) => s + j.grossMonthly, 0))} kr/{lang === "da" ? "md" : "mo"}
-                      </span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    {period === "annual" ? t("chart.netVsGross.desc.annual" as any) : t("chart.netVsGross.desc")}
+                  </p>
+                  <ResponsiveContainer width="100%" height={450}>
+                    <LineChart data={curveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+                      <XAxis
+                        dataKey="gross_monthly"
+                        type="number"
+                        domain={[0, 140000]}
+                        ticks={ticks}
+                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
+                        label={{
+                          value: showEur
+                            ? (period === "annual" ? t('chart.grossAnnualEur' as any) : t('chart.grossMonthEur' as any))
+                            : (period === "annual" ? t('chart.grossAnnualIncome' as any) : t('chart.grossMonthIncome' as any)),
+                          position: "insideBottom",
+                          offset: -5,
+                        }}
+                        stroke="var(--muted-foreground)"
+                        fontSize={12}
+                      />
+                      <YAxis
+                        type="number"
+                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
+                        domain={[0, 140000]}
+                        ticks={ticks}
+                        label={{
+                          value: showEur
+                            ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
+                            : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
+                          angle: -90,
+                          position: "insideLeft",
+                          style: { textAnchor: 'middle' },
+                          dx: -5,
+                        }}
+                        stroke="var(--muted-foreground)"
+                        fontSize={12}
+                      />
+                      <RTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload?.length) return null;
+                          const d = payload[0]?.payload as CurvePoint | undefined;
+                          if (!d) return null;
+                          const gVal = d.gross_monthly * cMul;
+                          const nVal = d.net_monthly * cMul;
+                          const bracket = d.gross_monthly >= topThreshold
+                            ? { label: 'Topskat', color: '#ef4444' }
+                            : d.gross_monthly >= mellemThreshold
+                              ? { label: 'Mellemskat', color: '#f59e0b' }
+                              : { label: 'Bundskat', color: '#22c55e' };
+                          return (
+                            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
+                              <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
+                                {bracket.label}
+                              </p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
+                            </div>
+                          );
+                        }}
+                      />
+                      <Line type="monotone" dataKey="gross_monthly" name="Gross" stroke="var(--muted-foreground)" strokeDasharray="5 5" strokeWidth={1.5} dot={false} tooltipType="none" />
+                      <Line type="monotone" dataKey="net_monthly" name="Net" stroke="var(--nordic-accent)" strokeWidth={2.5} dot={false} />
+                      <ReferenceDot x={workGrossMonthly} y={netMonthly} r={6} fill="var(--destructive)" stroke="white" strokeWidth={2} />
+                      {/* Tax bracket zones */}
+                      <ReferenceArea x1={0} x2={mellemThreshold} fill="#22c55e" fillOpacity={0.04} />
+                      <ReferenceArea x1={mellemThreshold} x2={topThreshold} fill="#f59e0b" fillOpacity={0.06} />
+                      <ReferenceArea x1={topThreshold} x2={140000} fill="#ef4444" fillOpacity={0.06} />
+                      <ReferenceLine x={mellemThreshold} stroke="#f59e0b" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                      <ReferenceLine x={topThreshold} stroke="#ef4444" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
+                    <Smartphone className="w-3.5 h-3.5 rotate-90" />
+                    {t("tip.rotateMobile" as any)}
+                  </p>
+                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-2 italic">
+                    <Info className="w-3.5 h-3.5 shrink-0" />
+                    {t("chart.suEffectDisclaimer" as any)}
+                  </p>
                 </div>
-              )}
+                );
+              })()}
             </TabsContent>
           )}
 
