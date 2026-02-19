@@ -13,7 +13,7 @@ const iconBtn =
 const divider = "w-px h-4 bg-border";
 
 export function Header() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -71,6 +71,10 @@ export function Header() {
               {t("nav.feedback")}
             </Link>
             <div className={divider} />
+            <Link to="/about" className={`${navBtn} whitespace-nowrap`}>
+              {lang === "da" ? "Om" : "About"}
+            </Link>
+            <div className={divider} />
             <LangSwitcher />
             <div className={divider} />
             <DarkModeToggle />
@@ -108,6 +112,13 @@ export function Header() {
                   className={navBtnMobile}
                 >
                   {t("nav.feedback")}
+                </Link>
+                <Link
+                  to="/about"
+                  onClick={() => setMobileOpen(false)}
+                  className={navBtnMobile}
+                >
+                  {lang === "da" ? "Om" : "About"}
                 </Link>
                 <div className="border-t border-border my-1" />
                 <div className="flex items-center justify-between px-4 py-2">

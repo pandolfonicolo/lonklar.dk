@@ -58,7 +58,7 @@ export function Wizard() {
   const navigate = useNavigate();
   const { t, lang } = useI18n();
 
-  React.useEffect(() => { document.title = "Calculator — lønklar.dk"; }, []);
+  React.useEffect(() => { document.title = "Calculator – Lonklar | lønklar.dk"; }, []);
   const [step, setStep] = useState(0);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);

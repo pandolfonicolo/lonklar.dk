@@ -543,7 +543,7 @@ export function Results() {
   const result = location.state as TaxResult | StudentResult | null;
   const { t, lang } = useI18n();
 
-  React.useEffect(() => { document.title = "Results — lønklar.dk"; }, []);
+  React.useEffect(() => { document.title = "Results – Lonklar | lønklar.dk"; }, []);
 
   // Toggle state
   const [period, setPeriod] = useState<"monthly" | "annual">("monthly");

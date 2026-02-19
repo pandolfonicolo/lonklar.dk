@@ -11,7 +11,7 @@ export function Home() {
   const navigate = useNavigate();
   const { t, lang } = useI18n();
 
-  React.useEffect(() => { document.title = "lønklar.dk — Danish Income Calculator"; }, []);
+  React.useEffect(() => { document.title = "Lonklar – Danish Salary & Tax Calculator | lønklar.dk"; }, []);
 
   const services = [
     {

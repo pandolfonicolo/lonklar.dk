@@ -54,7 +54,7 @@ export function HowItWorks() {
 
   React.useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "How It Works — lønklar.dk";
+    document.title = "How It Works – Lonklar | lønklar.dk";
   }, []);
 
   return (

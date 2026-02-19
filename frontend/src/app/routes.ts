@@ -5,6 +5,7 @@ import { Results } from "./pages/Results";
 import { HowItWorks } from "./pages/HowItWorks";
 import { QuickOverview } from "./pages/QuickOverview";
 import { Feedback } from "./pages/Feedback";
+import { About } from "./pages/About";
 import { NotFound } from "./pages/NotFound";
 
 export const router = createBrowserRouter([
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
   {
     path: "/how-it-works",
     Component: HowItWorks,
+  },
+  {
+    path: "/about",
+    Component: About,
   },
   {
     path: "/contact",

@@ -47,6 +47,7 @@ export function QuickOverview() {
   const [grossInput, setGrossInput] = useState("42000");
 
   useEffect(() => {
+    document.title = "Quick Overview – Lonklar | lønklar.dk";
     fetchCurve(STANDARD)
       .then(setCurveData)
       .catch(console.error)

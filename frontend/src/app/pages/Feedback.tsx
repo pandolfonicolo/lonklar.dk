@@ -19,7 +19,7 @@ export function Feedback() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  React.useEffect(() => { document.title = "Contact — lønklar.dk"; }, []);
+  React.useEffect(() => { document.title = "Contact – Lonklar | lønklar.dk"; }, []);
 
   const [type, setType] = useState<FeedbackType>("general");
   const [message, setMessage] = useState("");
