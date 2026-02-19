@@ -47,12 +47,12 @@ export function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-14 items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2.5 transition-opacity hover:opacity-80">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-9 h-9 shrink-0" aria-hidden="true">
+          <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className="w-7 h-7 shrink-0" aria-hidden="true">
               <rect width="32" height="32" rx="6" fill="var(--nordic-accent)" />
-              <text x="16" y="24" textAnchor="middle" fontFamily="'SF Mono','Monaco','Menlo','Consolas',monospace" fontSize="20" fontWeight="600" fill="#FFFFFF">l</text>
+              <text x="16" y="23" textAnchor="middle" fontFamily="'SF Mono','Monaco','Menlo','Consolas',monospace" fontSize="20" fontWeight="600" fill="#FFFFFF">l</text>
             </svg>
-            <span className="font-mono text-2xl leading-none tracking-tight text-foreground">
+            <span className="font-mono text-xl leading-tight tracking-tight text-foreground">
               lønklar<span className="text-[var(--nordic-accent)]">.dk</span>
             </span>
           </Link>
