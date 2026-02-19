@@ -1384,7 +1384,6 @@ export function Results() {
               {/* Fribeløb inflection explanation */}
               {fribeloebHour && (
                 <div className="flex gap-3 items-start rounded-[var(--radius)] border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-4">
-                  <span className="text-amber-600 dark:text-amber-400 text-lg leading-none mt-0.5">💡</span>
                   <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
                     {t("chart.fribeloebExplain" as any)?.replace("{hours}", String(fribeloebHour)).replace("{fribeloeb}", showEur ? fmtEUR(r.aars_fribeloeb, eurRate) : `${fmtDKK(r.aars_fribeloeb)} kr`)}
                   </p>
