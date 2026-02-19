@@ -32,3 +32,6 @@ Thumbs.db
 
 # Documentation
 INFRASTRUCTURE.md
+
+# User feedback data (persisted on server, not in repo)
+feedback_data/

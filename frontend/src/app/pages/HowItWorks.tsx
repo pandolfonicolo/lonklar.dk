@@ -6,11 +6,11 @@ import { useNavigate, Link } from "react-router";
 import { useI18n } from "../utils/i18n";
 
 /* ── pseudo-code formula block (language-independent) ────────── */
-const FORMULA = `// Full-time salary → net pay (2026)
+const FORMULA = `// Full-time job → net pay (2026 rates)
 
 pension        = gross × employee_pension_%
-atp            = 99 kr/month × 12
-feriepenge     = gross × 1%                    // (12.5% if hourly)
+atp            = 94.65 kr/month × 12             // (varies by hours)
+feriepenge     = gross × 1%                      // (12.5% if hourly)
 
 am_basis       = gross + feriepenge − pension − atp
 am_bidrag      = am_basis × 8%
@@ -19,6 +19,9 @@ income_after_am = am_basis − am_bidrag
 // ── deductions ──
 beskæft_fradrag = min(income_after_am × 12.75%, 63 300)
 job_fradrag     = min(income_after_am ×  4.50%,  3 100)
+befordring      = (daily_km − 24) × 1.98 kr/km × 218 days
+fagforening     = min(annual_union_fees, 7 000)
+lignings_fradrag = befordring + fagforening
 
 // ── state tax ──
 bundskat_base   = max(income_after_am − 54 100, 0)
@@ -26,8 +29,13 @@ bundskat        = bundskat_base × 12.01%
 
 // ── municipal tax (reduced base) ──
 kommune_base    = max(income_after_am − 54 100
-                    − beskæft_fradrag − job_fradrag, 0)
+                    − beskæft − job − lignings_fradrag, 0)
 kommuneskat     = kommune_base × kommune_%
+
+// ── church tax (optional, own base) ──
+kirke_base      = max(income_after_am − 54 100
+                    − lignings_fradrag, 0)
+kirkeskat       = kirke_base × kirke_%
 
 // ── progressive brackets (capped by skatteloft 44.57%) ──
 mellemskat      = max(min(income, 777 900) − 641 200, 0) × 7.5%
@@ -121,6 +129,7 @@ export function HowItWorks() {
                     <li>{t("method.calc.student.excess")}</li>
                     <li>{t("method.calc.student.interest")}</li>
                     <li>{t("method.calc.student.personfradrag")}</li>
+                    <li>{t("method.calc.student.multijob")}</li>
                   </ul>
                 </div>
               </div>
