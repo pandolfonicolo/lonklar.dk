@@ -125,7 +125,7 @@ export function Wizard() {
   // ── Multiple student jobs ──────────────────────────────────────
   type StudentJob = { id: number; name: string; hourlyRate: string; hours: string; hoursMode: "monthly" | "weekly" };
   const [studentJobs, setStudentJobs] = useState<StudentJob[]>([
-    { id: 1, name: "Job 1", hourlyRate: "140", hours: "40", hoursMode: "monthly" },
+    { id: 1, name: "Job 1", hourlyRate: "140", hours: "10", hoursMode: "weekly" },
   ]);
   const nextJobId = useRef(2);
 
@@ -133,7 +133,7 @@ export function Wizard() {
     const n = nextJobId.current++;
     setStudentJobs((prev) => [
       ...prev,
-      { id: n, name: `Job ${prev.length + 1}`, hourlyRate: "130", hours: "20", hoursMode: "monthly" },
+      { id: n, name: `Job ${prev.length + 1}`, hourlyRate: "130", hours: "5", hoursMode: "weekly" },
     ]);
   };
   const removeStudentJob = (id: number) => {
@@ -1358,19 +1358,21 @@ function Field({
 }
 
 function Tip({ text }: { text: string }) {
+  const [open, setOpen] = React.useState(false);
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip open={open} onOpenChange={setOpen}>
         <TooltipTrigger asChild>
           <button
             type="button"
             className="inline-flex items-center justify-center w-5 h-5 rounded-full text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted transition-colors"
             aria-label="More info"
+            onClick={(e) => { e.preventDefault(); setOpen((v) => !v); }}
           >
             <Info className="w-3.5 h-3.5" />
           </button>
         </TooltipTrigger>
-        <TooltipContent side="top">
+        <TooltipContent side="top" onPointerDownOutside={() => setOpen(false)}>
           <p>{text}</p>
         </TooltipContent>
       </Tooltip>
