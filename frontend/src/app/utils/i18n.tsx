@@ -13,7 +13,7 @@ const translations = {
   // ── Global / nav ───────────────────────────────────────────────
   "nav.calculators": { en: "Calculators", da: "Beregnere", it: "Calcolatori", de: "Rechner", sv: "Kalkylatorer", es: "Calculadoras", nb: "Kalkulatorer" },
   "nav.methodology": { en: "How it works", da: "Sådan fungerer det", it: "Come funziona", de: "So funktioniert es", sv: "Så fungerar det", es: "Cómo funciona", nb: "Slik fungerer det" },
-  "nav.feedback": { en: "Feedback", da: "Feedback", it: "Feedback", de: "Feedback", sv: "Feedback", es: "Feedback", nb: "Feedback" },
+  "nav.feedback": { en: "Contact", da: "Kontakt", it: "Contatti", de: "Kontakt", sv: "Kontakt", es: "Contacto", nb: "Kontakt" },
   "nav.language": { en: "DA", da: "EN", it: "EN", de: "EN", sv: "EN", es: "EN", nb: "EN" },
 
   // ── Home page ──────────────────────────────────────────────────
@@ -102,7 +102,7 @@ const translations = {
 
   // How it works
   "home.how.title": { en: "How it works", da: "Sådan virker det", it: "Come funziona", de: "So funktioniert es", sv: "Så fungerar det", es: "Cómo funciona", nb: "Slik fungerer det" },
-  "home.how.learnMore": { en: "Learn more about our methodology", da: "Læs mere om vores metode", it: "Scopri di più sulla nostra metodologia", de: "Mehr über unsere Methodik erfahren", sv: "Läs mer om vår metodik", es: "Más sobre nuestra metodología", nb: "Les mer om vår metodikk" },
+  "home.how.learnMore": { en: "See how we calculate", da: "Se hvordan vi beregner", it: "Scopri come calcoliamo", de: "So berechnen wir", sv: "Se hur vi beräknar", es: "Cómo calculamos", nb: "Se hvordan vi beregner" },
   "home.how.step1.title": { en: "Choose your situation", da: "Vælg din situation", it: "Scegli la tua situazione", de: "Wähle deine Situation", sv: "Välj din situation", es: "Elige tu situación", nb: "Velg din situasjon" },
   "home.how.step1.desc": {
     en: "Are you salaried, paid hourly, or a student with SU? Pick the calculator that fits.",
@@ -154,18 +154,18 @@ const translations = {
     nb: "Dette er et personlig prosjekt bygget på fritiden min. Jeg streber etter nøyaktighet, men tar ikke ansvar for resultatene. Har du funnet en feil eller har et forslag, hører jeg gjerne fra deg.",
   },
   "home.disclaimer.cta": {
-    en: "Give feedback",
-    da: "Giv feedback",
-    it: "Invia feedback",
-    de: "Feedback geben",
-    sv: "Ge feedback",
-    es: "Dar feedback",
-    nb: "Gi tilbakemelding",
+    en: "Contact us",
+    da: "Kontakt os",
+    it: "Contattaci",
+    de: "Kontaktiere uns",
+    sv: "Kontakta oss",
+    es: "Contáctanos",
+    nb: "Kontakt oss",
   },
   "home.comingSoon": { en: "Coming soon", da: "Kommer snart", it: "Prossimamente", de: "Demnächst", sv: "Kommer snart", es: "Próximamente", nb: "Kommer snart" },
 
   // Feedback page
-  "feedback.title": { en: "Feedback", da: "Feedback", it: "Feedback", de: "Feedback", sv: "Feedback", es: "Feedback", nb: "Feedback" },
+  "feedback.title": { en: "Contact", da: "Kontakt", it: "Contatti", de: "Kontakt", sv: "Kontakt", es: "Contacto", nb: "Kontakt" },
   "feedback.subtitle": {
     en: "Help improve lønklar.dk: report errors, suggest features, or share your experience.",
     da: "Hjælp med at forbedre lønklar.dk: rapportér fejl, foreslå funktioner, eller del din oplevelse.",
@@ -191,8 +191,10 @@ const translations = {
   },
   "feedback.email.label": { en: "Email (optional)", da: "E-mail (valgfrit)", it: "Email (facoltativo)", de: "E-Mail (optional)", sv: "E-post (valfritt)", es: "Correo electrónico (opcional)", nb: "E-post (valgfritt)" },
   "feedback.email.placeholder": { en: "In case I need to follow up", da: "Hvis jeg har behov for opfølgning", it: "Nel caso debba ricontattarti", de: "Falls ich nachfassen muss", sv: "Ifall jag behöver följa upp", es: "Por si necesito hacer seguimiento", nb: "I tilfelle jeg trenger å følge opp" },
-  "feedback.submit": { en: "Send feedback", da: "Send feedback", it: "Invia feedback", de: "Feedback senden", sv: "Skicka feedback", es: "Enviar feedback", nb: "Send tilbakemelding" },
-  "feedback.success": { en: "Thank you! Your feedback has been received.", da: "Tak! Din feedback er modtaget.", it: "Grazie! Il tuo feedback è stato ricevuto.", de: "Danke! Dein Feedback wurde empfangen.", sv: "Tack! Din feedback har mottagits.", es: "¡Gracias! Tu feedback ha sido recibido.", nb: "Takk! Din tilbakemelding er mottatt." },
+  "feedback.submit": { en: "Send message", da: "Send besked", it: "Invia messaggio", de: "Nachricht senden", sv: "Skicka meddelande", es: "Enviar mensaje", nb: "Send melding" },
+  "feedback.success": { en: "Thank you! Your message has been received.", da: "Tak! Din besked er modtaget.", it: "Grazie! Il tuo messaggio è stato ricevuto.", de: "Danke! Deine Nachricht wurde empfangen.", sv: "Tack! Ditt meddelande har mottagits.", es: "¡Gracias! Tu mensaje ha sido recibido.", nb: "Takk! Din melding er mottatt." },
+  "feedback.success.title": { en: "Message sent", da: "Besked sendt", it: "Messaggio inviato", de: "Nachricht gesendet", sv: "Meddelande skickat", es: "Mensaje enviado", nb: "Melding sendt" },
+  "feedback.sendAnother": { en: "Send another", da: "Send en til", it: "Invia un altro", de: "Weitere senden", sv: "Skicka ett till", es: "Enviar otro", nb: "Send en til" },
   "feedback.error": { en: "Something went wrong. Please try again.", da: "Noget gik galt. Prøv venligst igen.", it: "Qualcosa è andato storto. Riprova.", de: "Etwas ist schiefgelaufen. Bitte versuche es erneut.", sv: "Något gick fel. Försök igen.", es: "Algo salió mal. Inténtalo de nuevo.", nb: "Noe gikk galt. Vennligst prøv igjen." },
 
   // Accuracy report (Results page)
@@ -539,9 +541,23 @@ const translations = {
   "btn.new": { en: "New calculation", da: "Ny beregning", it: "Nuovo calcolo", de: "Neue Berechnung", sv: "Ny beräkning", es: "Nuevo cálculo", nb: "Ny beregning" },
   "btn.backHome": { en: "Back to home", da: "Tilbage til forsiden", it: "Torna alla home", de: "Zurück zur Startseite", sv: "Tillbaka till startsidan", es: "Volver al inicio", nb: "Tilbake til forsiden" },
 
+  // 404
+  "notFound.title": { en: "Page not found", da: "Side ikke fundet", it: "Pagina non trovata", de: "Seite nicht gefunden", sv: "Sidan hittades inte", es: "Página no encontrada", nb: "Siden ble ikke funnet" },
+  "notFound.desc": {
+    en: "The page you're looking for doesn't exist or has been moved.",
+    da: "Siden du leder efter eksisterer ikke eller er blevet flyttet.",
+    it: "La pagina che stai cercando non esiste o è stata spostata.",
+    de: "Die Seite, die du suchst, existiert nicht oder wurde verschoben.",
+    sv: "Sidan du letar efter finns inte eller har flyttats.",
+    es: "La página que buscas no existe o ha sido movida.",
+    nb: "Siden du leter etter finnes ikke eller er blitt flyttet.",
+  },
+
   // ── Results page ───────────────────────────────────────────────
   "results.netMonthly": { en: "Estimated net monthly", da: "Estimeret nettomånedlig", it: "Netto mensile stimato", de: "Geschätztes Nettomonatsgehalt", sv: "Uppskattad nettomånadslön", es: "Neto mensual estimado", nb: "Estimert nettomånedlig" },
   "results.netAnnual": { en: "Estimated net annual", da: "Estimeret nettoårlig", it: "Netto annuale stimato", de: "Geschätztes Nettojahresgehalt", sv: "Uppskattad nettoårslön", es: "Neto anual estimado", nb: "Estimert nettoårlig" },
+  "results.netMonthlyIncome": { en: "Estimated net monthly income", da: "Estimeret netto månedlig indkomst", it: "Reddito netto mensile stimato", de: "Geschätztes monatliches Nettoeinkommen", sv: "Uppskattad månatlig nettoinkomst", es: "Ingreso neto mensual estimado", nb: "Estimert månedlig nettoinntekt" },
+  "results.netAnnualIncome": { en: "Estimated net annual income", da: "Estimeret netto årsindkomst", it: "Reddito netto annuale stimato", de: "Geschätztes jährliches Nettoeinkommen", sv: "Uppskattad årlig nettoinkomst", es: "Ingreso neto anual estimado", nb: "Estimert årlig nettoinntekt" },
   "results.effRate": { en: "Eff. tax rate", da: "Eff. skatteprocent", it: "Aliquota fiscale eff.", de: "Eff. Steuersatz", sv: "Eff. skattesats", es: "Tasa imp. ef.", nb: "Eff. skattesats" },
   "results.marginTooltip": {
     en: "This is an estimate. The actual amount may vary by ±1.5% due to ferietillæg/feriepenge timing (paid monthly vs. reserved), rounding across tax brackets, municipality-specific rates, and individual deduction differences.",
@@ -567,7 +583,6 @@ const translations = {
   "results.item": { en: "Item", da: "Post", it: "Voce", de: "Posten", sv: "Post", es: "Concepto", nb: "Post" },
   "results.annualDKK": { en: "Annual (DKK)", da: "Årlig (DKK)", it: "Annuale (DKK)", de: "Jährlich (DKK)", sv: "Årlig (DKK)", es: "Anual (DKK)", nb: "Årlig (DKK)" },
   "results.monthlyDKK": { en: "Monthly (DKK)", da: "Månedlig (DKK)", it: "Mensile (DKK)", de: "Monatlich (DKK)", sv: "Månatlig (DKK)", es: "Mensual (DKK)", nb: "Månedlig (DKK)" },
-  "results.netAnnualIncome": { en: "Net annual income", da: "Netto årsindkomst", it: "Reddito annuo netto", de: "Netto-Jahreseinkommen", sv: "Netto årsinkomst", es: "Ingreso neto anual", nb: "Netto årsinntekt" },
 
   // Charts
   "chart.netVsGross": { en: "Net vs gross income", da: "Netto vs brutto indkomst", it: "Netto vs lordo", de: "Netto vs Brutto", sv: "Netto vs brutto inkomst", es: "Neto vs bruto", nb: "Netto vs brutto inntekt" },
@@ -600,6 +615,10 @@ const translations = {
   "chart.netAnnual": { en: "Net annual salary (DKK)", da: "Nettoløn pr. år (DKK)", it: "Stipendio netto annuale (DKK)", de: "Nettogehalt pro Jahr (DKK)", sv: "Nettolön per år (DKK)", es: "Salario neto anual (DKK)", nb: "Nettolønn per år (DKK)" },
   "chart.netMonthEur": { en: "Net monthly salary (EUR)", da: "Nettoløn pr. måned (EUR)", it: "Stipendio netto mensile (EUR)", de: "Nettogehalt pro Monat (EUR)", sv: "Nettolön per månad (EUR)", es: "Salario neto mensual (EUR)", nb: "Nettolønn per måned (EUR)" },
   "chart.netAnnualEur": { en: "Net annual salary (EUR)", da: "Nettoløn pr. år (EUR)", it: "Stipendio netto annuale (EUR)", de: "Nettogehalt pro Jahr (EUR)", sv: "Nettolön per år (EUR)", es: "Salario neto anual (EUR)", nb: "Nettolønn per år (EUR)" },
+  "chart.grossMonthIncome": { en: "Gross monthly income (DKK)", da: "Bruttoindkomst pr. måned (DKK)", it: "Reddito lordo mensile (DKK)", de: "Bruttoeinkommen pro Monat (DKK)", sv: "Bruttoinkomst per månad (DKK)", es: "Ingreso bruto mensual (DKK)", nb: "Bruttoinntekt per måned (DKK)" },
+  "chart.grossAnnualIncome": { en: "Gross annual income (DKK)", da: "Bruttoindkomst pr. år (DKK)", it: "Reddito lordo annuale (DKK)", de: "Bruttoeinkommen pro Jahr (DKK)", sv: "Bruttoinkomst per år (DKK)", es: "Ingreso bruto anual (DKK)", nb: "Bruttoinntekt per år (DKK)" },
+  "chart.netMonthIncome": { en: "Net monthly income (DKK)", da: "Nettoindkomst pr. måned (DKK)", it: "Reddito netto mensile (DKK)", de: "Nettoeinkommen pro Monat (DKK)", sv: "Nettoinkomst per månad (DKK)", es: "Ingreso neto mensual (DKK)", nb: "Nettoinntekt per måned (DKK)" },
+  "chart.netAnnualIncome": { en: "Net annual income (DKK)", da: "Nettoindkomst pr. år (DKK)", it: "Reddito netto annuale (DKK)", de: "Nettoeinkommen pro Jahr (DKK)", sv: "Nettoinkomst per år (DKK)", es: "Ingreso neto anual (DKK)", nb: "Nettoinntekt per år (DKK)" },
   "chart.hoursPerMonth": { en: "Hours / month", da: "Timer / måned", it: "Ore / mese", de: "Stunden / Monat", sv: "Timmar / månad", es: "Horas / mes", nb: "Timer / måned" },
   "chart.dkkMonth": { en: "month", da: "md", it: "mese", de: "Monat", sv: "månad", es: "mes", nb: "mnd" },
   "chart.dkkYear": { en: "year", da: "år", it: "anno", de: "Jahr", sv: "år", es: "año", nb: "år" },

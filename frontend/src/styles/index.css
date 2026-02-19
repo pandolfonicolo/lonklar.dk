@@ -42,6 +42,7 @@
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
+  overflow-y: scroll;
 }
 
 /* Focus visible for keyboard navigation */

@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate, Link } from "react-router";
-import { Briefcase, Clock, GraduationCap, ArrowRight, ChevronRight, Shield, FileText, Lock, MessageSquare } from "lucide-react";
+import { Briefcase, Clock, GraduationCap, ArrowRight, Shield, FileText, Lock, MessageSquare } from "lucide-react";
 import { motion } from "motion/react";
 import { Header } from "../components/Header";
 import { ServiceCard } from "../components/ServiceCard";
@@ -39,7 +39,7 @@ export function Home() {
       subtitleKey: "home.student.subtitle" as const,
       descKey: "home.student.desc" as const,
       comingSoon: false,
-      accent: "#6B9E7B",       // sage green
+      accent: "#6B9E7B",       // green
     },
   ];
 
@@ -54,7 +54,7 @@ export function Home() {
       <Header />
 
       {/* ── Hero ─────────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
+      <section key={lang} className="relative overflow-hidden">
         {/* Subtle background accent */}
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--nordic-accent-light)]/40 to-transparent pointer-events-none" />
 
@@ -147,7 +147,7 @@ export function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-[var(--nordic-accent)]/[0.07] via-[var(--nordic-accent)]/[0.05] to-transparent border-y border-[var(--nordic-accent)]/15 pointer-events-none" />
 
         <div className="relative max-w-5xl mx-auto">
-          <h2 className="text-center text-sm font-medium text-muted-foreground uppercase tracking-widest mb-6">
+          <h2 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-8">
             {t("home.cards.heading")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-stretch">
@@ -179,7 +179,7 @@ export function Home() {
       {/* ── How It Works ─────────────────────────────────── */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-secondary/30">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-center mb-10 text-foreground">{t("home.how.title")}</h2>
+          <h2 className="text-center text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-10">{t("home.how.title")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {(["step1", "step2", "step3"] as const).map((step, idx) => (
               <div key={step} className="relative text-center">
@@ -189,14 +189,15 @@ export function Home() {
                 <h3 className="mb-1.5 text-card-foreground text-sm font-semibold">
                   {t(`home.how.${step}.title`)}
                 </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[14rem] mx-auto">
                   {t(`home.how.${step}.desc`)}
                 </p>
                 {/* Connector arrow (desktop only, between steps) */}
                 {idx < 2 && (
-                  <div className="hidden md:flex absolute top-5 -right-5 items-center">
-                    <div className="w-6 border-t-2 border-dashed border-[var(--nordic-accent)]/40" />
-                    <ChevronRight className="w-4 h-4 -ml-1 text-[var(--nordic-accent)]/60" />
+                  <div className="hidden md:flex absolute top-5 -right-4 items-center">
+                    <svg width="24" height="12" viewBox="0 0 24 12" fill="none" className="text-[var(--nordic-accent)]/50">
+                      <path d="M0 6h18m0 0l-4-4m4 4l-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
                 )}
               </div>
@@ -209,7 +210,7 @@ export function Home() {
               className="inline-flex items-center gap-1.5 text-sm text-[var(--nordic-accent)] hover:text-[var(--nordic-accent-dark)] transition-colors font-medium"
             >
               {t("home.how.learnMore")}
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
@@ -225,7 +226,7 @@ export function Home() {
             </p>
           </div>
           <Link
-            to="/feedback"
+            to="/contact"
             className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white/95 text-[var(--nordic-accent-dark)] text-sm font-semibold rounded-[var(--radius-md)] hover:bg-white transition-colors shadow-sm"
           >
             <MessageSquare className="w-4 h-4" />

@@ -6,8 +6,6 @@ import { HowItWorks } from "./pages/HowItWorks";
 import { QuickOverview } from "./pages/QuickOverview";
 import { Feedback } from "./pages/Feedback";
 import { NotFound } from "./pages/NotFound";
-import { DesignSystemShowcase } from "./pages/DesignSystem";
-import { StyleGuide } from "./pages/StyleGuide";
 
 export const router = createBrowserRouter([
   {
@@ -31,16 +29,8 @@ export const router = createBrowserRouter([
     Component: HowItWorks,
   },
   {
-    path: "/feedback",
+    path: "/contact",
     Component: Feedback,
-  },
-  {
-    path: "/design-system",
-    Component: DesignSystemShowcase,
-  },
-  {
-    path: "/style-guide",
-    Component: StyleGuide,
   },
   {
     path: "*",

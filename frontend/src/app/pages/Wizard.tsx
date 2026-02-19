@@ -74,9 +74,9 @@ export function Wizard() {
   };
 
   const titleKeys: Record<string, TranslationKey> = {
-    fulltime: "wizard.fulltime.title",
-    parttime: "wizard.parttime.title",
-    student: "wizard.student.title",
+    fulltime: "home.fulltime.title",
+    parttime: "home.parttime.title",
+    student: "home.student.title",
   };
 
   // ── Shared state ───────────────────────────────────────────────
@@ -1120,9 +1120,10 @@ export function Wizard() {
       <Header />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <p className="text-sm text-muted-foreground mb-2">
-          {t(titleKeys[serviceId])}
-        </p>
+        <div className="mb-2">
+          <h1 className="text-3xl font-semibold text-foreground">{t(titleKeys[serviceId])}</h1>
+          <p className="text-muted-foreground text-lg mt-1">{t(`home.${serviceId}.subtitle` as any)}</p>
+        </div>
 
         <div className="mb-12">
           <Stepper steps={steps} currentStep={step} />

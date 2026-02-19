@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router";
-import { Home as HomeIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "../components/ui/button";
+import { useI18n } from "../utils/i18n";
 
 export function NotFound() {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
@@ -16,15 +18,15 @@ export function NotFound() {
           }}>
             <span className="text-5xl text-muted-foreground font-light tracking-tight">404</span>
           </div>
-          <h1 className="text-3xl mb-3 text-foreground tracking-tight">Side ikke fundet</h1>
+          <h1 className="text-3xl mb-3 text-foreground tracking-tight">{t("notFound.title" as any)}</h1>
           <p className="text-muted-foreground leading-relaxed">
-            Siden du leder efter eksisterer ikke eller er blevet flyttet.
+            {t("notFound.desc" as any)}
           </p>
         </div>
 
-        <Button onClick={() => navigate("/")} size="lg">
-          <HomeIcon className="w-4 h-4 mr-2" />
-          Gå til forsiden
+        <Button variant="ghost" onClick={() => navigate("/")} size="lg">
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          {t("btn.backHome")}
         </Button>
       </div>
     </div>

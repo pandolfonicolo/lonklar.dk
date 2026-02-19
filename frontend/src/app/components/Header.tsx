@@ -67,7 +67,7 @@ export function Header() {
               {t("nav.methodology")}
             </Link>
             <div className={divider} />
-            <Link to="/feedback" className={`${navBtn} whitespace-nowrap`}>
+            <Link to="/contact" className={`${navBtn} whitespace-nowrap`}>
               {t("nav.feedback")}
             </Link>
             <div className={divider} />
@@ -103,7 +103,7 @@ export function Header() {
                   {t("nav.methodology")}
                 </Link>
                 <Link
-                  to="/feedback"
+                  to="/contact"
                   onClick={() => setMobileOpen(false)}
                   className={navBtnMobile}
                 >

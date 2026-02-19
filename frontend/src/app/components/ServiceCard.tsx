@@ -102,10 +102,19 @@ export function ServiceCard({
         )}
         <p className="text-sm text-muted-foreground leading-relaxed flex-1">{description}</p>
 
-        {/* CTA — always visible, animates on hover */}
-        <div className="mt-5 flex items-center gap-1.5 text-xs font-semibold transition-all duration-300 group-hover:translate-x-1" style={{ color: accentColor }}>
-          <span>{ctaLabel}</span>
-          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+        {/* CTA — pill-style, animates on hover */}
+        <div className="mt-5 flex items-center">
+          <span
+            className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-semibold rounded-full border transition-all duration-300 group-hover:gap-3"
+            style={{
+              color: accentColor,
+              borderColor: `${accentColor}30`,
+              backgroundColor: `${accentColor}08`,
+            }}
+          >
+            {ctaLabel}
+            <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+          </span>
         </div>
       </div>
     </button>

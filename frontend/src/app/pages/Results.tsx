@@ -693,7 +693,10 @@ export function Results() {
           <div className="flex items-end justify-between flex-wrap gap-4">
             <div>
               <p className="text-sm opacity-90 mb-2">
-                {period === "annual" ? t("results.netAnnual") : t("results.netMonthly")}
+                {isStudent
+                  ? (period === "annual" ? t("results.netAnnualIncome" as any) : t("results.netMonthlyIncome" as any))
+                  : (period === "annual" ? t("results.netAnnual") : t("results.netMonthly"))
+                }
               </p>
               <div className="flex items-baseline gap-3 flex-wrap">
                 <h1 className="text-5xl font-mono">
@@ -959,7 +962,9 @@ export function Results() {
                         label={{
                           value: showEur
                             ? (period === "annual" ? t('chart.grossAnnualEur' as any) : t('chart.grossMonthEur' as any))
-                            : (period === "annual" ? t('chart.grossAnnual' as any) : t('chart.grossMonth')),
+                            : isStudent
+                              ? (period === "annual" ? t('chart.grossAnnualIncome' as any) : t('chart.grossMonthIncome' as any))
+                              : (period === "annual" ? t('chart.grossAnnual' as any) : t('chart.grossMonth')),
                           position: "insideBottom",
                           offset: -5,
                         }}
@@ -1100,7 +1105,9 @@ export function Results() {
                         label={{
                           value: showEur
                             ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
-                            : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
+                            : isStudent
+                              ? (period === "annual" ? t('chart.netAnnualIncome' as any) : t('chart.netMonthIncome' as any))
+                              : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
                           angle: -90,
                           position: "insideLeft",
                           style: { textAnchor: 'middle' },
@@ -1176,9 +1183,10 @@ export function Results() {
                         const topHrs = Math.round(777900 / 12 / r.hourly_rate);
                         return (
                           <>
+                            {/* Bundskat zone — always visible up to mellemskat or end of chart */}
+                            <ReferenceArea x1={0} x2={Math.min(mellemHrs, 220)} fill="#22c55e" fillOpacity={0.04} />
                             {mellemHrs <= 220 && (
                               <>
-                                <ReferenceArea x1={0} x2={mellemHrs} fill="#22c55e" fillOpacity={0.04} />
                                 <ReferenceArea x1={mellemHrs} x2={Math.min(topHrs, 220)} fill="#f59e0b" fillOpacity={0.06} />
                                 <ReferenceLine x={mellemHrs} stroke="#f59e0b" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
                               </>
@@ -1242,7 +1250,7 @@ export function Results() {
                       label={{
                         value: showEur
                           ? (period === "annual" ? t("chart.netAnnualEur" as any) : t("chart.netMonthEur" as any))
-                          : (period === "annual" ? t("chart.netAnnual" as any) : t("chart.netMonth" as any)),
+                          : (period === "annual" ? t("chart.netAnnualIncome" as any) : t("chart.netMonthIncome" as any)),
                         angle: -90,
                         position: "insideLeft",
                         style: { textAnchor: "middle" },

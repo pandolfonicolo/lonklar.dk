@@ -1,8 +1,8 @@
 import React from "react";
 import { Header } from "../components/Header";
-import { ArrowLeft, ExternalLink } from "lucide-react";
+import { ArrowLeft, ExternalLink, MessageSquare } from "lucide-react";
 import { Button } from "../components/ui/button";
-import { useNavigate } from "react-router";
+import { useNavigate, Link } from "react-router";
 import { useI18n } from "../utils/i18n";
 
 /* ── pseudo-code formula block (language-independent) ────────── */
@@ -56,14 +56,14 @@ export function HowItWorks() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <Button variant="ghost" onClick={() => navigate("/")} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
-          {t("method.back")}
+          {t("btn.backHome")}
         </Button>
 
         <article className="prose prose-slate max-w-none">
           {/* ── Hero ── */}
           <div className="mb-10">
-            <h1 className="text-4xl mb-3 text-foreground">{t("method.title")}</h1>
-            <p className="text-lg text-muted-foreground">
+            <h1 className="text-3xl font-semibold text-foreground mb-3">{t("method.title")}</h1>
+            <p className="text-muted-foreground text-lg max-w-xl">
               {t("method.subtitle")}
             </p>
           </div>
@@ -230,7 +230,26 @@ export function HowItWorks() {
         </article>
       </div>
 
-      <footer className="mt-16 py-8 px-4 sm:px-6 lg:px-8 border-t border-border">
+      {/* ── Disclaimer + Contact Band ──────────────────── */}
+      <section className="relative overflow-hidden transition-all duration-500">
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--nordic-accent)] to-[var(--nordic-accent-dark)] pointer-events-none" />
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col sm:flex-row items-center gap-4 sm:gap-8">
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-sm leading-relaxed text-white/85">
+              {t("home.disclaimer")}
+            </p>
+          </div>
+          <Link
+            to="/contact"
+            className="flex-shrink-0 inline-flex items-center gap-2 px-5 py-2.5 bg-white/95 text-[var(--nordic-accent-dark)] text-sm font-semibold rounded-[var(--radius-md)] hover:bg-white transition-colors shadow-sm"
+          >
+            <MessageSquare className="w-4 h-4" />
+            {t("home.disclaimer.cta")}
+          </Link>
+        </div>
+      </section>
+
+      <footer className="mt-0 py-8 px-4 sm:px-6 lg:px-8 border-t border-border">
         <div className="max-w-4xl mx-auto text-center text-sm text-muted-foreground">
           <p>{t("method.footer")}</p>
         </div>
