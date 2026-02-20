@@ -770,6 +770,40 @@ export function Results() {
               interest applies.
             </div>
           )}
+
+          {/* Student max hours hint */}
+          {isStudent && r._input_student_hourly_rate > 0 && (() => {
+            const hourlyRate = r._input_student_hourly_rate;
+            const pensionPct = r._input_pension_pct ?? 0;
+            const fribeloeb = (r as StudentResult).aars_fribeloeb;
+            // work_after_am = (annual * (1 + 0.125 - pensionPct)) * 0.92
+            const factor = (1 + 0.125 - pensionPct) * 0.92;
+            const maxAnnualGross = fribeloeb / factor;
+            const maxWeeklyHours = Math.floor(maxAnnualGross / (hourlyRate * 52));
+            const currentHoursMonth = r._input_student_hours_month ?? 0;
+            const currentHoursWeek = Math.round(currentHoursMonth * 12 / 52);
+            const exceeds = (r as StudentResult).over_fribeloeb;
+
+            if (maxWeeklyHours <= 0) return null;
+
+            return (
+              <div className={`mt-3 p-3 rounded-[var(--radius-md)] text-sm flex items-start gap-2 ${
+                exceeds ? "bg-yellow-500/20" : "bg-white/10"
+              }`}>
+                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                <span>
+                  {exceeds
+                    ? t("results.studentMaxHoursExceeded" as any)
+                        .replace("{hours}", String(currentHoursWeek))
+                        .replace("{maxHours}", String(maxWeeklyHours))
+                    : t("results.studentMaxHours" as any)
+                        .replace("{rate}", String(Math.round(hourlyRate)))
+                        .replace("{hours}", String(maxWeeklyHours))
+                  }
+                </span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── Toggle controls ──────────────────────────────────── */}
