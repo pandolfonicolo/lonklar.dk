@@ -1,10 +1,16 @@
 # Umami Analytics — self-hosted, privacy-friendly visitor tracking
 # Runs alongside the main lonklar app on the same server.
 #
+# BEFORE FIRST RUN:
+#   1. Copy .env.example to .env
+#   2. Generate secrets:  openssl rand -base64 32
+#   3. Fill in POSTGRES_PASSWORD and APP_SECRET in .env
+#
 # Usage:
 #   sudo docker compose -f docker-compose.umami.yml up -d
 #
 # Dashboard: https://analytics.lonklar.dk (after DNS + Caddy setup)
+# ⚠️  Change the default admin password (admin/umami) immediately after first login!
 
 services:
   umami:
@@ -12,11 +18,10 @@ services:
     container_name: umami
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"   # Bind to localhost only — Caddy proxies externally
     environment:
-      DATABASE_URL: postgresql://umami:umami@umami-db:5432/umami
-      # Generate your own: openssl rand -base64 32
-      APP_SECRET: CHANGE_ME_BEFORE_DEPLOYING
+      DATABASE_URL: postgresql://umami:${POSTGRES_PASSWORD}@umami-db:5432/umami
+      APP_SECRET: ${APP_SECRET}   # REQUIRED — generate with: openssl rand -base64 32
     depends_on:
       umami-db:
         condition: service_healthy
@@ -30,7 +35,7 @@ services:
     environment:
       POSTGRES_DB: umami
       POSTGRES_USER: umami
-      POSTGRES_PASSWORD: umami
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}   # REQUIRED — must match DATABASE_URL above
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U umami"]
       interval: 5s
