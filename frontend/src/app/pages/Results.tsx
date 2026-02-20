@@ -15,6 +15,7 @@ import {
   ThumbsDown,
   Info,
   Smartphone,
+  ExternalLink,
 } from "lucide-react";
 import {
   LineChart,
@@ -369,8 +370,8 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
   // Student pie
   if (isStudent) {
     const sr = r as StudentResult;
-    // Total gross = SU gross + work gross
-    const grossVal = Math.round(((sr.su_annual_gross || sr.su_annual) + sr.work_gross_annual) / div);
+    // Total gross = SU gross + work gross + feriepenge
+    const grossVal = Math.round(((sr.su_annual_gross || sr.su_annual) + sr.work_gross_annual + (sr.work_feriepenge || 0)) / div);
     if (grossVal <= 0) return null;
 
     const netVal = Math.round(sr.net_annual / div);
@@ -680,10 +681,6 @@ export function Results() {
   const eurRate = meta?.dkk_per_eur ?? 7.45;
 
   const displayAmount = netMonthly * mul;
-  const displayGross = isStudent
-    ? (r.su_annual_gross + r.work_gross_annual) / (period === "annual" ? 1 : 12)
-    : (r.gross_annual || 0) / (period === "annual" ? 1 : 12);
-
   const breakdown: Row[] = isStudent
     ? studentBreakdown(result as StudentResult, r._input_student_jobs)
     : employeeBreakdown(result as TaxResult);
@@ -1333,14 +1330,17 @@ export function Results() {
                         if (!active || !payload?.length) return null;
                         const d = payload[0]?.payload as StudentHoursCurvePoint | undefined;
                         if (!d) return null;
+                        const suVal = d.su_gross_monthly * sMul;
+                        const workGross = d.work_gross_monthly * sMul;
+                        const ferieVal = d.feriepenge_monthly * sMul;
+                        const deductVal = d.deductions_monthly * sMul;
                         const nVal = (period === "annual" ? d.net_annual : d.net_monthly);
-                        const suVal = d.su_kept_monthly * sMul;
-                        const workVal = d.work_net_monthly * sMul;
-                        const grossWork = d.hours_month * studentHourlyRate * sMul;
-                        const effectiveRate = grossWork > 0 ? ((grossWork - workVal) / grossWork * 100) : 0;
+                        const totalGross = suVal + workGross + ferieVal;
+                        const effectiveRate = totalGross > 0 ? (deductVal / totalGross * 100) : 0;
                         const hrsWeek = (d.hours_month / 4.33).toFixed(1);
+                        const fmt = (v: number) => showEur ? fmtEUR(v, eurRate) : `${fmtDKK(v)} kr`;
                         return (
-                          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, padding: "10px 14px", lineHeight: 1.6 }}>
+                          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, padding: "10px 14px", lineHeight: 1.7, minWidth: 200 }}>
                             {d.over_fribeloeb && (
                               <p style={{ fontSize: 11, color: '#ef4444', fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', display: 'inline-block' }} />
@@ -1348,11 +1348,26 @@ export function Results() {
                               </p>
                             )}
                             <p style={{ fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>{d.hours_month} {t("chart.hoursMonth" as any)} ({hrsWeek} {t("chart.hoursWeek" as any)})</p>
-                            <p style={{ fontWeight: 500 }}>{t("chart.gross")}: {showEur ? fmtEUR(grossWork, eurRate) : `${fmtDKK(grossWork)} kr`}</p>
-                            <p style={{ color: "var(--nordic-accent)", fontWeight: 500 }}>{t("chart.net")}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
-                            <p style={{ fontWeight: 500 }}>SU: {showEur ? fmtEUR(suVal, eurRate) : `${fmtDKK(suVal)} kr`}</p>
-                            <p style={{ fontWeight: 500 }}>{t("chart.workIncome" as any)}: {showEur ? fmtEUR(workVal, eurRate) : `${fmtDKK(workVal)} kr`}</p>
-                            <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {effectiveRate.toFixed(1)}%</p>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                              <span>SU</span><span>{fmt(suVal)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
+                              <span>{t("chart.workIncome" as any)}</span><span>{fmt(workGross)}</span>
+                            </div>
+                            {ferieVal > 0 && (
+                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, color: 'var(--muted-foreground)', fontSize: 12 }}>
+                                <span>{t("chart.feriepenge" as any)}</span><span>+ {fmt(ferieVal)}</span>
+                              </div>
+                            )}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, color: 'var(--muted-foreground)', fontSize: 12 }}>
+                              <span>{t("chart.taxDed" as any)}</span><span>− {fmt(deductVal)}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, borderTop: '1px solid var(--border)', paddingTop: 4, marginTop: 4, fontWeight: 600, color: "var(--nordic-accent)" }}>
+                              <span>{t("chart.netIncome" as any)}</span><span>{fmt(nVal)}</span>
+                            </div>
+                            {totalGross > 0 && (
+                              <p style={{ color: 'var(--muted-foreground)', fontSize: 11, marginTop: 2, textAlign: 'right' }}>{t('chart.effectiveTax')}: {effectiveRate.toFixed(1)}%</p>
+                            )}
                           </div>
                         );
                       }}
@@ -1693,6 +1708,32 @@ export function Results() {
                           {t("ferie.feriefridageNote")}
                         </p>
                       </div>
+                    )}
+                  </div>
+
+                  {/* Payout info */}
+                  <div className="p-4 bg-[var(--nordic-accent-light)] border border-[var(--nordic-accent)]/30 rounded-[var(--radius-md)] space-y-2">
+                    <div className="flex items-center gap-2 mb-1">
+                      <ExternalLink className="w-3.5 h-3.5 text-[var(--nordic-accent)]" />
+                      <p className="text-sm font-medium text-foreground">
+                        {isSalaried ? "Ferietillæg" : "FerieKonto"}
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {isSalaried
+                        ? t("ferie.salaryPayoutInfo" as any)
+                        : t("ferie.payoutInfo" as any)}
+                    </p>
+                    {!isSalaried && (
+                      <a
+                        href="https://www.borger.dk/arbejde-dagpenge-ferie/Ferie-og-fridage/feriepenge"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium text-[var(--nordic-accent)] hover:underline mt-1"
+                      >
+                        borger.dk/feriekonto
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
                     )}
                   </div>
                 </div>
