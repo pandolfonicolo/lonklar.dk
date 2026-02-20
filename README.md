@@ -179,6 +179,19 @@ Contributions are welcome! Some areas that could use help:
 - **Translations** — improve existing or add new languages
 - **Tests** — automated tests for the tax engine
 
+Please see [SECURITY.md](SECURITY.md) for security-related reporting.
+
+## Feedback Data & Privacy
+
+The feedback endpoints (`/api/vote`, `/api/feedback`, `/api/accuracy-report`) write to
+date-stamped JSONL files on disk. **No PII is collected** — the email field was
+intentionally removed. Feedback data is:
+
+- Stored only on the production server (volume-mounted, not in the repo)
+- Rate-limited per IP to prevent abuse
+- Validated with field-length caps and enum constraints
+- Rotated daily via date-stamped filenames
+
 ## License
 
 MIT
