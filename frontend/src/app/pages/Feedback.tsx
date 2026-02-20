@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router";
-import { ArrowLeft, Send, CheckCircle, AlertCircle, Bug, Lightbulb, MessageCircle, Mail, ArrowRight } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, AlertCircle, Bug, Lightbulb, MessageCircle, ArrowRight } from "lucide-react";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../utils/i18n";
@@ -23,7 +23,6 @@ export function Feedback() {
 
   const [type, setType] = useState<FeedbackType>("general");
   const [message, setMessage] = useState("");
-  const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,14 +36,12 @@ export function Feedback() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type,
-          message: message.trim(),
-          email: email.trim() || null,
+          message: message.trim().slice(0, 2000),
         }),
       });
       if (!res.ok) throw new Error("Failed");
       setStatus("success");
       setMessage("");
-      setEmail("");
     } catch {
       setStatus("error");
     }
@@ -129,24 +126,8 @@ export function Feedback() {
                   placeholder={t("feedback.message.placeholder")}
                   required
                   rows={5}
+                  maxLength={2000}
                   className="w-full px-4 py-3 text-sm bg-background border border-border rounded-[var(--radius-md)] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-[var(--nordic-accent)]/30 focus:border-[var(--nordic-accent)] resize-y transition-colors"
-                />
-              </div>
-
-              {/* Email */}
-              <div className="p-6 sm:p-8 border-b border-border">
-                <label className="block text-sm font-medium text-foreground mb-2">
-                  <span className="flex items-center gap-2">
-                    <Mail className="w-4 h-4 text-muted-foreground" />
-                    {t("feedback.email.label")}
-                  </span>
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder={t("feedback.email.placeholder")}
-                  className="w-full px-4 py-2.5 text-sm bg-background border border-border rounded-[var(--radius-md)] text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-[var(--nordic-accent)]/30 focus:border-[var(--nordic-accent)] transition-colors"
                 />
               </div>
 

@@ -2,7 +2,7 @@
 Pydantic request / response models for the DK Income Calculator API.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -102,23 +102,63 @@ class StudentHoursCurveRequest(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════
-#  FEEDBACK — request models
+#  FEEDBACK — request models (privacy-minimised, length-capped)
 # ═══════════════════════════════════════════════════════════════════════
 
 class FeedbackRequest(BaseModel):
-    type: str = Field(..., description="bug | feature | general")
-    message: str = Field(..., min_length=1)
-    email: str | None = None
+    type: str = Field(..., description="bug | feature | general", max_length=20)
+    message: str = Field(..., min_length=1, max_length=2000)
+
+    @field_validator("type")
+    @classmethod
+    def validate_type(cls, v: str) -> str:
+        allowed = {"bug", "feature", "general"}
+        if v not in allowed:
+            raise ValueError(f"type must be one of {allowed}")
+        return v
 
 
 class AccuracyReportRequest(BaseModel):
-    service_type: str = Field(..., description="fulltime | parttime | student")
-    estimated_net_monthly: float
-    actual_net_monthly: float
+    service_type: str = Field(..., description="fulltime | parttime | student", max_length=20)
+    estimated_net_monthly: float = Field(..., ge=0, le=10_000_000)
+    actual_net_monthly: float = Field(..., ge=0, le=10_000_000)
     inputs: dict = Field(default_factory=dict, description="Original calculation inputs")
+
+    @field_validator("service_type")
+    @classmethod
+    def validate_service_type(cls, v: str) -> str:
+        allowed = {"fulltime", "parttime", "student"}
+        if v not in allowed:
+            raise ValueError(f"service_type must be one of {allowed}")
+        return v
+
+    @field_validator("inputs")
+    @classmethod
+    def cap_inputs_size(cls, v: dict) -> dict:
+        """Reject inputs dicts larger than ~32 KB when serialized."""
+        import json
+        if len(json.dumps(v, default=str)) > 32_768:
+            raise ValueError("inputs payload too large (max 32 KB)")
+        return v
 
 
 class VoteRequest(BaseModel):
-    vote: str = Field(..., description="up | down")
-    service_type: str = Field(..., description="fulltime | parttime | student")
-    estimated_net: float = Field(0)
+    vote: str = Field(..., description="up | down", max_length=10)
+    service_type: str = Field(..., description="fulltime | parttime | student", max_length=20)
+    estimated_net: float = Field(0, ge=0, le=10_000_000)
+
+    @field_validator("vote")
+    @classmethod
+    def validate_vote(cls, v: str) -> str:
+        allowed = {"up", "down"}
+        if v not in allowed:
+            raise ValueError(f"vote must be one of {allowed}")
+        return v
+
+    @field_validator("service_type")
+    @classmethod
+    def validate_service_type(cls, v: str) -> str:
+        allowed = {"fulltime", "parttime", "student"}
+        if v not in allowed:
+            raise ValueError(f"service_type must be one of {allowed}")
+        return v
