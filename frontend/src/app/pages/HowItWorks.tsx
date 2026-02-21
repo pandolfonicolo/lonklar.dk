@@ -10,7 +10,8 @@ const FORMULA = `// Full-time job → net pay (2026 rates)
 
 pension        = gross × employee_pension_%
 atp            = 94.65 kr/month × 12             // (varies by hours)
-feriepenge     = gross × 1%                      // (12.5% if hourly)
+feriepenge     = gross × 1%                      // ferietillæg (salaried)
+               // gross × 12.5%                   // feriepenge (hourly/student)
 
 am_basis       = gross + feriepenge − pension − atp
 am_bidrag      = am_basis × 8%
@@ -125,6 +126,7 @@ export function HowItWorks() {
                   <ul className="list-disc list-inside space-y-1 ml-2">
                     <li>{t("method.calc.student.su_no_am")}</li>
                     <li>{t("method.calc.student.work_am")}</li>
+                    <li>{t("method.calc.student.feriepenge" as any)}</li>
                     <li>{t("method.calc.student.fribeloeb")}</li>
                     <li>{t("method.calc.student.excess")}</li>
                     <li>{t("method.calc.student.interest")}</li>

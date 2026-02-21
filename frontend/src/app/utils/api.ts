@@ -152,10 +152,11 @@ export interface StudentHoursCurvePoint {
   hours_month: number;
   net_monthly: number;
   net_annual: number;
-  su_kept_monthly: number;
-  work_net_monthly: number;
+  su_gross_monthly: number;
+  work_gross_monthly: number;
+  feriepenge_monthly: number;
+  deductions_monthly: number;
   over_fribeloeb: boolean;
-  total_deductions: number;
 }
 
 export interface TaxResult {

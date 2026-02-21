@@ -220,9 +220,10 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
             "hours_month": h,
             "net_monthly": round(r["net_monthly"]),
             "net_annual": round(r["net_annual"]),
-            "su_kept_monthly": round(r["su_annual"] / 12),
-            "work_net_monthly": round(r["work_after_am"] / 12),
+            "su_gross_monthly": round(r["su_annual_gross"] / 12),
+            "work_gross_monthly": round(work_gross_monthly),
+            "feriepenge_monthly": round(r["work_feriepenge"] / 12),
+            "deductions_monthly": round(r["total_deductions"] / 12),
             "over_fribeloeb": r["over_fribeloeb"],
-            "total_deductions": round(r["total_deductions"]),
         })
     return data
