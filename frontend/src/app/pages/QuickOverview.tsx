@@ -219,7 +219,7 @@ export function QuickOverview() {
                   dataKey="gross_monthly"
                   type="number"
                   domain={[0, 140000]}
-                  ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
+                  ticks={Array.from({ length: 8 }, (_, i) => i * 20000)}
                   tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                   label={{
                     value:
@@ -236,11 +236,13 @@ export function QuickOverview() {
                   type="number"
                   tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}k`}
                   domain={[0, 140000]}
-                  ticks={Array.from({ length: 15 }, (_, i) => i * 10000)}
+                  ticks={Array.from({ length: 8 }, (_, i) => i * 20000)}
                   label={{
-                    value: "DKK/" + (lang === "da" ? "md" : "month"),
+                    value: lang === "da" ? "Netto pr. måned (DKK)" : "Net monthly (DKK)",
                     angle: -90,
                     position: "insideLeft",
+                    style: { textAnchor: 'middle' },
+                    dx: -5,
                   }}
                   stroke="var(--muted-foreground)"
                   fontSize={12}

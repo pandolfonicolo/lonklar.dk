@@ -10,6 +10,7 @@ import {
   Wallet,
   ChevronDown,
   Umbrella,
+  Receipt,
   CheckCircle,
   ThumbsUp,
   ThumbsDown,
@@ -354,18 +355,21 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
 
 const PIE_COLORS = [
   "var(--nordic-accent)",   // net pay — primary accent
+  "#0ea5e9",               // feriepenge (FerieKonto) — sky blue
   "var(--chart-3)",         // income tax — matches bundskat/tax rows
   "var(--chart-4)",         // AM-bidrag — warm tone
   "var(--chart-2)",         // pension — matches pension row
   "var(--chart-5)",         // ATP — steel/teal
   "var(--chart-1)",         // church tax — primary blue/sage
   "var(--muted-foreground)",// after-tax deductions — neutral
+  "#f59e0b",               // SU repayment — amber
 ];
 
-function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: TaxResult | StudentResult; isStudent: boolean; period: "monthly" | "annual"; showEur: boolean; eurRate: number }) {
+function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate }: { r: TaxResult | StudentResult; isStudent: boolean; serviceId: string; period: "monthly" | "annual"; showEur: boolean; eurRate: number }) {
   const { t } = useI18n();
 
   const div = period === "annual" ? 1 : 12;
+  const showFerieSplit = serviceId !== "fulltime";
 
   // Student pie
   if (isStudent) {
@@ -374,7 +378,8 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
     const grossVal = Math.round(((sr.su_annual_gross || sr.su_annual) + sr.work_gross_annual + (sr.work_feriepenge || 0)) / div);
     if (grossVal <= 0) return null;
 
-    const netVal = Math.round(sr.net_annual / div);
+    const ferieNetVal = showFerieSplit ? Math.round((sr.net_ferie || 0) / div) : 0;
+    const netVal = Math.round(sr.net_annual / div) - ferieNetVal;
     const incomeTax = Math.round(sr.total_income_tax / div);
     const am = Math.round(sr.work_am_bidrag / div);
     const pension = Math.round((sr.work_employee_pension || 0) / div);
@@ -384,6 +389,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
     const data: Slice[] = [
       { key: "chart.pie.net", value: netVal },
     ];
+    if (ferieNetVal > 0) data.push({ key: "chart.pie.feriepenge", value: ferieNetVal });
     if (incomeTax > 0) data.push({ key: "chart.pie.incomeTax", value: incomeTax });
     if (am > 0) data.push({ key: "chart.pie.am", value: am });
     if (pension > 0) data.push({ key: "chart.pie.pension", value: pension });
@@ -409,7 +415,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
                     const pctVal = ((d.value / grossVal) * 100).toFixed(1);
                     return (
                       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '8px 12px', lineHeight: 1.6 }}>
-                        <p style={{ fontWeight: 600 }}>{d.key === "chart.pie.suRepay" ? "SU repayment" : t(d.key as any)}</p>
+                        <p style={{ fontWeight: 600 }}>{t(d.key as any)}</p>
                         <p>{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
                       </div>
                     );
@@ -424,7 +430,7 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
               return (
                 <div key={d.key} className="flex items-center gap-2.5">
                   <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                  <span className="text-muted-foreground">{d.key === "chart.pie.suRepay" ? "SU repayment" : t(d.key as any)}</span>
+                  <span className="text-muted-foreground">{t(d.key as any)}</span>
                   <span className="text-muted-foreground/60 text-xs ml-1">({pctVal}%)</span>
                   <span className="font-medium text-foreground ml-auto tabular-nums">{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`}</span>
                 </div>
@@ -443,7 +449,8 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
 
   const tr = r as TaxResult;
   const grossVal = Math.round((tr.gross_annual + tr.feriepenge) / div);
-  const netVal = Math.round(tr.net_annual / div);
+  const ferieNetVal = showFerieSplit ? Math.round((tr.net_ferie || 0) / div) : 0;
+  const netVal = Math.round(tr.net_annual / div) - ferieNetVal;
   const incomeTax = Math.round(tr.total_income_tax / div);
   const am = Math.round(tr.am_bidrag / div);
   const pension = Math.round(tr.employee_pension / div);
@@ -454,9 +461,10 @@ function SalaryBreakdownPie({ r, isStudent, period, showEur, eurRate }: { r: Tax
   type Slice = { key: string; value: number };
   const data: Slice[] = [
     { key: "chart.pie.net", value: netVal },
-    { key: "chart.pie.incomeTax", value: incomeTax },
-    { key: "chart.pie.am", value: am },
   ];
+  if (ferieNetVal > 0) data.push({ key: "chart.pie.feriepenge", value: ferieNetVal });
+  data.push({ key: "chart.pie.incomeTax", value: incomeTax });
+  data.push({ key: "chart.pie.am", value: am });
   if (pension > 0) data.push({ key: "chart.pie.pension", value: pension });
   if (atp > 0) data.push({ key: "chart.pie.atp", value: atp });
   if (kirkeskat > 0) data.push({ key: "chart.pie.kirkeskat", value: kirkeskat });
@@ -670,6 +678,8 @@ export function Results() {
 
   const netMonthly = r.net_monthly as number;
   const netAnnual = r.net_annual as number;
+  const netFerieMonthly = (r.net_ferie_monthly ?? 0) as number;
+  const netFerieAnnual = (r.net_ferie ?? 0) as number;
   const effectiveRate = isStudent
     ? ((r.total_deductions /
         (r.su_annual_gross + r.work_gross_annual + r.work_feriepenge)) *
@@ -681,6 +691,10 @@ export function Results() {
   const eurRate = meta?.dkk_per_eur ?? 7.45;
 
   const displayAmount = netMonthly * mul;
+  // Only split ferie for parttime/student — their feriepenge is paid separately via FerieKonto
+  const showFerieSplit = serviceId !== "fulltime";
+  const ferieAmount = showFerieSplit ? (period === "annual" ? netFerieAnnual : netFerieMonthly) : 0;
+  const primaryNetAmount = showFerieSplit ? displayAmount - ferieAmount : displayAmount;
   const breakdown: Row[] = isStudent
     ? studentBreakdown(result as StudentResult, r._input_student_jobs)
     : employeeBreakdown(result as TaxResult);
@@ -724,8 +738,8 @@ export function Results() {
               <div className="flex items-baseline gap-3 flex-wrap">
                 <h1 className="text-5xl font-mono">
                   {showEur
-                    ? fmtEUR(displayAmount, eurRate)
-                    : `${fmtDKK(displayAmount)} kr`
+                    ? fmtEUR(primaryNetAmount, eurRate)
+                    : `${fmtDKK(primaryNetAmount)} kr`
                   }
                 </h1>
                 {/* ±1.5% margin indicator */}
@@ -749,6 +763,15 @@ export function Results() {
                   </TooltipContent>
                 </Tooltip>
               </div>
+              {/* Feriepenge — shown only for parttime/student (paid separately via FerieKonto) */}
+              {showFerieSplit && ferieAmount > 0 && (
+                <p className="mt-1.5 text-lg font-mono opacity-80">
+                  + {showEur ? fmtEUR(ferieAmount, eurRate) : `${fmtDKK(ferieAmount)} kr`}{" "}
+                  <span className="text-sm font-sans opacity-70">
+                    {t("results.feriepengeLabel" as any)}
+                  </span>
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-[var(--radius-md)]">
               <TrendingDown className="w-4 h-4" />
@@ -884,7 +907,7 @@ export function Results() {
               value="breakdown"
               className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
             >
-              {t("results.tab.breakdown")}
+              <Receipt className="w-4 h-4 mr-1" /> {t("results.tab.breakdown")}
             </TabsTrigger>
             <TabsTrigger
               value="chart"
@@ -990,12 +1013,12 @@ export function Results() {
             <TabsContent value="chart" className="mt-0 p-6 space-y-8" forceMount={undefined}>
 
               {/* ── Salary breakdown pie ── */}
-              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
+              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showEur={showEur} eurRate={eurRate} />
 
               {/* Net vs Gross curve */}
               {curveData.length > 0 && (() => {
                 const cMul = period === "annual" ? 12 : 1;
-                const ticks = Array.from({ length: 15 }, (_, i) => i * 10000);
+                const ticks = Array.from({ length: 8 }, (_, i) => i * 20000);
                 return (
                 <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
                   <h3 className="text-foreground font-medium mb-1">
@@ -1143,7 +1166,7 @@ export function Results() {
                     How your net {period === "annual" ? "annual" : "monthly"} income changes with hours at{" "}
                     {fmtDKK(r.hourly_rate)} DKK/hour
                   </p>
-                  <ResponsiveContainer width="100%" height={400}>
+                  <ResponsiveContainer width="100%" height={450}>
                     <LineChart data={hoursCurveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
                       <CartesianGrid
                         strokeDasharray="3 3"
@@ -1153,6 +1176,7 @@ export function Results() {
                         dataKey="hours_month"
                         type="number"
                         domain={[0, 220]}
+                        ticks={Array.from({ length: 12 }, (_, i) => i * 20)}
                         label={{
                           value: t('chart.hoursPerMonth'),
                           position: "insideBottom",
@@ -1286,7 +1310,7 @@ export function Results() {
             return (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
               {/* ── Salary breakdown pie ── */}
-              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
+              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showEur={showEur} eurRate={eurRate} />
 
               <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
                 <h3 className="text-foreground font-medium mb-1">
@@ -1302,7 +1326,7 @@ export function Results() {
                       dataKey="hours_month"
                       type="number"
                       domain={[0, 220]}
-                      ticks={Array.from({ length: 45 }, (_, i) => i * 5)}
+                      ticks={Array.from({ length: 12 }, (_, i) => i * 20)}
                       label={{
                         value: t("chart.hoursPerMonth"),
                         position: "insideBottom",
@@ -1445,12 +1469,12 @@ export function Results() {
           {/* Student with no work (SU only) or multi-job */}
           {isStudent && studentHoursCurveData.length === 0 && (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
-              <SalaryBreakdownPie r={r} isStudent={isStudent} period={period} showEur={showEur} eurRate={eurRate} />
+              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showEur={showEur} eurRate={eurRate} />
 
               {/* Net vs Gross curve for multi-job students */}
               {r._input_student_jobs && r._input_student_jobs.length > 1 && curveData.length > 0 && (() => {
                 const cMul = period === "annual" ? 12 : 1;
-                const ticks = Array.from({ length: 15 }, (_, i) => i * 10000);
+                const ticks = Array.from({ length: 8 }, (_, i) => i * 20000);
                 const workGrossMonthly = r.work_gross_monthly || Math.round(r.work_gross_annual / 12);
                 const mellemThreshold = Math.round(641200 / 12);
                 const topThreshold = Math.round(777900 / 12);
@@ -1604,13 +1628,23 @@ export function Results() {
                     {t("ferie.title")}
                   </h3>
 
+                  {/* FerieKonto info for parttime/student */}
+                  {(isHourly || isStudent) && (
+                    <div className="flex items-start gap-3 p-4 bg-[var(--nordic-accent-light)] border border-[var(--nordic-accent)]/40 rounded-[var(--radius-md)]">
+                      <Info className="w-4 h-4 text-[var(--nordic-accent)] mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-foreground">
+                        {t("results.feriepengeSeparate" as any)}
+                      </p>
+                    </div>
+                  )}
+
                   {/* Stat cards */}
                   <div className={`grid grid-cols-1 gap-4 ${feriefridageDays > 0 ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-3"}`}>
                     <div className="bg-secondary/50 border border-border rounded-[var(--radius-md)] p-4">
                       <p className="text-xs text-muted-foreground mb-1">
                         {feriefridageDays > 0 ? t("ferie.totalDays") : t("ferie.daysPerYear")}
                       </p>
-                      <p className="text-2xl font-mono text-foreground">
+                      <p className="text-lg font-mono text-foreground">
                         {totalDays}
                         {feriefridageDays > 0 && (
                           <span className="text-sm text-muted-foreground ml-1">
@@ -1630,7 +1664,7 @@ export function Results() {
                           ? t("ferie.ferietillaeg")
                           : t("ferie.feriepenge")}
                       </p>
-                      <p className="text-2xl font-mono text-foreground">
+                      <p className="text-lg font-mono text-foreground">
                         {showEur ? fmtEUR(ferieAmount, eurRate) : `${fmtDKK(ferieAmount)} kr`}
                       </p>
                     </div>
@@ -1638,7 +1672,7 @@ export function Results() {
                       <p className="text-xs text-muted-foreground mb-1">
                         {t("ferie.dailyRate")}
                       </p>
-                      <p className="text-2xl font-mono text-foreground">
+                      <p className="text-lg font-mono text-foreground">
                         {showEur ? fmtEUR(dailyRate, eurRate) : `${fmtDKK(dailyRate)} kr`}
                       </p>
                     </div>
@@ -1647,7 +1681,7 @@ export function Results() {
                         <p className="text-xs text-muted-foreground mb-1">
                           {t("ferie.feriefridage")}
                         </p>
-                        <p className="text-2xl font-mono text-foreground">
+                        <p className="text-lg font-mono text-foreground">
                           {showEur ? fmtEUR(feriefridageValue, eurRate) : `${fmtDKK(feriefridageValue)} kr`}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
@@ -1975,7 +2009,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-card border border-border rounded-[var(--radius-md)] p-4">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
-      <p className="text-foreground font-mono text-sm">{value}</p>
+      <p className="text-foreground font-mono text-lg">{value}</p>
     </div>
   );
 }

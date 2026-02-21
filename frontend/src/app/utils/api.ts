@@ -138,6 +138,7 @@ export interface CurvePoint {
   gross_annual: number;
   gross_monthly: number;
   net_monthly: number;
+  ferie_net_monthly: number;
   effective_rate: number;
 }
 
@@ -145,6 +146,7 @@ export interface HoursCurvePoint {
   hours_month: number;
   gross_monthly: number;
   net_monthly: number;
+  ferie_net_monthly: number;
   effective_rate: number;
 }
 
@@ -192,6 +194,8 @@ export interface TaxResult {
   total_deductions: number;
   net_annual: number;
   net_monthly: number;
+  net_ferie: number;
+  net_ferie_monthly: number;
   effective_tax_rate: number;
   // Part-time extras
   hourly_rate?: number;
@@ -229,6 +233,8 @@ export interface StudentResult {
   total_deductions: number;
   net_annual: number;
   net_monthly: number;
+  net_ferie: number;
+  net_ferie_monthly: number;
   over_fribeloeb: boolean;
   fribeloeb_limit: number;
   work_after_am_monthly: number;

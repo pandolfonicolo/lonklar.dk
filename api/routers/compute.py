@@ -160,6 +160,7 @@ def compute_curve(req: CurveRequest):
             "gross_annual": round(gross),
             "gross_monthly": round(gross / 12),
             "net_monthly": round(r["net_monthly"]),
+            "ferie_net_monthly": round(r["net_ferie_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
         })
     return data
@@ -192,6 +193,7 @@ def compute_hours_curve(req: HoursCurveRequest):
             "hours_month": h,
             "gross_monthly": round(gross_annual / 12),
             "net_monthly": round(r["net_monthly"]),
+            "ferie_net_monthly": round(r["net_ferie_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
         })
     return data

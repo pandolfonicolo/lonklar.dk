@@ -93,6 +93,7 @@ def compute_tax(
     atp_monthly: float = 0.0,
     transport_km: float = 0.0,
     union_fees_annual: float = 0.0,
+    _skip_ferie: bool = False,
 ) -> dict:
     """Full Danish tax calculation for one year.
 
@@ -121,8 +122,11 @@ def compute_tax(
     #    We include it in annual income and spread across 12 months.
     #    This is correct for annual totals but inflates a single month's AM-basis
     #    compared to the payslip (except May when it's actually disbursed).
-    ferie_rate = FERIEPENGE_RATE if is_hourly else FERIETILLAEG_RATE
-    feriepenge = gross_annual * ferie_rate
+    if _skip_ferie:
+        feriepenge = 0.0
+    else:
+        ferie_rate = FERIEPENGE_RATE if is_hourly else FERIETILLAEG_RATE
+        feriepenge = gross_annual * ferie_rate
 
     # Total cash pay = salary + feriepenge + other pay - pretax deductions
     total_cash = gross_annual + feriepenge + other_pay_annual - pretax_deductions_annual
@@ -208,7 +212,7 @@ def compute_tax(
     # (taxable benefits are non-cash so not in net)
     net_annual = total_cash - total_deductions - aftertax_deductions_annual
 
-    return {
+    result = {
         "gross_annual":        gross_annual,
         "feriepenge":          feriepenge,
         "other_pay":           other_pay_annual,
@@ -242,6 +246,24 @@ def compute_tax(
                                  if total_gross > 0 else 0,
     }
 
+    # Compute net contribution of feriepenge (difference method)
+    if not _skip_ferie and feriepenge > 0:
+        r_no = compute_tax(
+            gross_annual, pension_pct, kommune_pct, kirke_pct,
+            is_church, has_employment_income, employer_pension_pct,
+            is_hourly, taxable_benefits_annual, other_pay_annual,
+            pretax_deductions_annual, aftertax_deductions_annual,
+            atp_monthly, transport_km, union_fees_annual,
+            _skip_ferie=True,
+        )
+        net_ferie = net_annual - r_no["net_annual"]
+    else:
+        net_ferie = 0.0
+    result["net_ferie"] = net_ferie
+    result["net_ferie_monthly"] = net_ferie / 12
+
+    return result
+
 
 # ═══════════════════════════════════════════════════════════════════════
 #  STUDENT (SU + WORK)
@@ -256,6 +278,7 @@ def compute_student_income(
     is_church: bool,
     employer_pension_pct: float = 0.0,
     aars_fribeloeb: float | None = None,
+    _skip_ferie: bool = False,
 ) -> dict:
     """Combined net income: SU (no AM) + work wages (AM applies).
 
@@ -268,7 +291,7 @@ def compute_student_income(
     work_annual     = work_gross_monthly * 12
 
     # Feriepenge (12.5 % for hourly student jobs — counts towards egenindkomst)
-    work_feriepenge = work_annual * FERIEPENGE_RATE
+    work_feriepenge = 0.0 if _skip_ferie else work_annual * FERIEPENGE_RATE
 
     # Work side
     work_employee_pension = work_annual * pension_pct
@@ -331,7 +354,7 @@ def compute_student_income(
     # Monthly helpers
     work_after_am_monthly = work_after_am / 12
 
-    return {
+    result = {
         "su_annual_gross":         su_annual_gross,
         "su_annual":               su_annual,
         "su_monthly":              su_monthly,
@@ -363,3 +386,19 @@ def compute_student_income(
         "fribeloeb_limit":         FRIBELOEB_LAVESTE_VID,
         "work_after_am_monthly":   work_after_am_monthly,
     }
+
+    # Compute net contribution of feriepenge (difference method)
+    if not _skip_ferie and work_feriepenge > 0:
+        r_no = compute_student_income(
+            su_monthly, work_gross_monthly, pension_pct,
+            kommune_pct, kirke_pct, is_church,
+            employer_pension_pct, aars_fribeloeb,
+            _skip_ferie=True,
+        )
+        net_ferie = net_annual - r_no["net_annual"]
+    else:
+        net_ferie = 0.0
+    result["net_ferie"] = net_ferie
+    result["net_ferie_monthly"] = net_ferie / 12
+
+    return result
