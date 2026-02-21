@@ -229,11 +229,11 @@ export function Wizard() {
     if (serviceId === "parttime") {
       if (weeklyHours < 9) return 0;
       if (weeklyHours < 18) return 0;
-      if (weeklyHours < 27) return c?.atp_monthly_parttime?.["18-26"] ?? 31.55;
-      if (weeklyHours < 37) return c?.atp_monthly_parttime?.["27-36"] ?? 63.1;
-      return c?.atp_monthly_fulltime ?? 94.65;
+      if (weeklyHours < 27) return c?.atp_monthly_parttime?.["18-26"] ?? 33;
+      if (weeklyHours < 37) return c?.atp_monthly_parttime?.["27-36"] ?? 66;
+      return c?.atp_monthly_fulltime ?? 99;
     }
-    return c?.atp_monthly_fulltime ?? 94.65;
+    return c?.atp_monthly_fulltime ?? 99;
   }, [serviceId, weeklyHours, c]);
 
   const atpMonthly = useMemo(() => {

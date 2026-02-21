@@ -34,7 +34,7 @@ const STANDARD = {
   employer_pension_pct: 8,
   is_church: true,
   is_hourly: false,
-  atp_monthly: 94.65,
+  atp_monthly: 99,
   max_gross: 1_680_000,   // 140k monthly × 12
   step_monthly: 500,       // 500 DKK granularity
 } as const;
@@ -191,7 +191,7 @@ export function QuickOverview() {
             </div>
             <div>
               <span className="text-muted-foreground">ATP:</span>{" "}
-              <span className="font-mono text-foreground">94,65 kr/md</span>
+              <span className="font-mono text-foreground">99 kr/md</span>
             </div>
           </div>
         </div>
