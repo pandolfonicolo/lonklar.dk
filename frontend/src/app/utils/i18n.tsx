@@ -574,11 +574,22 @@ const translations = {
   },
 
   // ── Results page ───────────────────────────────────────────────
-  "results.netMonthly": { en: "Estimated net monthly", da: "Estimeret nettomånedlig", it: "Netto mensile stimato", de: "Geschätztes Nettomonatsgehalt", sv: "Uppskattad nettomånadslön", es: "Neto mensual estimado", nb: "Estimert nettomånedlig" },
-  "results.netAnnual": { en: "Estimated net annual", da: "Estimeret nettoårlig", it: "Netto annuale stimato", de: "Geschätztes Nettojahresgehalt", sv: "Uppskattad nettoårslön", es: "Neto anual estimado", nb: "Estimert nettoårlig" },
+  "results.netMonthly": { en: "Estimated net salary monthly", da: "Estimeret nettoløn månedlig", it: "Stipendio netto mensile stimato", de: "Geschätztes Nettogehalt monatlich", sv: "Uppskattad nettolön per månad", es: "Salario neto mensual estimado", nb: "Estimert nettolønn månedlig" },
+  "results.netAnnual": { en: "Estimated net salary annual", da: "Estimeret nettoløn årlig", it: "Stipendio netto annuale stimato", de: "Geschätztes Nettogehalt jährlich", sv: "Uppskattad nettolön per år", es: "Salario neto anual estimado", nb: "Estimert nettolønn årlig" },
   "results.netMonthlyIncome": { en: "Estimated net monthly income", da: "Estimeret netto månedlig indkomst", it: "Reddito netto mensile stimato", de: "Geschätztes monatliches Nettoeinkommen", sv: "Uppskattad månatlig nettoinkomst", es: "Ingreso neto mensual estimado", nb: "Estimert månedlig nettoinntekt" },
   "results.netAnnualIncome": { en: "Estimated net annual income", da: "Estimeret netto årsindkomst", it: "Reddito netto annuale stimato", de: "Geschätztes jährliches Nettoeinkommen", sv: "Uppskattad årlig nettoinkomst", es: "Ingreso neto anual estimado", nb: "Estimert årlig nettoinntekt" },
   "results.effRate": { en: "Eff. tax rate", da: "Eff. skatteprocent", it: "Aliquota fiscale eff.", de: "Eff. Steuersatz", sv: "Eff. skattesats", es: "Tasa imp. ef.", nb: "Eff. skattesats" },
+  "results.ferieLabel": { en: "holiday pay (net)", da: "feriepenge (netto)", it: "ferie (netto)", de: "Urlaubsgeld (netto)", sv: "semesterlön (netto)", es: "vacaciones (neto)", nb: "feriepenger (netto)" },
+  "results.feriepengeLabel": { en: "feriepenge (net)", da: "feriepenge (netto)", it: "feriepenge (netto)", de: "Feriepenge (netto)", sv: "feriepenge (netto)", es: "feriepenge (neto)", nb: "feriepenger (netto)" },
+  "results.feriepengeSeparate": {
+    en: "Paid separately via FerieKonto — you request it when you take vacation",
+    da: "Udbetales separat via FerieKonto — du anmoder om det, når du holder ferie",
+    it: "Pagato separatamente tramite FerieKonto — lo richiedi quando vai in ferie",
+    de: "Wird separat über FerieKonto ausgezahlt — Sie beantragen es bei Urlaubsantritt",
+    sv: "Betalas separat via FerieKonto — du begär det när du tar semester",
+    es: "Se paga por separado a través de FerieKonto — lo solicitas al tomar vacaciones",
+    nb: "Utbetales separat via FerieKonto — du ber om det når du tar ferie",
+  },
   "results.marginTooltip": {
     en: "This is an estimate. The actual amount may vary by ±1.5% due to ferietillæg/feriepenge timing (paid monthly vs. reserved), rounding across tax brackets, municipality-specific rates, and individual deduction differences.",
     da: "Dette er et estimat. Det faktiske beløb kan variere med ±1,5% pga. ferietillæg/feriepenge-håndtering (udbetalt månedligt vs. opsparet), afrunding i skattetrin, kommunespecifikke satser og individuelle fradragsforskelle.",
@@ -659,12 +670,14 @@ const translations = {
   "perLabel.month": { en: "/month", da: "/md", it: "/mese", de: "/Monat", sv: "/månad", es: "/mes", nb: "/mnd" },
   "chart.pie.title": { en: "Your salary breakdown", da: "Din lønfordeling", it: "Ripartizione del tuo stipendio", de: "Deine Gehaltsaufteilung", sv: "Din lönefördelning", es: "Desglose de tu salario", nb: "Din lønnsfordeling" },
   "chart.pie.net": { en: "Net pay", da: "Nettoløn", it: "Stipendio netto", de: "Nettogehalt", sv: "Nettolön", es: "Salario neto", nb: "Nettolønn" },
+  "chart.pie.feriepenge": { en: "Feriepenge (FerieKonto)", da: "Feriepenge (FerieKonto)", it: "Feriepenge (FerieKonto)", de: "Feriepenge (FerieKonto)", sv: "Feriepenge (FerieKonto)", es: "Feriepenge (FerieKonto)", nb: "Feriepenger (FerieKonto)" },
   "chart.pie.incomeTax": { en: "Income tax", da: "Indkomstskat", it: "Imposta sul reddito", de: "Einkommensteuer", sv: "Inkomstskatt", es: "Impuesto sobre la renta", nb: "Inntektsskatt" },
   "chart.pie.am": { en: "AM-bidrag", da: "AM-bidrag", it: "AM-bidrag", de: "AM-Beitrag", sv: "AM-bidrag", es: "AM-bidrag", nb: "AM-bidrag" },
   "chart.pie.pension": { en: "Pension", da: "Pension", it: "Pensione", de: "Rente", sv: "Pension", es: "Pensión", nb: "Pensjon" },
   "chart.pie.atp": { en: "ATP", da: "ATP", it: "ATP", de: "ATP", sv: "ATP", es: "ATP", nb: "ATP" },
   "chart.pie.kirkeskat": { en: "Church tax", da: "Kirkeskat", it: "Tassa ecclesiastica", de: "Kirchensteuer", sv: "Kyrkoskatt", es: "Impuesto eclesiástico", nb: "Kirkeskatt" },
   "chart.pie.afterTax": { en: "After-tax ded.", da: "Fradrag efter skat", it: "Deduzioni post-tasse", de: "Abzüge nach Steuern", sv: "Avdrag efter skatt", es: "Ded. post-impuestos", nb: "Fradrag etter skatt" },
+  "chart.pie.suRepay": { en: "SU repayment", da: "SU-tilbagebetaling", it: "Rimborso SU", de: "SU-Rückzahlung", sv: "SU-återbetalning", es: "Devolución SU", nb: "SU-tilbakebetaling" },
 
   // Pension tab
   "pension.accrual": { en: "Pension accrual", da: "Pensionsopsparing", it: "Maturazione pensione", de: "Rentenansammlung", sv: "Pensionsuppbyggnad", es: "Acumulación de pensión", nb: "Pensjonsopptjening" },
