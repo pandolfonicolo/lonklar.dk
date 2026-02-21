@@ -43,7 +43,7 @@ from .data import (
     TOPTOPSKAT_THRESHOLD, TOPTOPSKAT_RATE,
     SKATTELOFT,
     BESKAEFT_RATE, BESKAEFT_MAX,
-    JOB_FRADRAG_RATE, JOB_FRADRAG_MAX,
+    JOB_FRADRAG_THRESHOLD, JOB_FRADRAG_RATE, JOB_FRADRAG_MAX,
     FRIBELOEB_LAVESTE_VID,
     SU_REPAYMENT_INTEREST_RATE,
     FERIETILLAEG_RATE, FERIEPENGE_RATE,
@@ -149,7 +149,9 @@ def compute_tax(
     # 3) Employment deductions
     if has_employment_income:
         beskaeft = min(income_after_am * BESKAEFT_RATE, BESKAEFT_MAX)
-        job_frad = min(income_after_am * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
+        # Jobfradrag: only on income ABOVE bundgrænse (ligningsloven § 9 K)
+        job_frad = min(max(income_after_am - JOB_FRADRAG_THRESHOLD, 0)
+                       * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
     else:
         beskaeft = job_frad = 0.0
 
@@ -173,10 +175,10 @@ def compute_tax(
     k_pct = kommune_pct / 100.0
     kommuneskat = kommune_base * k_pct
 
-    # 6) Kirkeskat (also reduced by ligningsmæssige fradrag)
+    # 6) Kirkeskat (also reduced by all ligningsmæssige fradrag)
     kirkeskat = 0.0
     if is_church:
-        kirke_base = max(income_after_am - PERSONFRADRAG - lignings_fradrag, 0)
+        kirke_base = max(income_after_am - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
         kirkeskat = kirke_base * (kirke_pct / 100.0)
 
     # 7) Progressive brackets — capped by skatteloft
@@ -321,7 +323,9 @@ def compute_student_income(
 
     # Employment deductions (work portion only)
     beskaeft = min(work_after_am * BESKAEFT_RATE, BESKAEFT_MAX)
-    job_frad = min(work_after_am * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
+    # Jobfradrag: only on income ABOVE bundgrænse (ligningsloven § 9 K)
+    job_frad = min(max(work_after_am - JOB_FRADRAG_THRESHOLD, 0)
+                   * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
 
     # Bundskat
     bundskat_base = max(total_personal - PERSONFRADRAG, 0)
@@ -332,10 +336,10 @@ def compute_student_income(
     k_pct = kommune_pct / 100.0
     kommuneskat = kommune_base * k_pct
 
-    # Kirkeskat
+    # Kirkeskat (reduced by ligningsmæssige fradrag: beskaeft + jobfradrag)
     kirkeskat = 0.0
     if is_church:
-        kirke_base = max(total_personal - PERSONFRADRAG, 0)
+        kirke_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad, 0)
         kirkeskat = kirke_base * (kirke_pct / 100.0)
 
     # Higher brackets (unlikely for most students)

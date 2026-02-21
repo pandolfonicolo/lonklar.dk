@@ -9,7 +9,7 @@ import { useI18n } from "../utils/i18n";
 const FORMULA = `// Full-time job → net pay (2026 rates)
 
 pension        = gross × employee_pension_%
-atp            = 94.65 kr/month × 12             // (varies by hours)
+atp            = 99 kr/month × 12                // (varies by hours)
 feriepenge     = gross × 1%                      // ferietillæg (salaried)
                // gross × 12.5%                   // feriepenge (hourly/student)
 
@@ -19,7 +19,7 @@ income_after_am = am_basis − am_bidrag
 
 // ── deductions ──
 beskæft_fradrag = min(income_after_am × 12.75%, 63 300)
-job_fradrag     = min(income_after_am ×  4.50%,  3 100)
+job_fradrag     = min(max(income_after_am − 235 200, 0) × 4.50%, 3 100)
 befordring      = (daily_km − 24) × 1.98 kr/km × 218 days
 fagforening     = min(annual_union_fees, 7 000)
 lignings_fradrag = befordring + fagforening
@@ -33,9 +33,9 @@ kommune_base    = max(income_after_am − 54 100
                     − beskæft − job − lignings_fradrag, 0)
 kommuneskat     = kommune_base × kommune_%
 
-// ── church tax (optional, own base) ──
+// ── church tax (optional, same reduced base) ──
 kirke_base      = max(income_after_am − 54 100
-                    − lignings_fradrag, 0)
+                    − beskæft − job − lignings_fradrag, 0)
 kirkeskat       = kirke_base × kirke_%
 
 // ── progressive brackets (capped by skatteloft 44.57%) ──

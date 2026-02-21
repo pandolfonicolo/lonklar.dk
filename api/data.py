@@ -34,8 +34,10 @@ BESKAEFT_RATE = 0.1275   # 12.75 %
 BESKAEFT_MAX  = 63_300   # kr/year
 
 # ── Jobfradrag (job deduction) ──────────────────────────────────────
-JOB_FRADRAG_RATE = 0.045   # 4.50 %
-JOB_FRADRAG_MAX  = 3_100   # kr/year
+# Ligningsloven § 9 K: fradrag for the part of income ABOVE bundgrænse
+JOB_FRADRAG_THRESHOLD = 235_200  # kr/year (bundgrænse, § 9 K stk. 1, skm.dk 2026)
+JOB_FRADRAG_RATE      = 0.045    # 4.50 %
+JOB_FRADRAG_MAX       = 3_100    # kr/year
 
 # ── SU 2026 (su.dk) ─────────────────────────────────────────────────
 SU_UDEBOENDE_MONTH   = 7_426   # kr/month before tax (videregående, udeboende)
@@ -72,13 +74,13 @@ FAGFORENING_MAX = 7_000  # max annual deductible union + a-kasse fees
 # ── Exchange rate (fallback) ─────────────────────────────────────────
 DKK_PER_EUR = 7.45  # fallback; app auto-fetches live rate
 
-# ── ATP ──────────────────────────────────────────────────────────────
-ATP_ANNUAL = 1_135.80    # kr/year (employee side, full-time ~37 h/w)
-ATP_MONTHLY = 94.65      # kr/month (employee, full-time)
+# ── ATP (from 2024, lov om Arbejdsmarkedets Tillægspension § 15) ────
+ATP_ANNUAL  = 1_188.00   # kr/year (employee side, full-time ≥ 117 h/month)
+ATP_MONTHLY = 99.00      # kr/month (employee 1/3 of total 297 kr)
 ATP_MONTHLY_PARTTIME = {  # employee share by weekly hours
-    "27-36":  63.10,
-    "18-26":  31.55,
-    "9-17":    0.00,      # under 9 h/w → no ATP
+    "27-36":  66.00,      # B-sats: 2/3 of full
+    "18-26":  33.00,      # C-sats: 1/3 of full
+    "9-17":    0.00,      # under threshold → no ATP
 }
 ATP_EMPLOYER_FACTOR = 2   # employer pays 2× the employee share
 
