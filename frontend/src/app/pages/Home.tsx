@@ -6,12 +6,17 @@ import { Header } from "../components/Header";
 import { ServiceCard } from "../components/ServiceCard";
 import { SalaryPreview } from "../components/SalaryPreview";
 import { useI18n } from "../utils/i18n";
+import { usePageMeta } from "../utils/usePageMeta";
 
 export function Home() {
   const navigate = useNavigate();
   const { t, lang } = useI18n();
 
-  React.useEffect(() => { document.title = "Lonklar – Danish Salary & Tax Calculator | lønklar.dk"; }, []);
+  usePageMeta({
+    title: "Lonklar – Danish Salary & Tax Calculator | lønklar.dk",
+    description: "Free Danish net salary calculator. Get an accurate tax breakdown for full-time, part-time, and student jobs — aligned with SKAT 2026 rates.",
+    path: "/",
+  });
 
   const services = [
     {

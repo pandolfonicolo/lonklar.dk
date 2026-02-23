@@ -551,7 +551,7 @@ export function Results() {
   const navigate = useNavigate();
   const result = location.state as TaxResult | StudentResult | null;
   const { t, lang } = useI18n();
-
+  // Results pages are dynamic/state-based, no SEO needed
   React.useEffect(() => { document.title = "Results – Lonklar | lønklar.dk"; }, []);
 
   // Toggle state

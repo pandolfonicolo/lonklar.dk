@@ -44,6 +44,7 @@ import {
   type Meta,
 } from "../utils/api";
 import { useI18n, type TranslationKey } from "../utils/i18n";
+import { usePageMeta } from "../utils/usePageMeta";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -58,7 +59,11 @@ export function Wizard() {
   const navigate = useNavigate();
   const { t, lang } = useI18n();
 
-  React.useEffect(() => { document.title = "Calculator – Lonklar | lønklar.dk"; }, []);
+  usePageMeta({
+    title: `${(serviceId ?? "calculator").replace(/^\w/, c => c.toUpperCase())} Salary Calculator – Lonklar | lønklar.dk`,
+    description: `Calculate your Danish net salary for a ${serviceId ?? ""} job. Step-by-step wizard with AM-bidrag, bundskat, pension, and all SKAT 2026 deductions.`,
+    path: `/wizard/${serviceId ?? ""}`,
+  });
   const [step, setStep] = useState(0);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);

@@ -4,13 +4,19 @@ import { ArrowLeft, Shield, FileText, Lock, Mail, ExternalLink, ArrowRight, Mess
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../utils/i18n";
+import { usePageMeta } from "../utils/usePageMeta";
 
 export function About() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
+  usePageMeta({
+    title: "About Lonklar – Free Danish Salary Calculator | lønklar.dk",
+    description: "Learn about Lonklar — a free, open, privacy-friendly Danish salary calculator. No ads, no tracking, aligned with official SKAT 2026 tax rates.",
+    path: "/about",
+  });
+
   React.useEffect(() => {
-    document.title = "About Lonklar – Free Danish Salary Calculator | lønklar.dk";
     window.scrollTo(0, 0);
   }, []);
 

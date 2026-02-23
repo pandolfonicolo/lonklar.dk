@@ -18,6 +18,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { fetchCurve, type CurvePoint } from "../utils/api";
 import { useI18n } from "../utils/i18n";
+import { usePageMeta } from "../utils/usePageMeta";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -46,8 +47,13 @@ export function QuickOverview() {
   const [loading, setLoading] = useState(true);
   const [grossInput, setGrossInput] = useState("42000");
 
+  usePageMeta({
+    title: "Quick Overview – Lonklar | lønklar.dk",
+    description: "See how Danish net salary changes with gross income. Interactive chart showing tax brackets, effective tax rate, and take-home pay — powered by SKAT 2026 rates.",
+    path: "/quick-overview",
+  });
+
   useEffect(() => {
-    document.title = "Quick Overview – Lonklar | lønklar.dk";
     fetchCurve(STANDARD)
       .then(setCurveData)
       .catch(console.error)

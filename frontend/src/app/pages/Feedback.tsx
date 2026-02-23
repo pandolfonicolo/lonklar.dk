@@ -4,6 +4,7 @@ import { ArrowLeft, Send, CheckCircle, AlertCircle, Bug, Lightbulb, MessageCircl
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
 import { useI18n } from "../utils/i18n";
+import { usePageMeta } from "../utils/usePageMeta";
 
 const API = import.meta.env.DEV ? "http://localhost:8000" : "";
 
@@ -19,7 +20,11 @@ export function Feedback() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
-  React.useEffect(() => { document.title = "Contact – Lonklar | lønklar.dk"; }, []);
+  usePageMeta({
+    title: "Contact – Lonklar | lønklar.dk",
+    description: "Send feedback, report a bug, or suggest a feature for Lonklar — the free Danish salary calculator.",
+    path: "/contact",
+  });
 
   const [type, setType] = useState<FeedbackType>("general");
   const [message, setMessage] = useState("");

@@ -29,7 +29,11 @@ _ALLOWED_ORIGINS = [
     if o.strip()
 ]
 
-app = FastAPI(title="lønklar.dk API", version="1.0.0")
+app = FastAPI(
+    title="lønklar.dk API",
+    version="1.0.0",
+    redirect_slashes=False,
+)
 
 # Rate-limiter state
 app.state.limiter = limiter

@@ -4,6 +4,7 @@ import { ArrowLeft, ExternalLink, MessageSquare } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate, Link } from "react-router";
 import { useI18n } from "../utils/i18n";
+import { usePageMeta } from "../utils/usePageMeta";
 
 /* ── pseudo-code formula block (language-independent) ────────── */
 const FORMULA = `// Full-time job → net pay (2026 rates)
@@ -53,9 +54,14 @@ export function HowItWorks() {
   const navigate = useNavigate();
   const { t } = useI18n();
 
+  usePageMeta({
+    title: "How It Works – Lonklar | lønklar.dk",
+    description: "Understand how Lonklar calculates your Danish net salary. Step-by-step breakdown of AM-bidrag, bundskat, kommuneskat, deductions, and pension — using SKAT 2026 rates.",
+    path: "/how-it-works",
+  });
+
   React.useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = "How It Works – Lonklar | lønklar.dk";
   }, []);
 
   return (
