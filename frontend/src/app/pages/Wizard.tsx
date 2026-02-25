@@ -353,11 +353,16 @@ export function Wizard() {
 
   const handleNext = () => {
     if (isReview) handleSubmit();
-    else setStep(step + 1);
+    else {
+      setStep(step + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
   const handleBack = () => {
-    if (step > 0) setStep(step - 1);
-    else navigate("/");
+    if (step > 0) {
+      setStep(step - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else navigate("/");
   };
 
   // ── Step renderers ─────────────────────────────────────────────

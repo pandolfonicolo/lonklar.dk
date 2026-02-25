@@ -785,8 +785,8 @@ export function Results() {
           {isStudent && (r as StudentResult).over_fribeloeb && (
             <div className="mt-4 p-3 bg-white/15 rounded-[var(--radius-md)] text-sm">
               ⚠ You exceed the annual fribeløb by{" "}
-              {fmtDKK((r as StudentResult).fribeloeb_excess)} kr — SU
-              repayment of {fmtDKK((r as StudentResult).su_repayment)} kr +
+              {showEur ? fmtEUR((r as StudentResult).fribeloeb_excess, eurRate) : `${fmtDKK((r as StudentResult).fribeloeb_excess)} kr`} — SU
+              repayment of {showEur ? fmtEUR((r as StudentResult).su_repayment, eurRate) : `${fmtDKK((r as StudentResult).su_repayment)} kr`} +
               interest applies.
             </div>
           )}
@@ -1817,8 +1817,8 @@ export function Results() {
                       {t("fribeloeb.egenindkomst")}
                     </span>
                     <span className="font-mono">
-                      {fmtDKK(sr.work_after_am_monthly * 12)} /{" "}
-                      {fmtDKK(sr.aars_fribeloeb)} kr
+                      {showEur ? fmtEUR(sr.work_after_am_monthly * 12, eurRate) : fmtDKK(sr.work_after_am_monthly * 12)} /{" "}
+                      {showEur ? fmtEUR(sr.aars_fribeloeb, eurRate) : `${fmtDKK(sr.aars_fribeloeb)} kr`}
                     </span>
                   </div>
                   <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
@@ -1835,8 +1835,8 @@ export function Results() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     {sr.over_fribeloeb
-                      ? `Over by ${fmtDKK(sr.fribeloeb_excess)} kr — SU repayment: ${fmtDKK(sr.su_repayment)} kr + ${fmtDKK(sr.su_repayment_interest)} kr interest`
-                      : `${usedPct.toFixed(0)}% used — ${fmtDKK(sr.aars_fribeloeb - sr.work_after_am_monthly * 12)} kr remaining`}
+                      ? `Over by ${showEur ? fmtEUR(sr.fribeloeb_excess, eurRate) : `${fmtDKK(sr.fribeloeb_excess)} kr`} — SU repayment: ${showEur ? fmtEUR(sr.su_repayment, eurRate) : `${fmtDKK(sr.su_repayment)} kr`} + ${showEur ? fmtEUR(sr.su_repayment_interest, eurRate) : `${fmtDKK(sr.su_repayment_interest)} kr`} interest`
+                      : `${usedPct.toFixed(0)}% used — ${showEur ? fmtEUR(sr.aars_fribeloeb - sr.work_after_am_monthly * 12, eurRate) : `${fmtDKK(sr.aars_fribeloeb - sr.work_after_am_monthly * 12)} kr`} remaining`}
                   </p>
                 </>
               );
