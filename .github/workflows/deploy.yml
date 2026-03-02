@@ -25,5 +25,6 @@ jobs:
               --restart unless-stopped \
               -p 8000:8000 \
               -v /opt/lonklar-data/feedback:/app/feedback_data \
+              --env-file /opt/lonklar-data/server.env \
               lonklar
             sudo docker image prune -f
