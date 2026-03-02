@@ -1011,10 +1011,14 @@ export function Wizard() {
                 <Field label={t("input.aftertaxDed")} tooltip={t("input.aftertaxDed.tip")}>
                   <Input type="number" min="0" step="100" value={aftertaxDed} onChange={(e) => setAftertaxDed(e.target.value)} className="h-12" />
                 </Field>
-                <Field label={t("input.transportKm" as any)} tooltip={t("input.transportKm.tip" as any)}>
+
+                <hr className="border-border my-2" />
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("input.personalDeductions")}</p>
+
+                <Field label={t("input.transportKm")} tooltip={t("input.transportKm.tip")}>
                   <Input type="number" min="0" step="1" value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
                 </Field>
-                <Field label={t("input.unionFees" as any)} tooltip={t("input.unionFees.tip" as any)}>
+                <Field label={t("input.unionFees")} tooltip={t("input.unionFees.tip")}>
                   <Input type="number" min="0" step="500" value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
                 </Field>
               </CollapsibleContent>

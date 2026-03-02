@@ -18,6 +18,11 @@ jobs:
           script: |
             cd /opt/lonklar.dk
             git pull origin main
+
+            # Write secrets to server.env (from GitHub Secrets)
+            echo 'ADMIN_TOKEN=${{ secrets.ADMIN_TOKEN }}' | sudo tee /opt/lonklar-data/server.env > /dev/null
+            sudo chmod 600 /opt/lonklar-data/server.env
+
             sudo docker build -t lonklar .
             sudo docker rm -f lonklar
             sudo docker run -d \
