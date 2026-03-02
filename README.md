@@ -6,11 +6,12 @@
 
 - **Three calculator modes:** Full-time, Part-time, and Student income
 - **Multi-job support** for students with multiple part-time jobs
-- **Accurate 2026 Danish tax model:** bundskat, kommuneskat, AM-bidrag, personfradrag, beskæftigelsesfradrag, ATP, church tax, pension, befordringsfradrag, and more
+- **Accurate 2026 Danish tax model:** bundskat, kommuneskat, AM-bidrag, personfradrag, beskæftigelsesfradrag, ATP, church tax, pension, befordringsfradrag, fagforening, pre-/after-tax deductions, and more
 - **Interactive charts** showing net-vs-gross income curves with tax bracket visualization
 - **7 languages:** Danish, English, Italian, German, Swedish, Spanish, Norwegian
 - **Dark/light theme** with responsive mobile design
 - **User feedback system** — vote on accuracy, report actual salary, submit bug reports
+- **Admin feedback dashboard** — token-protected page to review all user feedback
 
 ## Architecture
 
@@ -35,12 +36,12 @@ Browser → Cloudflare DNS → Caddy (HTTPS) → Docker → FastAPI + React SPA
 │   ├── data.py             # Tax rates, kommune data (2026)
 │   └── routers/
 │       ├── compute.py      # /api/compute/* endpoints
-│       ├── feedback.py     # /api/feedback, /api/vote, /api/accuracy-report
+│       ├── feedback.py     # /api/feedback, /api/vote, /api/accuracy-report, /api/admin/feedback
 │       └── meta.py         # /api/meta (kommune list, rates)
 ├── frontend/               # React SPA
 │   └── src/
 │       └── app/
-│           ├── pages/      # Home, Wizard, Results, About, Feedback, HowItWorks
+│           ├── pages/      # Home, Wizard, Results, About, Feedback, HowItWorks, AdminFeedback
 │           ├── components/  # Header, ServiceCard, Stepper, shadcn/ui
 │           └── utils/
 │               ├── api.ts   # Backend API client
@@ -73,6 +74,7 @@ Browser → Cloudflare DNS → Caddy (HTTPS) → Docker → FastAPI + React SPA
 | `GET` | `/api/vote/stats` | Aggregate vote statistics |
 | `POST` | `/api/accuracy-report` | Report actual vs estimated salary |
 | `POST` | `/api/feedback` | Submit bug report / feature request / general feedback |
+| `GET` | `/api/admin/feedback` | Admin-only: view all feedback, votes, accuracy reports (token auth) |
 
 ## Local Development
 

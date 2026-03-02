@@ -15,6 +15,7 @@ This project is a **read-only tax calculator** with no authentication, no user
 accounts, and no payment processing. The attack surface is limited to:
 
 - Unauthenticated feedback/vote endpoints (rate-limited, validated)
+- Token-authenticated admin feedback endpoint (`/api/admin/feedback`)
 - Static frontend served from the same origin
 - Self-hosted Umami analytics (separate Docker container)
 
@@ -22,8 +23,9 @@ accounts, and no payment processing. The attack surface is limited to:
 
 | Area | Measure |
 |------|---------|
-| **Secrets** | No secrets in repo; all credentials via `.env` / env vars |
+| **Secrets** | No secrets in repo; all credentials via `.env` / env vars / GitHub Secrets |
 | **CORS** | Explicit origin allowlist (no wildcards) |
+| **Admin auth** | `/api/admin/feedback` requires `X-Admin-Token` header (set via `ADMIN_TOKEN` env var) |
 | **Rate limiting** | slowapi per-IP limits on all write endpoints |
 | **Input validation** | Pydantic models with field-length caps, enum validation, payload size limits |
 | **Feedback storage** | Date-stamped JSONL files, hardcoded filenames (no path injection), no PII collected |
