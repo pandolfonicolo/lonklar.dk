@@ -6,6 +6,7 @@ import { HowItWorks } from "./pages/HowItWorks";
 import { QuickOverview } from "./pages/QuickOverview";
 import { Feedback } from "./pages/Feedback";
 import { About } from "./pages/About";
+import { AdminFeedback } from "./pages/AdminFeedback";
 import { NotFound } from "./pages/NotFound";
 
 export const router = createBrowserRouter([
@@ -36,6 +37,10 @@ export const router = createBrowserRouter([
   {
     path: "/contact",
     Component: Feedback,
+  },
+  {
+    path: "/admin/feedback",
+    Component: AdminFeedback,
   },
   {
     path: "*",

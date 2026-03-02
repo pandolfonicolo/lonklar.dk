@@ -6,7 +6,6 @@ __pycache__/
 dist/
 build/
 .venv/
-.venv-1/
 
 # Node / Frontend
 frontend/node_modules/

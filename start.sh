@@ -5,7 +5,7 @@
 set -e
 
 # Find the Python executable (venv or system)
-PYTHON="${PYTHON:-$(dirname "$0")/.venv-1/bin/python}"
+PYTHON="${PYTHON:-$(dirname "$0")/.venv/bin/python}"
 if [ ! -f "$PYTHON" ]; then
   PYTHON="python3"
 fi

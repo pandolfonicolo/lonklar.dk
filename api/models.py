@@ -48,6 +48,12 @@ class StudentRequest(BaseModel):
     employer_pension_pct: float = Field(0.0, description="Employer pension %")
     is_church: bool = Field(True)
     aars_fribeloeb: float | None = Field(None, description="Annual fribeløb (null = default)")
+    atp_monthly: float = Field(0.0, description="Monthly ATP contribution")
+    pretax_deductions_monthly: float = Field(0.0, description="Monthly pre-tax deductions")
+    aftertax_deductions_monthly: float = Field(0.0, description="Monthly after-tax deductions")
+    other_pay_monthly: float = Field(0.0, description="Extra monthly pay")
+    transport_km: float = Field(0.0, description="Round-trip daily commute in km")
+    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
 
 
 # ═══════════════════════════════════════════════════════════════════════

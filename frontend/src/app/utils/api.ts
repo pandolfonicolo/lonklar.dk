@@ -85,6 +85,12 @@ export interface StudentRequest {
   employer_pension_pct: number;
   is_church: boolean;
   aars_fribeloeb?: number | null;
+  atp_monthly?: number;
+  pretax_deductions_monthly?: number;
+  aftertax_deductions_monthly?: number;
+  other_pay_monthly?: number;
+  transport_km?: number;
+  union_fees_annual?: number;
 }
 
 export interface CurveRequest {
@@ -222,6 +228,13 @@ export interface StudentResult {
   work_total_pension: number;
   work_am_bidrag: number;
   work_after_am: number;
+  atp_annual: number;
+  other_pay: number;
+  pretax_deductions: number;
+  aftertax_deductions: number;
+  befordring: number;
+  union_deduction: number;
+  lignings_fradrag: number;
   total_personal: number;
   beskaeft_fradrag: number;
   job_fradrag: number;

@@ -106,6 +106,12 @@ def compute_student(req: StudentRequest):
         is_church=req.is_church,
         employer_pension_pct=req.employer_pension_pct / 100,
         aars_fribeloeb=req.aars_fribeloeb,
+        atp_monthly=req.atp_monthly,
+        pretax_deductions_annual=req.pretax_deductions_monthly * 12,
+        aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
+        other_pay_annual=req.other_pay_monthly * 12,
+        transport_km=req.transport_km,
+        union_fees_annual=req.union_fees_annual,
     )
     return {
         "kommune": req.kommune,

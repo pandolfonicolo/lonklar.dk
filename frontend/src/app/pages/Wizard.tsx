@@ -317,6 +317,12 @@ export function Wizard() {
           employer_pension_pct: studentWorkMode === "none" ? 0 : Number(erPensionPct),
           is_church: isChurch,
           aars_fribeloeb: aarsFribeloeb,
+          atp_monthly: studentWorkMode === "none" ? 0 : atpMonthly,
+          pretax_deductions_monthly: studentWorkMode === "none" ? 0 : Number(pretaxDed),
+          aftertax_deductions_monthly: studentWorkMode === "none" ? 0 : Number(aftertaxDed),
+          other_pay_monthly: studentWorkMode === "none" ? 0 : Number(otherPay),
+          transport_km: Number(transportKm),
+          union_fees_annual: Number(unionFees),
         });
       }
       navigate(`/results/${serviceId}`, { state: {
@@ -910,7 +916,7 @@ export function Wizard() {
           </div>
         );
 
-      case 2: // Pension
+      case 2: // Pension & extras
         return (
           <div className="space-y-6">
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -940,6 +946,79 @@ export function Wizard() {
                 />
               </Field>
             </div>
+
+            <hr className="border-border" />
+
+            {/* ATP */}
+            <div className="p-4 border border-border rounded-[var(--radius-md)] space-y-3">
+              <div className="flex items-center gap-3">
+                <Switch id="student-atp" checked={atpEnabled} onCheckedChange={setAtpEnabled} />
+                <div className="flex-1 min-w-0">
+                  <Label htmlFor="student-atp">{t("input.atp")}</Label>
+                  <p className="text-xs text-muted-foreground">{t("input.atp.sub")}</p>
+                </div>
+                <Tip text={t("input.atp.tip")} />
+              </div>
+              {atpEnabled && (
+                <div className="flex items-center gap-3 pl-[52px]">
+                  <Label className="text-sm text-muted-foreground whitespace-nowrap">
+                    {lang === "da" ? "Medarbejderandel" : "Employee share"}
+                  </Label>
+                  <div className="relative w-36">
+                    <Input
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={atpCustom ?? String(atpDefault)}
+                      onChange={(e) => setAtpCustom(e.target.value)}
+                      className="h-10 pr-14 text-sm"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground pointer-events-none">
+                      kr/{lang === "da" ? "md" : "mo"}
+                    </span>
+                  </div>
+                  {atpCustom !== null && (
+                    <button
+                      type="button"
+                      onClick={() => setAtpCustom(null)}
+                      className="text-xs text-muted-foreground hover:text-foreground underline"
+                    >
+                      Reset
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Student extras (collapsible) */}
+            <Collapsible open={extrasOpen} onOpenChange={setExtrasOpen}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 w-full p-4 text-sm font-medium text-foreground border border-border rounded-[var(--radius-md)] hover:bg-secondary/50 transition-colors">
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${extrasOpen ? "rotate-180" : ""}`}
+                  />
+                  {t("input.extras.title")}
+                  <span className="text-xs text-muted-foreground ml-auto">{t("input.extras.optional")}</span>
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-4 space-y-4 pl-2 border-l-2 border-border">
+                <Field label={t("input.otherPay")} tooltip={t("input.otherPay.tip")}>
+                  <Input type="number" min="0" step="500" value={otherPay} onChange={(e) => setOtherPay(e.target.value)} className="h-12" />
+                </Field>
+                <Field label={t("input.pretaxDed")} tooltip={t("input.pretaxDed.tip")}>
+                  <Input type="number" min="0" step="100" value={pretaxDed} onChange={(e) => setPretaxDed(e.target.value)} className="h-12" />
+                </Field>
+                <Field label={t("input.aftertaxDed")} tooltip={t("input.aftertaxDed.tip")}>
+                  <Input type="number" min="0" step="100" value={aftertaxDed} onChange={(e) => setAftertaxDed(e.target.value)} className="h-12" />
+                </Field>
+                <Field label={t("input.transportKm" as any)} tooltip={t("input.transportKm.tip" as any)}>
+                  <Input type="number" min="0" step="1" value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
+                </Field>
+                <Field label={t("input.unionFees" as any)} tooltip={t("input.unionFees.tip" as any)}>
+                  <Input type="number" min="0" step="500" value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
+                </Field>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         );
 

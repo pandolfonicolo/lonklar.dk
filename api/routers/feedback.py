@@ -7,9 +7,11 @@ Security features:
 - Path-injection safe (hardcoded filenames, no user input in paths)
 - Field-length caps enforced via Pydantic models
 - No PII collection (email field removed)
+- Admin endpoint protected by ADMIN_TOKEN env var
 """
 
-from fastapi import APIRouter, Request
+import os
+from fastapi import APIRouter, Request, Header, HTTPException
 import json
 from datetime import datetime, timezone, date
 from pathlib import Path
@@ -20,6 +22,8 @@ from slowapi.util import get_remote_address
 from ..models import FeedbackRequest, AccuracyReportRequest, VoteRequest
 
 router = APIRouter(prefix="/api")
+
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "changeme")
 
 # ── Rate limiter (shared with main app) ──────────────────────────────
 limiter = Limiter(key_func=get_remote_address)
@@ -100,3 +104,39 @@ async def vote_stats(request: Request):
                     except json.JSONDecodeError:
                         pass
     return {"up": up, "down": down, "total": up + down}
+
+
+# ── Admin: read all feedback (protected by token) ────────────────────
+
+def _verify_admin(token: str | None):
+    if not token or token != ADMIN_TOKEN:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+
+
+def _read_all_jsonl(pattern: str) -> list[dict]:
+    """Read all records from matching JSONL files, newest first."""
+    records: list[dict] = []
+    if not FEEDBACK_DIR.exists():
+        return records
+    for filepath in sorted(FEEDBACK_DIR.glob(pattern)):
+        with open(filepath, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    records.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
+    records.reverse()  # newest first
+    return records
+
+
+@router.get("/admin/feedback")
+async def admin_feedback(request: Request, x_admin_token: str | None = Header(None)):
+    _verify_admin(x_admin_token)
+    return {
+        "feedback": _read_all_jsonl("feedback*.jsonl"),
+        "accuracy_reports": _read_all_jsonl("accuracy_reports*.jsonl"),
+        "votes": _read_all_jsonl("votes*.jsonl"),
+    }

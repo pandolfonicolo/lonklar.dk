@@ -281,11 +281,24 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
         value: r.work_feriepenge,
         color: "var(--chart-1)",
       },
+    );
+    if ((r as any).other_pay > 0)
+      rows.push({ label: "+ Other pay", value: (r as any).other_pay });
+    if ((r as any).pretax_deductions > 0)
+      rows.push({
+        label: "- Pre-tax deductions",
+        value: -(r as any).pretax_deductions,
+      });
+    rows.push(
       {
         label: "- Work pension",
         value: -r.work_pension,
         color: "var(--chart-2)",
       },
+    );
+    if (r.atp_annual > 0)
+      rows.push({ label: "- ATP", value: -r.atp_annual });
+    rows.push(
       {
         label: "- AM-bidrag (work, 8%)",
         value: -r.work_am_bidrag,
@@ -318,6 +331,29 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
   }
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
+    label: "Beskæftigelsesfradrag",
+    value: r.beskaeft_fradrag,
+    indent: true,
+  });
+  rows.push({
+    label: "Jobfradrag",
+    value: r.job_fradrag,
+    indent: true,
+  });
+  if (r.befordring > 0)
+    rows.push({
+      label: "Befordringsfradrag",
+      value: r.befordring,
+      indent: true,
+    });
+  if (r.union_deduction > 0)
+    rows.push({
+      label: "Fagforening / A-kasse",
+      value: r.union_deduction,
+      indent: true,
+    });
+  rows.push({ label: "", value: 0, spacer: true });
+  rows.push({
     label: "- Bundskat",
     value: -r.bundskat,
     color: "var(--chart-3)",
@@ -341,6 +377,17 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
     bold: true,
     color: "var(--chart-3)",
   });
+  rows.push({
+    label: "TOTAL DEDUCTIONS",
+    value: -r.total_deductions,
+    bold: true,
+    color: "var(--chart-3)",
+  });
+  if ((r as any).aftertax_deductions > 0)
+    rows.push({
+      label: "- After-tax deductions",
+      value: -(r as any).aftertax_deductions,
+    });
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
     label: "NET INCOME",
@@ -383,6 +430,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
     const incomeTax = Math.round(sr.total_income_tax / div);
     const am = Math.round(sr.work_am_bidrag / div);
     const pension = Math.round((sr.work_employee_pension || 0) / div);
+    const atp = Math.round((sr.atp_annual || 0) / div);
     const suRepay = Math.round((sr.su_repayment || 0) / div);
 
     type Slice = { key: string; value: number };
@@ -393,6 +441,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
     if (incomeTax > 0) data.push({ key: "chart.pie.incomeTax", value: incomeTax });
     if (am > 0) data.push({ key: "chart.pie.am", value: am });
     if (pension > 0) data.push({ key: "chart.pie.pension", value: pension });
+    if (atp > 0) data.push({ key: "chart.pie.atp", value: atp });
     if (suRepay > 0) data.push({ key: "chart.pie.suRepay", value: suRepay });
 
     return (
@@ -770,6 +819,16 @@ export function Results() {
                   <span className="text-sm font-sans opacity-70">
                     {t("results.feriepengeLabel" as any)}
                   </span>
+                </p>
+              )}
+              {/* SU included note for students */}
+              {isStudent && (
+                <p className="mt-2 text-sm opacity-75 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5" />
+                  {lang === "da"
+                    ? `Inkl. SU (netto ca. ${fmtDKK(Math.round((r as StudentResult).su_annual / 12))} kr/md) — du modtager SU separat fra dit studie-job`
+                    : `Includes net SU (~${fmtDKK(Math.round((r as StudentResult).su_annual / 12))} kr/mo) — SU is paid separately from your work income`
+                  }
                 </p>
               )}
             </div>

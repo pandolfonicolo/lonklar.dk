@@ -280,6 +280,12 @@ def compute_student_income(
     is_church: bool,
     employer_pension_pct: float = 0.0,
     aars_fribeloeb: float | None = None,
+    atp_monthly: float = 0.0,
+    pretax_deductions_annual: float = 0.0,
+    aftertax_deductions_annual: float = 0.0,
+    other_pay_annual: float = 0.0,
+    transport_km: float = 0.0,
+    union_fees_annual: float = 0.0,
     _skip_ferie: bool = False,
 ) -> dict:
     """Combined net income: SU (no AM) + work wages (AM applies).
@@ -295,12 +301,16 @@ def compute_student_income(
     # Feriepenge (12.5 % for hourly student jobs — counts towards egenindkomst)
     work_feriepenge = 0.0 if _skip_ferie else work_annual * FERIEPENGE_RATE
 
+    # Total cash = work salary + feriepenge + other pay - pretax deductions
+    total_work_cash = work_annual + work_feriepenge + other_pay_annual - pretax_deductions_annual
+
     # Work side
     work_employee_pension = work_annual * pension_pct
     work_employer_pension = work_annual * employer_pension_pct  # on top
     work_total_pension    = work_employee_pension + work_employer_pension
     work_pension          = work_employee_pension  # only employee part is deducted
-    work_am_basis  = (work_annual + work_feriepenge) - work_pension
+    atp_annual = atp_monthly * 12
+    work_am_basis  = total_work_cash - work_pension - atp_annual
     work_am_bidrag = work_am_basis * AM_RATE
     work_after_am  = work_am_basis - work_am_bidrag
 
@@ -327,19 +337,24 @@ def compute_student_income(
     job_frad = min(max(work_after_am - JOB_FRADRAG_THRESHOLD, 0)
                    * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
 
+    # Ligningsmæssige fradrag (reduce kommune/kirke base)
+    befordring = compute_befordringsfradrag(transport_km) if transport_km > 0 else 0.0
+    union_deduction = min(union_fees_annual, FAGFORENING_MAX)
+    lignings_fradrag = befordring + union_deduction
+
     # Bundskat
     bundskat_base = max(total_personal - PERSONFRADRAG, 0)
     bundskat = bundskat_base * BUNDSKAT_RATE
 
     # Kommuneskat
-    kommune_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad, 0)
+    kommune_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
     k_pct = kommune_pct / 100.0
     kommuneskat = kommune_base * k_pct
 
     # Kirkeskat (reduced by ligningsmæssige fradrag: beskaeft + jobfradrag)
     kirkeskat = 0.0
     if is_church:
-        kirke_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad, 0)
+        kirke_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
         kirkeskat = kirke_base * (kirke_pct / 100.0)
 
     # Higher brackets (unlikely for most students)
@@ -352,8 +367,10 @@ def compute_student_income(
     # Totals — note: net is based on effective SU (after repayment)
     total_income_tax = bundskat + kommuneskat + kirkeskat + mellemskat
     total_deductions = (work_am_bidrag + work_pension + total_income_tax
+                        + atp_annual
                         + su_repayment + su_repayment_interest)
-    net_annual = (su_annual_gross + work_annual + work_feriepenge) - total_deductions
+    # Net = SU gross + work cash - deductions - after-tax items
+    net_annual = (su_annual_gross + total_work_cash) - total_deductions - aftertax_deductions_annual
 
     # Monthly helpers
     work_after_am_monthly = work_after_am / 12
@@ -375,6 +392,13 @@ def compute_student_income(
         "work_total_pension":      work_total_pension,
         "work_am_bidrag":          work_am_bidrag,
         "work_after_am":           work_after_am,
+        "atp_annual":              atp_annual,
+        "other_pay":               other_pay_annual,
+        "pretax_deductions":       pretax_deductions_annual,
+        "aftertax_deductions":     aftertax_deductions_annual,
+        "befordring":              befordring,
+        "union_deduction":         union_deduction,
+        "lignings_fradrag":        lignings_fradrag,
         "total_personal":          total_personal,
         "beskaeft_fradrag":        beskaeft,
         "job_fradrag":             job_frad,
@@ -397,6 +421,9 @@ def compute_student_income(
             su_monthly, work_gross_monthly, pension_pct,
             kommune_pct, kirke_pct, is_church,
             employer_pension_pct, aars_fribeloeb,
+            atp_monthly, pretax_deductions_annual,
+            aftertax_deductions_annual, other_pay_annual,
+            transport_km, union_fees_annual,
             _skip_ferie=True,
         )
         net_ferie = net_annual - r_no["net_annual"]
