@@ -78,7 +78,7 @@ export function Wizard() {
     parttime: ["step.work", "step.location", "step.pension", "step.review"],
     student: studentWorkMode === "none"
       ? ["step.education", "step.workLocation", "step.review"]
-      : ["step.education", "step.workLocation", "step.pensionOnly", "step.review"],
+      : ["step.education", "step.workLocation", "step.pension", "step.review"],
   };
 
   const titleKeys: Record<string, TranslationKey> = {
