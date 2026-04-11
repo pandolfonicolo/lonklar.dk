@@ -48,8 +48,7 @@ Browser → Cloudflare DNS → Caddy (HTTPS) → Docker → FastAPI + React SPA
 │               └── i18n.tsx  # Translations (7 languages)
 ├── Dockerfile              # Multi-stage: Node build → Python runtime
 ├── requirements.txt        # Python dependencies
-├── start.sh                # Local dev: starts backend + frontend
-└── INFRASTRUCTURE.md       # Full infrastructure & ops guide
+└── start.sh                # Local dev: starts backend + frontend
 ```
 
 ## API Endpoints
@@ -157,8 +156,6 @@ The app auto-deploys on push to `main` via GitHub Actions:
 
 Production runs on Oracle Cloud Free Tier with Caddy as a reverse proxy for automatic HTTPS.
 
-See [INFRASTRUCTURE.md](INFRASTRUCTURE.md) for the full infrastructure & operations guide.
-
 ## SEO
 
 The site is set up for Google indexing:
@@ -169,8 +166,6 @@ The site is set up for Google indexing:
 - **Per-route `document.title`** with "Lonklar" branding on every page
 - **`/about` page** — text-heavy brand page for crawlers
 - **Google Search Console** — verify via Cloudflare DNS TXT, submit sitemap
-
-See the [SEO section in INFRASTRUCTURE.md](INFRASTRUCTURE.md#seo--google-indexing) for full details.
 
 ## Contributing
 
