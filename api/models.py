@@ -2,7 +2,12 @@
 Pydantic request / response models for the DK Income Calculator API.
 """
 
+from typing import Literal
+
 from pydantic import BaseModel, Field, field_validator
+
+
+PensionType = Literal["standard", "section53a"]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -14,6 +19,7 @@ class FullTimeRequest(BaseModel):
     kommune: str = Field("København", description="Municipality name")
     pension_pct: float = Field(4.0, description="Employee pension % (0-15)")
     employer_pension_pct: float = Field(8.0, description="Employer pension % (0-20)")
+    pension_type: PensionType = Field("standard", description="standard | section53a")
     is_church: bool = Field(True, description="Member of Folkekirken?")
     other_pay_monthly: float = Field(0.0, description="Extra monthly pay (broadband etc.)")
     taxable_benefits_monthly: float = Field(0.0, description="Monthly taxable benefits")
@@ -30,6 +36,7 @@ class PartTimeRequest(BaseModel):
     kommune: str = Field("København", description="Municipality name")
     pension_pct: float = Field(0.0, description="Employee pension % (0-15)")
     employer_pension_pct: float = Field(0.0, description="Employer pension % (0-20)")
+    pension_type: PensionType = Field("standard", description="standard | section53a")
     is_church: bool = Field(True, description="Member of Folkekirken?")
     other_pay_monthly: float = Field(0.0)
     taxable_benefits_monthly: float = Field(0.0)
@@ -46,6 +53,7 @@ class StudentRequest(BaseModel):
     kommune: str = Field("København", description="Municipality name")
     pension_pct: float = Field(0.0, description="Employee pension %")
     employer_pension_pct: float = Field(0.0, description="Employer pension %")
+    pension_type: PensionType = Field("standard", description="standard | section53a")
     is_church: bool = Field(True)
     aars_fribeloeb: float | None = Field(None, description="Annual fribeløb (null = default)")
     atp_monthly: float = Field(0.0, description="Monthly ATP contribution")
@@ -64,6 +72,7 @@ class CurveRequest(BaseModel):
     kommune: str = Field("København")
     pension_pct: float = Field(4.0)
     employer_pension_pct: float = Field(8.0)
+    pension_type: PensionType = Field("standard")
     is_church: bool = Field(True)
     is_hourly: bool = Field(False)
     atp_monthly: float = Field(94.65)
@@ -84,6 +93,7 @@ class HoursCurveRequest(BaseModel):
     kommune: str = Field("København")
     pension_pct: float = Field(0.0)
     employer_pension_pct: float = Field(0.0)
+    pension_type: PensionType = Field("standard")
     is_church: bool = Field(True)
     atp_monthly: float = Field(0.0)
     other_pay_monthly: float = Field(0.0)
@@ -101,6 +111,7 @@ class StudentHoursCurveRequest(BaseModel):
     kommune: str = Field("København")
     pension_pct: float = Field(0.0)
     employer_pension_pct: float = Field(0.0)
+    pension_type: PensionType = Field("standard")
     is_church: bool = Field(True)
     aars_fribeloeb: float | None = Field(None)
     max_hours: int = Field(220)

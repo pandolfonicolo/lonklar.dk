@@ -46,11 +46,14 @@ export interface Meta {
   constants: TaxConstants;
 }
 
+export type PensionType = "standard" | "section53a";
+
 export interface FullTimeRequest {
   gross_annual: number;
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
+  pension_type?: PensionType;
   is_church: boolean;
   other_pay_monthly?: number;
   taxable_benefits_monthly?: number;
@@ -67,6 +70,7 @@ export interface PartTimeRequest {
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
+  pension_type?: PensionType;
   is_church: boolean;
   other_pay_monthly?: number;
   taxable_benefits_monthly?: number;
@@ -83,6 +87,7 @@ export interface StudentRequest {
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
+  pension_type?: PensionType;
   is_church: boolean;
   aars_fribeloeb?: number | null;
   atp_monthly?: number;
@@ -97,6 +102,7 @@ export interface CurveRequest {
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
+  pension_type?: PensionType;
   is_church: boolean;
   is_hourly?: boolean;
   atp_monthly?: number;
@@ -117,6 +123,7 @@ export interface HoursCurveRequest {
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
+  pension_type?: PensionType;
   is_church: boolean;
   atp_monthly?: number;
   other_pay_monthly?: number;
@@ -134,6 +141,7 @@ export interface StudentHoursCurveRequest {
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
+  pension_type?: PensionType;
   is_church: boolean;
   aars_fribeloeb?: number | null;
   max_hours?: number;
@@ -178,10 +186,13 @@ export interface TaxResult {
   aftertax_deductions: number;
   taxable_benefits: number;
   total_gross: number;
+  taxable_income: number;
+  pension_type: PensionType;
   pension: number;
   employee_pension: number;
   employer_pension: number;
   total_pension: number;
+  taxable_employer_pension: number;
   am_bidrag: number;
   atp_annual: number;
   income_after_am: number;
@@ -223,9 +234,12 @@ export interface StudentResult {
   work_gross_annual: number;
   work_gross_monthly: number;
   work_pension: number;
+  pension_type: PensionType;
   work_employee_pension: number;
   work_employer_pension: number;
   work_total_pension: number;
+  work_taxable_employer_pension: number;
+  work_taxable_income: number;
   work_am_bidrag: number;
   work_after_am: number;
   atp_annual: number;

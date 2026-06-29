@@ -85,6 +85,7 @@ _CACHE_TTL = 3600  # 1 hour in seconds
 # Currencies to offer (code → symbol)
 SUPPORTED_CURRENCIES = {
     "EUR": "€",
+    "NZD": "NZ$",
     "USD": "$",
     "GBP": "£",
     "SEK": "kr",
@@ -102,6 +103,7 @@ SUPPORTED_CURRENCIES = {
 # Fallback rates (DKK per 1 unit of foreign currency)
 FALLBACK_RATES = {
     "EUR": 7.45,
+    "NZD": 4.10,
     "USD": 6.85,
     "GBP": 8.65,
     "SEK": 0.65,

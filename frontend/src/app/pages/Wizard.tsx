@@ -10,6 +10,7 @@ import {
   Plus,
   Trash2,
   Pencil,
+  RotateCcw,
 } from "lucide-react";
 import { Header } from "../components/Header";
 import { Stepper } from "../components/Stepper";
@@ -42,9 +43,15 @@ import {
   computePartTime,
   computeStudent,
   type Meta,
+  type PensionType,
 } from "../utils/api";
 import { useI18n, type TranslationKey } from "../utils/i18n";
 import { usePageMeta } from "../utils/usePageMeta";
+import {
+  clearWizardState,
+  loadWizardState,
+  saveWizardState,
+} from "../utils/wizardPersistence";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -92,6 +99,7 @@ export function Wizard() {
   const [isChurch, setIsChurch] = useState(false);
   const [pensionPct, setPensionPct] = useState("4");
   const [erPensionPct, setErPensionPct] = useState("8");
+  const [pensionType, setPensionType] = useState<PensionType>("standard");
 
   // ── Full-time state ────────────────────────────────────────────
   const [salaryMode, setSalaryMode] = useState<"annual" | "monthly">("monthly");
@@ -129,10 +137,45 @@ export function Wizard() {
 
   // ── Multiple student jobs ──────────────────────────────────────
   type StudentJob = { id: number; name: string; hourlyRate: string; hours: string; hoursMode: "monthly" | "weekly" };
+  type WizardSavedState = {
+    step: number;
+    kommune: string;
+    isChurch: boolean;
+    pensionPct: string;
+    erPensionPct: string;
+    pensionType: PensionType;
+    salaryMode: "annual" | "monthly";
+    grossAnnual: string;
+    grossMonthly: string;
+    hourlyRate: string;
+    hoursMonth: string;
+    atpEnabled: boolean;
+    atpCustom: string | null;
+    otherPay: string;
+    taxBenefits: string;
+    pretaxDed: string;
+    aftertaxDed: string;
+    transportKm: string;
+    unionFees: string;
+    feriefridage: string;
+    ferieEnabled: boolean;
+    extrasOpen: boolean;
+    studentWorkMode: "hourly" | "none";
+    eduType: "vid" | "ungdom";
+    livingSituation: "ude" | "hjemme";
+    children: string;
+    suMonths: string;
+    optedOutMonths: string;
+    studentJobs: StudentJob[];
+    studyPeriod: "full" | "start" | "finish";
+    studyStartMonth: number;
+    studyEndMonth: number;
+  };
   const [studentJobs, setStudentJobs] = useState<StudentJob[]>([
     { id: 1, name: "Job 1", hourlyRate: "140", hours: "10", hoursMode: "weekly" },
   ]);
   const nextJobId = useRef(2);
+  const persistenceReady = useRef(false);
 
   const addStudentJob = () => {
     const n = nextJobId.current++;
@@ -193,12 +236,75 @@ export function Wizard() {
     if (su + opted > enrolledMonths) setOptedOutMonths(String(Math.max(0, enrolledMonths - su)));
   }, [enrolledMonths]);
 
-  useEffect(() => {
-    fetchMeta().then(setMeta).catch(console.error);
-  }, []);
+  function collectWizardState(): WizardSavedState {
+    return {
+      step,
+      kommune,
+      isChurch,
+      pensionPct,
+      erPensionPct,
+      pensionType,
+      salaryMode,
+      grossAnnual,
+      grossMonthly,
+      hourlyRate,
+      hoursMonth,
+      atpEnabled,
+      atpCustom,
+      otherPay,
+      taxBenefits,
+      pretaxDed,
+      aftertaxDed,
+      transportKm,
+      unionFees,
+      feriefridage,
+      ferieEnabled,
+      extrasOpen,
+      studentWorkMode,
+      eduType,
+      livingSituation,
+      children,
+      suMonths,
+      optedOutMonths,
+      studentJobs,
+      studyPeriod,
+      studyStartMonth,
+      studyEndMonth,
+    };
+  }
 
-  // Defaults per service
-  useEffect(() => {
+  function setDefaultWizardState(resetStep = true) {
+    if (resetStep) setStep(0);
+    setKommune("København");
+    setIsChurch(false);
+    setPensionType("standard");
+    setSalaryMode("monthly");
+    setGrossAnnual("504000");
+    setGrossMonthly("42000");
+    setHourlyRate("180");
+    setHoursMonth("80");
+    setAtpCustom(null);
+    setOtherPay("0");
+    setTaxBenefits("0");
+    setPretaxDed("0");
+    setAftertaxDed("0");
+    setTransportKm("0");
+    setUnionFees("0");
+    setFeriefridage("0");
+    setFerieEnabled(false);
+    setExtrasOpen(false);
+    setStudentWorkMode("hourly");
+    setEduType("vid");
+    setLivingSituation("ude");
+    setChildren("0");
+    setSuMonths("12");
+    setOptedOutMonths("0");
+    setStudentJobs([{ id: 1, name: "Job 1", hourlyRate: "140", hours: "10", hoursMode: "weekly" }]);
+    nextJobId.current = 2;
+    setStudyPeriod("full");
+    setStudyStartMonth(8);
+    setStudyEndMonth(6);
+
     if (serviceId === "parttime") {
       setPensionPct("0");
       setErPensionPct("0");
@@ -206,13 +312,106 @@ export function Wizard() {
     } else if (serviceId === "student") {
       setPensionPct("0");
       setErPensionPct("0");
+      setAtpEnabled(true);
     } else {
       setPensionPct("4");
       setErPensionPct("8");
       setAtpEnabled(true);
     }
-    setStep(0);
+  }
+
+  function applyWizardState(saved: WizardSavedState) {
+    setStep(saved.step ?? 0);
+    setKommune(saved.kommune ?? "København");
+    setIsChurch(saved.isChurch ?? false);
+    setPensionPct(saved.pensionPct ?? (serviceId === "fulltime" ? "4" : "0"));
+    setErPensionPct(saved.erPensionPct ?? (serviceId === "fulltime" ? "8" : "0"));
+    setPensionType(saved.pensionType ?? "standard");
+    setSalaryMode(saved.salaryMode ?? "monthly");
+    setGrossAnnual(saved.grossAnnual ?? "504000");
+    setGrossMonthly(saved.grossMonthly ?? "42000");
+    setHourlyRate(saved.hourlyRate ?? "180");
+    setHoursMonth(saved.hoursMonth ?? "80");
+    setAtpEnabled(saved.atpEnabled ?? serviceId !== "parttime");
+    setAtpCustom(saved.atpCustom ?? null);
+    setOtherPay(saved.otherPay ?? "0");
+    setTaxBenefits(saved.taxBenefits ?? "0");
+    setPretaxDed(saved.pretaxDed ?? "0");
+    setAftertaxDed(saved.aftertaxDed ?? "0");
+    setTransportKm(saved.transportKm ?? "0");
+    setUnionFees(saved.unionFees ?? "0");
+    setFeriefridage(saved.feriefridage ?? "0");
+    setFerieEnabled(saved.ferieEnabled ?? false);
+    setExtrasOpen(saved.extrasOpen ?? false);
+    setStudentWorkMode(saved.studentWorkMode ?? "hourly");
+    setEduType(saved.eduType ?? "vid");
+    setLivingSituation(saved.livingSituation ?? "ude");
+    setChildren(saved.children ?? "0");
+    setSuMonths(saved.suMonths ?? "12");
+    setOptedOutMonths(saved.optedOutMonths ?? "0");
+    const jobs = saved.studentJobs?.length
+      ? saved.studentJobs
+      : [{ id: 1, name: "Job 1", hourlyRate: "140", hours: "10", hoursMode: "weekly" as const }];
+    setStudentJobs(jobs);
+    nextJobId.current = Math.max(...jobs.map((job) => job.id), 1) + 1;
+    setStudyPeriod(saved.studyPeriod ?? "full");
+    setStudyStartMonth(saved.studyStartMonth ?? 8);
+    setStudyEndMonth(saved.studyEndMonth ?? 6);
+  }
+
+  useEffect(() => {
+    fetchMeta().then(setMeta).catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    if (!serviceId) return;
+    persistenceReady.current = false;
+    const saved = loadWizardState<WizardSavedState>(serviceId);
+    if (saved) applyWizardState(saved);
+    else setDefaultWizardState(true);
+    window.setTimeout(() => {
+      persistenceReady.current = true;
+    }, 0);
   }, [serviceId]);
+
+  useEffect(() => {
+    if (!serviceId || !persistenceReady.current) return;
+    saveWizardState(serviceId, collectWizardState());
+  }, [
+    serviceId,
+    step,
+    kommune,
+    isChurch,
+    pensionPct,
+    erPensionPct,
+    pensionType,
+    salaryMode,
+    grossAnnual,
+    grossMonthly,
+    hourlyRate,
+    hoursMonth,
+    atpEnabled,
+    atpCustom,
+    otherPay,
+    taxBenefits,
+    pretaxDed,
+    aftertaxDed,
+    transportKm,
+    unionFees,
+    feriefridage,
+    ferieEnabled,
+    extrasOpen,
+    studentWorkMode,
+    eduType,
+    livingSituation,
+    children,
+    suMonths,
+    optedOutMonths,
+    studentJobs,
+    studyPeriod,
+    studyStartMonth,
+    studyEndMonth,
+  ]);
 
   if (!serviceId || !stepNames[serviceId]) {
     navigate("/");
@@ -283,6 +482,7 @@ export function Wizard() {
           kommune,
           pension_pct: Number(pensionPct),
           employer_pension_pct: Number(erPensionPct),
+          pension_type: pensionType,
           is_church: isChurch,
           atp_monthly: atpMonthly,
           other_pay_monthly: Number(otherPay),
@@ -299,6 +499,7 @@ export function Wizard() {
           kommune,
           pension_pct: Number(pensionPct),
           employer_pension_pct: Number(erPensionPct),
+          pension_type: pensionType,
           is_church: isChurch,
           atp_monthly: atpMonthly,
           other_pay_monthly: Number(otherPay),
@@ -315,6 +516,7 @@ export function Wizard() {
           kommune,
           pension_pct: studentWorkMode === "none" ? 0 : Number(pensionPct),
           employer_pension_pct: studentWorkMode === "none" ? 0 : Number(erPensionPct),
+          pension_type: pensionType,
           is_church: isChurch,
           aars_fribeloeb: aarsFribeloeb,
           atp_monthly: studentWorkMode === "none" ? 0 : atpMonthly,
@@ -329,6 +531,7 @@ export function Wizard() {
         ...result,
         _input_pension_pct: Number(pensionPct),
         _input_employer_pension_pct: Number(erPensionPct),
+        _input_pension_type: pensionType,
         _input_is_church: isChurch,
         _input_atp_monthly: atpMonthly,
         _input_other_pay_monthly: Number(otherPay),
@@ -369,6 +572,17 @@ export function Wizard() {
       setStep(step - 1);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else navigate("/");
+  };
+
+  const handleReset = () => {
+    if (!serviceId) return;
+    clearWizardState(serviceId);
+    persistenceReady.current = false;
+    setDefaultWizardState(true);
+    window.setTimeout(() => {
+      persistenceReady.current = true;
+    }, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // ── Step renderers ─────────────────────────────────────────────
@@ -922,6 +1136,7 @@ export function Wizard() {
             <p className="text-sm text-muted-foreground leading-relaxed">
               {t("input.student.pension.desc")}
             </p>
+            {renderPensionTypeControl()}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Field label={t("input.pension.yours")} tooltip={t("input.pension.yours.tip")}>
                 <Input
@@ -1073,6 +1288,43 @@ export function Wizard() {
     <div className="space-y-6">{renderLocationFields()}</div>
   );
 
+  const renderPensionTypeControl = () => (
+    <Field label={t("input.pension.type" as any)} tooltip={t("input.pension.type.tip" as any)}>
+      <RadioGroup
+        value={pensionType}
+        onValueChange={(v) => setPensionType(v as PensionType)}
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+      >
+        <label
+          className={`flex items-start gap-3 p-4 border rounded-[var(--radius-md)] cursor-pointer transition-colors ${
+            pensionType === "standard"
+              ? "border-[var(--nordic-accent)] bg-[var(--nordic-accent-light)]"
+              : "border-border"
+          }`}
+        >
+          <RadioGroupItem value="standard" id="pension-standard" />
+          <div>
+            <p className="text-sm font-medium">{t("input.pension.type.standard" as any)}</p>
+            <p className="text-xs text-muted-foreground">{t("input.pension.type.standard.sub" as any)}</p>
+          </div>
+        </label>
+        <label
+          className={`flex items-start gap-3 p-4 border rounded-[var(--radius-md)] cursor-pointer transition-colors ${
+            pensionType === "section53a"
+              ? "border-[var(--nordic-accent)] bg-[var(--nordic-accent-light)]"
+              : "border-border"
+          }`}
+        >
+          <RadioGroupItem value="section53a" id="pension-section53a" />
+          <div>
+            <p className="text-sm font-medium">{t("input.pension.type.section53a" as any)}</p>
+            <p className="text-xs text-muted-foreground">{t("input.pension.type.section53a.sub" as any)}</p>
+          </div>
+        </label>
+      </RadioGroup>
+    </Field>
+  );
+
   // ═══════════════════════════════════════════════════════════════
   //  SHARED: Pension + Extras step (fulltime / parttime)
   // ═══════════════════════════════════════════════════════════════
@@ -1082,6 +1334,9 @@ export function Wizard() {
       <div>
         <h3 className="text-lg font-medium text-foreground mb-1">{t("input.pension.title")}</h3>
         <p className="text-sm text-muted-foreground mb-4">{t("input.pension.desc")}</p>
+        <div className="mb-4">
+          {renderPensionTypeControl()}
+        </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("input.pension.yours")} tooltip={t("input.pension.yours.tip")}>
             <Input
@@ -1325,6 +1580,12 @@ export function Wizard() {
     rows.push({ label: t("input.kommune"), value: kommune });
     rows.push({ label: t("input.church"), value: isChurch ? yes : no });
     if (!(serviceId === "student" && studentWorkMode === "none")) {
+      rows.push({
+        label: t("input.pension.type" as any),
+        value: pensionType === "section53a"
+          ? t("input.pension.type.section53a" as any)
+          : t("input.pension.type.standard" as any),
+      });
       rows.push({ label: t("input.pension.yours"), value: `${pensionPct} %` });
       rows.push({ label: t("input.pension.employer"), value: `${erPensionPct} %` });
     }
@@ -1393,14 +1654,20 @@ export function Wizard() {
               <ChevronLeft className="w-4 h-4 mr-2" />
               {step === 0 ? t("btn.home") : t("btn.back")}
             </Button>
-            <Button onClick={handleNext} disabled={loading}>
-              {loading
-                ? t("btn.calculating")
-                : isReview
-                ? t("btn.calculate")
-                : t("btn.next")}
-              {!loading && <ChevronRight className="w-4 h-4 ml-2" />}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={handleReset} disabled={loading}>
+                <RotateCcw className="w-4 h-4 mr-2" />
+                {t("btn.reset" as any)}
+              </Button>
+              <Button onClick={handleNext} disabled={loading}>
+                {loading
+                  ? t("btn.calculating")
+                  : isReview
+                  ? t("btn.calculate")
+                  : t("btn.next")}
+                {!loading && <ChevronRight className="w-4 h-4 ml-2" />}
+              </Button>
+            </div>
           </div>
         </div>
 

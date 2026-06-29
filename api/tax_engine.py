@@ -34,6 +34,8 @@ Combined, these factors typically result in ±1–2% deviation from the
 actual net pay shown on a payslip.
 """
 
+from __future__ import annotations
+
 from .data import (
     AM_RATE,
     PERSONFRADRAG,
@@ -93,6 +95,7 @@ def compute_tax(
     atp_monthly: float = 0.0,
     transport_km: float = 0.0,
     union_fees_annual: float = 0.0,
+    pension_type: str = "standard",
     _skip_ferie: bool = False,
 ) -> dict:
     """Full Danish tax calculation for one year.
@@ -105,7 +108,9 @@ def compute_tax(
     kirke_pct              Church-tax rate as **percentage** (e.g. 0.80).
     is_church              Member of the national church?
     has_employment_income  True → AM-bidrag + beskæftigelsesfradrag apply.
-    employer_pension_pct   Employer pension contribution ON TOP (0–1), not taxed.
+    employer_pension_pct   Employer pension contribution ON TOP (0–1).
+    pension_type           standard → normal Danish pension treatment.
+                           section53a → pension contributions taxed as salary.
     is_hourly              True → 12.5% feriepenge; False → 1% ferietillæg.
     taxable_benefits_annual  Non-cash benefits that add to taxable income
                              (e.g. fri telefon, sundhedsforsikring).
@@ -131,16 +136,20 @@ def compute_tax(
     # Total cash pay = salary + feriepenge + other pay - pretax deductions
     total_cash = gross_annual + feriepenge + other_pay_annual - pretax_deductions_annual
 
-    # Total taxable gross = cash pay + taxable non-cash benefits
-    total_gross = total_cash + taxable_benefits_annual
-
     # 1) Pension (on base salary only, not on feriepenge/benefits)
     employee_pension = gross_annual * pension_pct          # deducted from gross
-    employer_pension = gross_annual * employer_pension_pct # on top, not taxed
+    employer_pension = gross_annual * employer_pension_pct # on top
     total_pension    = employee_pension + employer_pension
-    pension = employee_pension  # only employee part reduces taxable income
+    is_section53a = pension_type == "section53a"
+    pension = employee_pension  # cash deduction in both pension models
+
+    # Total taxable gross = cash pay + taxable non-cash benefits.
+    # Section 53A employer pension is also taxed as salary when contributed.
+    taxable_employer_pension = employer_pension if is_section53a else 0.0
+    total_gross = total_cash + taxable_benefits_annual + taxable_employer_pension
     atp_annual = atp_monthly * 12
-    am_basis = total_gross - pension - atp_annual
+    pension_tax_deduction = 0.0 if is_section53a else employee_pension
+    am_basis = total_gross - pension_tax_deduction - atp_annual
 
     # 2) AM-bidrag
     am_bidrag = am_basis * AM_RATE if has_employment_income else 0.0
@@ -222,10 +231,13 @@ def compute_tax(
         "aftertax_deductions": aftertax_deductions_annual,
         "taxable_benefits":    taxable_benefits_annual,
         "total_gross":         total_gross,
+        "taxable_income":      am_basis,
+        "pension_type":        pension_type,
         "pension":             pension,
         "employee_pension":    employee_pension,
         "employer_pension":    employer_pension,
         "total_pension":       total_pension,
+        "taxable_employer_pension": taxable_employer_pension,
         "am_bidrag":           am_bidrag,
         "atp_annual":          atp_annual,
         "income_after_am":     income_after_am,
@@ -256,6 +268,7 @@ def compute_tax(
             is_hourly, taxable_benefits_annual, other_pay_annual,
             pretax_deductions_annual, aftertax_deductions_annual,
             atp_monthly, transport_km, union_fees_annual,
+            pension_type=pension_type,
             _skip_ferie=True,
         )
         net_ferie = net_annual - r_no["net_annual"]
@@ -286,6 +299,7 @@ def compute_student_income(
     other_pay_annual: float = 0.0,
     transport_km: float = 0.0,
     union_fees_annual: float = 0.0,
+    pension_type: str = "standard",
     _skip_ferie: bool = False,
 ) -> dict:
     """Combined net income: SU (no AM) + work wages (AM applies).
@@ -308,9 +322,17 @@ def compute_student_income(
     work_employee_pension = work_annual * pension_pct
     work_employer_pension = work_annual * employer_pension_pct  # on top
     work_total_pension    = work_employee_pension + work_employer_pension
-    work_pension          = work_employee_pension  # only employee part is deducted
+    is_section53a = pension_type == "section53a"
+    work_pension          = work_employee_pension  # cash deduction in both pension models
+    work_taxable_employer_pension = work_employer_pension if is_section53a else 0.0
+    work_pension_tax_deduction = 0.0 if is_section53a else work_employee_pension
     atp_annual = atp_monthly * 12
-    work_am_basis  = total_work_cash - work_pension - atp_annual
+    work_am_basis  = (
+        total_work_cash
+        + work_taxable_employer_pension
+        - work_pension_tax_deduction
+        - atp_annual
+    )
     work_am_bidrag = work_am_basis * AM_RATE
     work_after_am  = work_am_basis - work_am_bidrag
 
@@ -387,9 +409,12 @@ def compute_student_income(
         "work_gross_annual":       work_annual,
         "work_gross_monthly":      work_gross_monthly,
         "work_pension":            work_pension,
+        "pension_type":            pension_type,
         "work_employee_pension":   work_employee_pension,
         "work_employer_pension":   work_employer_pension,
         "work_total_pension":      work_total_pension,
+        "work_taxable_employer_pension": work_taxable_employer_pension,
+        "work_taxable_income":     work_am_basis,
         "work_am_bidrag":          work_am_bidrag,
         "work_after_am":           work_after_am,
         "atp_annual":              atp_annual,
@@ -424,6 +449,7 @@ def compute_student_income(
             atp_monthly, pretax_deductions_annual,
             aftertax_deductions_annual, other_pay_annual,
             transport_km, union_fees_annual,
+            pension_type=pension_type,
             _skip_ferie=True,
         )
         net_ferie = net_annual - r_no["net_annual"]

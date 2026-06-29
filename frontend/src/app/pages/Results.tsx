@@ -53,14 +53,24 @@ import {
   fetchCurve,
   fetchHoursCurve,
   fetchStudentHoursCurve,
+  fetchExchangeRates,
   type Meta,
   type TaxResult,
   type StudentResult,
   type CurvePoint,
   type HoursCurvePoint,
   type StudentHoursCurvePoint,
+  type ExchangeRates,
 } from "../utils/api";
 import { useI18n } from "../utils/i18n";
+import {
+  CURRENCIES,
+  formatCurrency,
+  formatCurrencyAxis,
+  getDkkPerCurrency,
+  type CurrencyCode,
+} from "../utils/currency";
+import { clearWizardState } from "../utils/wizardPersistence";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -71,11 +81,10 @@ function fmtDKK(n: number, decimals = 0): string {
   }).format(n);
 }
 
-function fmtEUR(n: number, rate: number): string {
-  return `€${(n / rate).toLocaleString("da-DK", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  })}`;
+let activeCurrencyCode: CurrencyCode = "EUR";
+
+function fmtForeign(n: number, rate: number): string {
+  return formatCurrency(n, activeCurrencyCode, rate);
 }
 
 /** Smart axis label: use M for millions, k for thousands */
@@ -86,12 +95,8 @@ function fmtAxisDKK(v: number): string {
   return String(v);
 }
 
-function fmtAxisEUR(v: number, rate: number): string {
-  const eur = v / rate;
-  const abs = Math.abs(eur);
-  if (abs >= 1_000_000) return `€${(eur / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
-  if (abs >= 1_000) return `€${(eur / 1_000).toFixed(0)}k`;
-  return `€${Math.round(eur)}`;
+function fmtAxisForeign(v: number, rate: number): string {
+  return formatCurrencyAxis(v, activeCurrencyCode, rate);
 }
 
 function pct(n: number): string {
@@ -148,9 +153,22 @@ function employeeBreakdown(r: TaxResult): Row[] {
   });
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
-    label: "- Your pension",
+    label: "- Employee pension deduction",
     value: -r.employee_pension,
     color: "var(--chart-2)",
+  });
+  if (r.employer_pension > 0) {
+    rows.push({
+      label: "Employer pension contribution",
+      value: r.employer_pension,
+      color: "var(--chart-2)",
+    });
+  }
+  rows.push({
+    label: "Taxable income",
+    value: r.taxable_income ?? r.income_after_am + r.am_bidrag,
+    bold: true,
+    color: "var(--chart-1)",
   });
   rows.push({
     label: "- AM-bidrag (8%)",
@@ -225,7 +243,7 @@ function employeeBreakdown(r: TaxResult): Row[] {
     });
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
-    label: "Total income tax",
+    label: "Tax",
     value: -r.total_income_tax,
     bold: true,
     color: "var(--chart-3)",
@@ -243,11 +261,19 @@ function employeeBreakdown(r: TaxResult): Row[] {
     });
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
-    label: "NET INCOME",
+    label: "Net salary",
     value: r.net_annual,
     bold: true,
     color: "var(--chart-1)",
   });
+  if (r.total_pension > 0) {
+    rows.push({
+      label: "Total pension contribution",
+      value: r.total_pension,
+      bold: true,
+      color: "var(--chart-2)",
+    });
+  }
   return rows;
 }
 
@@ -291,11 +317,24 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
       });
     rows.push(
       {
-        label: "- Work pension",
+        label: "- Employee pension deduction",
         value: -r.work_pension,
         color: "var(--chart-2)",
       },
     );
+    if (r.work_employer_pension > 0) {
+      rows.push({
+        label: "Employer pension contribution",
+        value: r.work_employer_pension,
+        color: "var(--chart-2)",
+      });
+    }
+    rows.push({
+      label: "Taxable work income",
+      value: r.work_taxable_income ?? r.work_after_am + r.work_am_bidrag,
+      bold: true,
+      color: "var(--chart-1)",
+    });
     if (r.atp_annual > 0)
       rows.push({ label: "- ATP", value: -r.atp_annual });
     rows.push(
@@ -372,7 +411,7 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
   if (r.mellemskat > 0)
     rows.push({ label: "- Mellemskat", value: -r.mellemskat });
   rows.push({
-    label: "Total income tax",
+    label: "Tax",
     value: -r.total_income_tax,
     bold: true,
     color: "var(--chart-3)",
@@ -390,11 +429,19 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
     });
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
-    label: "NET INCOME",
+    label: "Net salary",
     value: r.net_annual,
     bold: true,
     color: "var(--chart-1)",
   });
+  if (r.work_total_pension > 0) {
+    rows.push({
+      label: "Total pension contribution",
+      value: r.work_total_pension,
+      bold: true,
+      color: "var(--chart-2)",
+    });
+  }
   return rows;
 }
 
@@ -412,7 +459,7 @@ const PIE_COLORS = [
   "#f59e0b",               // SU repayment — amber
 ];
 
-function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate }: { r: TaxResult | StudentResult; isStudent: boolean; serviceId: string; period: "monthly" | "annual"; showEur: boolean; eurRate: number }) {
+function SalaryBreakdownPie({ r, isStudent, serviceId, period, showConverted, currencyRate }: { r: TaxResult | StudentResult; isStudent: boolean; serviceId: string; period: "monthly" | "annual"; showConverted: boolean; currencyRate: number }) {
   const { t } = useI18n();
 
   const div = period === "annual" ? 1 : 12;
@@ -447,7 +494,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
     return (
       <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
         <h3 className="text-foreground font-medium mb-1">{t("chart.pie.title" as any)}</h3>
-        <p className="text-sm text-muted-foreground mb-6">{showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}</p>
+        <p className="text-sm text-muted-foreground mb-6">{showConverted ? fmtForeign(grossVal, currencyRate) : `${fmtDKK(grossVal)} kr`}/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}</p>
 
         <div className="flex flex-col sm:flex-row items-center gap-6">
           <div className="w-52 h-52 flex-shrink-0">
@@ -465,7 +512,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
                     return (
                       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '8px 12px', lineHeight: 1.6 }}>
                         <p style={{ fontWeight: 600 }}>{t(d.key as any)}</p>
-                        <p>{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
+                        <p>{showConverted ? fmtForeign(d.value, currencyRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
                       </div>
                     );
                   }}
@@ -481,14 +528,14 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
                   <span className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                   <span className="text-muted-foreground">{t(d.key as any)}</span>
                   <span className="text-muted-foreground/60 text-xs ml-1">({pctVal}%)</span>
-                  <span className="font-medium text-foreground ml-auto tabular-nums">{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`}</span>
+                  <span className="font-medium text-foreground ml-auto tabular-nums">{showConverted ? fmtForeign(d.value, currencyRate) : `${fmtDKK(d.value)} kr`}</span>
                 </div>
               );
             })}
             <div className="border-t border-border pt-2 mt-1 flex items-center gap-2.5">
               <span className="w-3 h-3 flex-shrink-0" />
               <span className="text-muted-foreground font-medium">Total</span>
-              <span className="font-semibold text-foreground ml-auto tabular-nums">{showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}</span>
+              <span className="font-semibold text-foreground ml-auto tabular-nums">{showConverted ? fmtForeign(grossVal, currencyRate) : `${fmtDKK(grossVal)} kr`}</span>
             </div>
           </div>
         </div>
@@ -522,7 +569,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
   return (
     <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
       <h3 className="text-foreground font-medium mb-1">{t("chart.pie.title" as any)}</h3>
-      <p className="text-sm text-muted-foreground mb-6">{showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}</p>
+      <p className="text-sm text-muted-foreground mb-6">{showConverted ? fmtForeign(grossVal, currencyRate) : `${fmtDKK(grossVal)} kr`}/{period === "annual" ? t("chart.dkkYear" as any) : t("chart.dkkMonth" as any)}</p>
 
       <div className="flex flex-col sm:flex-row items-center gap-6">
         {/* Donut */}
@@ -552,7 +599,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
                   return (
                     <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '8px 12px', lineHeight: 1.6 }}>
                       <p style={{ fontWeight: 600 }}>{t(d.key as any)}</p>
-                      <p>{showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
+                      <p>{showConverted ? fmtForeign(d.value, currencyRate) : `${fmtDKK(d.value)} kr`} <span style={{ opacity: 0.6 }}>({pctVal}%)</span></p>
                     </div>
                   );
                 }}
@@ -574,7 +621,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
                 <span className="text-muted-foreground">{t(d.key as any)}</span>
                 <span className="text-muted-foreground/60 text-xs ml-1">({pctVal}%)</span>
                 <span className="font-medium text-foreground ml-auto tabular-nums">
-                  {showEur ? fmtEUR(d.value, eurRate) : `${fmtDKK(d.value)} kr`}
+                  {showConverted ? fmtForeign(d.value, currencyRate) : `${fmtDKK(d.value)} kr`}
                 </span>
               </div>
             );
@@ -583,7 +630,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showEur, eurRate 
             <span className="w-3 h-3 flex-shrink-0" />
             <span className="text-muted-foreground font-medium">Total</span>
             <span className="font-semibold text-foreground ml-auto tabular-nums">
-              {showEur ? fmtEUR(grossVal, eurRate) : `${fmtDKK(grossVal)} kr`}
+              {showConverted ? fmtForeign(grossVal, currencyRate) : `${fmtDKK(grossVal)} kr`}
             </span>
           </div>
         </div>
@@ -605,8 +652,10 @@ export function Results() {
 
   // Toggle state
   const [period, setPeriod] = useState<"monthly" | "annual">("monthly");
-  const [showEur, setShowEur] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("DKK");
+  const showConverted = selectedCurrency !== "DKK";
   const [meta, setMeta] = useState<Meta | null>(null);
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
 
   // Chart data
@@ -627,6 +676,7 @@ export function Results() {
 
   useEffect(() => {
     fetchMeta().then(setMeta).catch(console.error);
+    fetchExchangeRates().then(setExchangeRates).catch(console.error);
     // Fetch vote stats
     fetch(`${import.meta.env.DEV ? "http://localhost:8000" : ""}/api/vote/stats`)
       .then(r => r.json())
@@ -640,6 +690,7 @@ export function Results() {
     const r = result as any;
     const pensionPct = r._input_pension_pct ?? 0;
     const erPensionPct = r._input_employer_pension_pct ?? 0;
+    const pensionType = r._input_pension_type ?? r.pension_type ?? "standard";
     const isChurch = r._input_is_church ?? (r.kirkeskat > 0);
     const atpMonthly = r._input_atp_monthly ?? 0;
     const otherPayMonthly = r._input_other_pay_monthly ?? 0;
@@ -661,6 +712,7 @@ export function Results() {
         kommune: r.kommune,
         pension_pct: pensionPct,
         employer_pension_pct: erPensionPct,
+        pension_type: pensionType,
         is_church: isChurch,
         is_hourly: serviceId === "parttime",
         atp_monthly: atpMonthly,
@@ -677,6 +729,7 @@ export function Results() {
         kommune: r.kommune,
         pension_pct: pensionPct,
         employer_pension_pct: erPensionPct,
+        pension_type: pensionType,
         is_church: isChurch,
         atp_monthly: atpMonthly,
         ...extraParams,
@@ -692,6 +745,7 @@ export function Results() {
         kommune: r.kommune,
         pension_pct: pensionPct,
         employer_pension_pct: erPensionPct,
+        pension_type: pensionType,
         is_church: isChurch,
         aars_fribeloeb: r.aars_fribeloeb,
         max_hours: 220,
@@ -706,6 +760,7 @@ export function Results() {
         kommune: r.kommune,
         pension_pct: pensionPct,
         employer_pension_pct: erPensionPct,
+        pension_type: pensionType,
         is_church: isChurch,
         is_hourly: false,
         atp_monthly: 0,
@@ -737,7 +792,11 @@ export function Results() {
 
   const mul = period === "annual" ? 12 : 1;
   const perLabel = period === "annual" ? t("perLabel.year" as any) : t("perLabel.month" as any);
-  const eurRate = meta?.dkk_per_eur ?? 7.45;
+  const currencyRate = getDkkPerCurrency(
+    selectedCurrency,
+    exchangeRates?.rates ?? (meta ? { EUR: meta.dkk_per_eur } : undefined),
+  );
+  activeCurrencyCode = selectedCurrency === "DKK" ? "EUR" : selectedCurrency;
 
   const displayAmount = netMonthly * mul;
   // Only split ferie for parttime/student — their feriepenge is paid separately via FerieKonto
@@ -757,7 +816,7 @@ export function Results() {
 
   const formatVal = (v: number): string => {
     const display = period === "annual" ? v : v / 12;
-    if (showEur) return fmtEUR(display, eurRate);
+    if (showConverted) return fmtForeign(display, currencyRate);
     return `${fmtDKK(display)} kr`;
   };
 
@@ -786,8 +845,8 @@ export function Results() {
               </p>
               <div className="flex items-baseline gap-3 flex-wrap">
                 <h1 className="text-5xl font-mono">
-                  {showEur
-                    ? fmtEUR(primaryNetAmount, eurRate)
+                  {showConverted
+                    ? fmtForeign(primaryNetAmount, currencyRate)
                     : `${fmtDKK(primaryNetAmount)} kr`
                   }
                 </h1>
@@ -801,8 +860,8 @@ export function Results() {
                       }}
                     >
                       <Info className="w-3.5 h-3.5" />
-                      ±{showEur
-                        ? fmtEUR(Math.round(displayAmount * 0.015), eurRate)
+                      ±{showConverted
+                        ? fmtForeign(Math.round(displayAmount * 0.015), currencyRate)
                         : `${fmtDKK(Math.round(displayAmount * 0.015))} kr`
                       }
                     </span>
@@ -815,7 +874,7 @@ export function Results() {
               {/* Feriepenge — shown only for parttime/student (paid separately via FerieKonto) */}
               {showFerieSplit && ferieAmount > 0 && (
                 <p className="mt-1.5 text-lg font-mono opacity-80">
-                  + {showEur ? fmtEUR(ferieAmount, eurRate) : `${fmtDKK(ferieAmount)} kr`}{" "}
+                  + {showConverted ? fmtForeign(ferieAmount, currencyRate) : `${fmtDKK(ferieAmount)} kr`}{" "}
                   <span className="text-sm font-sans opacity-70">
                     {t("results.feriepengeLabel" as any)}
                   </span>
@@ -844,8 +903,8 @@ export function Results() {
           {isStudent && (r as StudentResult).over_fribeloeb && (
             <div className="mt-4 p-3 bg-white/15 rounded-[var(--radius-md)] text-sm">
               ⚠ You exceed the annual fribeløb by{" "}
-              {showEur ? fmtEUR((r as StudentResult).fribeloeb_excess, eurRate) : `${fmtDKK((r as StudentResult).fribeloeb_excess)} kr`} — SU
-              repayment of {showEur ? fmtEUR((r as StudentResult).su_repayment, eurRate) : `${fmtDKK((r as StudentResult).su_repayment)} kr`} +
+              {showConverted ? fmtForeign((r as StudentResult).fribeloeb_excess, currencyRate) : `${fmtDKK((r as StudentResult).fribeloeb_excess)} kr`} — SU
+              repayment of {showConverted ? fmtForeign((r as StudentResult).su_repayment, currencyRate) : `${fmtDKK((r as StudentResult).su_repayment)} kr`} +
               interest applies.
             </div>
           )}
@@ -911,28 +970,22 @@ export function Results() {
             </button>
           </div>
 
-          {/* Currency toggle */}
+          {/* Currency selector */}
           <div className="inline-flex items-center rounded-[var(--radius-lg)] bg-muted p-1 gap-0.5">
-            <button
-              onClick={() => setShowEur(false)}
-              className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
-                !showEur
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              DKK
-            </button>
-            <button
-              onClick={() => setShowEur(true)}
-              className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
-                showEur
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              EUR
-            </button>
+            {CURRENCIES.map((currency) => (
+              <button
+                key={currency.code}
+                onClick={() => setSelectedCurrency(currency.code)}
+                className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
+                  selectedCurrency === currency.code
+                    ? "bg-card text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                aria-label={`${t("currency.convert_to" as any)} ${currency.label}`}
+              >
+                {currency.code}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -944,16 +997,13 @@ export function Results() {
           {!isStudent && (
             <Stat
               label={`Pension (total)${perLabel}`}
-              value={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
+              value={showConverted ? fmtForeign(r.total_pension / (period === "annual" ? 1 : 12), currencyRate) : `${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
             />
           )}
           {isStudent && (
             <Stat
               label="SU kept"
-              value={`${fmtDKK(
-                (r as StudentResult).su_annual /
-                  (period === "annual" ? 1 : 12)
-              )} kr${perLabel}`}
+              value={`${formatVal((r as StudentResult).su_annual)}${perLabel}`}
             />
           )}
         </div>
@@ -1005,8 +1055,8 @@ export function Results() {
               <div className="p-4 flex items-center justify-between text-xs text-muted-foreground font-medium uppercase tracking-wide">
                 <span>{t("results.item")}</span>
                 <div className="flex gap-3 sm:gap-8">
-                  <span className="w-20 sm:w-28 text-right">{showEur ? t("results.annualDKK" as any).replace('DKK','EUR') : t("results.annualDKK")}</span>
-                  <span className="w-20 sm:w-28 text-right">{showEur ? t("results.monthlyDKK" as any).replace('DKK','EUR') : t("results.monthlyDKK")}</span>
+                  <span className="w-20 sm:w-28 text-right">{showConverted ? t("results.annualDKK" as any).replace("DKK", selectedCurrency) : t("results.annualDKK")}</span>
+                  <span className="w-20 sm:w-28 text-right">{showConverted ? t("results.monthlyDKK" as any).replace("DKK", selectedCurrency) : t("results.monthlyDKK")}</span>
                 </div>
               </div>
               {breakdown.map((item, i) =>
@@ -1038,10 +1088,10 @@ export function Results() {
                     </div>
                     <div className="flex gap-3 sm:gap-8 shrink-0">
                       <div className={`w-16 sm:w-28 text-right font-mono text-xs sm:text-sm ${item.bold ? "font-semibold" : ""}`}>
-                        <p>{showEur ? fmtEUR(item.value, eurRate) : fmtDKK(item.value)}</p>
+                        <p>{showConverted ? fmtForeign(item.value, currencyRate) : fmtDKK(item.value)}</p>
                       </div>
                       <div className={`w-16 sm:w-28 text-right font-mono text-xs sm:text-sm text-muted-foreground ${item.bold ? "font-semibold" : ""}`}>
-                        <p>{showEur ? fmtEUR(item.value / 12, eurRate) : fmtDKK(item.value / 12)}</p>
+                        <p>{showConverted ? fmtForeign(item.value / 12, currencyRate) : fmtDKK(item.value / 12)}</p>
                       </div>
                     </div>
                   </div>
@@ -1049,10 +1099,10 @@ export function Results() {
               )}
             </div>
 
-            {showEur && (
+            {showConverted && (
               <div className="mt-4 p-4 bg-secondary/30 rounded-[var(--radius-md)]">
                 <p className="text-xs text-muted-foreground">
-                  Exchange rate: 1 EUR = {eurRate} DKK
+                  Exchange rate: 1 {selectedCurrency} = {currencyRate} DKK
                 </p>
               </div>
             )}
@@ -1072,7 +1122,7 @@ export function Results() {
             <TabsContent value="chart" className="mt-0 p-6 space-y-8" forceMount={undefined}>
 
               {/* ── Salary breakdown pie ── */}
-              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showEur={showEur} eurRate={eurRate} />
+              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showConverted={showConverted} currencyRate={currencyRate} />
 
               {/* Net vs Gross curve */}
               {curveData.length > 0 && (() => {
@@ -1097,10 +1147,10 @@ export function Results() {
                         type="number"
                         domain={[0, 140000]}
                         ticks={ticks}
-                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
+                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * cMul, currencyRate) : fmtAxisDKK(v * cMul)}
                         label={{
-                          value: showEur
-                            ? (period === "annual" ? t('chart.grossAnnualEur' as any) : t('chart.grossMonthEur' as any))
+                          value: showConverted
+                            ? (period === "annual" ? `Gross annual salary (${selectedCurrency})` : `Gross monthly salary (${selectedCurrency})`)
                             : isStudent
                               ? (period === "annual" ? t('chart.grossAnnualIncome' as any) : t('chart.grossMonthIncome' as any))
                               : (period === "annual" ? t('chart.grossAnnual' as any) : t('chart.grossMonth')),
@@ -1112,12 +1162,12 @@ export function Results() {
                       />
                       <YAxis
                         type="number"
-                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
+                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * cMul, currencyRate) : fmtAxisDKK(v * cMul)}
                         domain={[0, 140000]}
                         ticks={ticks}
                         label={{
-                          value: showEur
-                            ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
+                          value: showConverted
+                            ? (period === "annual" ? `Net annual salary (${selectedCurrency})` : `Net monthly salary (${selectedCurrency})`)
                             : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
                           angle: -90,
                           position: "insideLeft",
@@ -1147,8 +1197,8 @@ export function Results() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
                                 {bracket.label}
                               </p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showConverted ? fmtForeign(gVal, currencyRate) : `${fmtDKK(gVal)} kr`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showConverted ? fmtForeign(nVal, currencyRate) : `${fmtDKK(nVal)} kr`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -1245,10 +1295,10 @@ export function Results() {
                         fontSize={12}
                       />
                       <YAxis
-                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * hMul, eurRate) : fmtAxisDKK(v * hMul)}
+                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * hMul, currencyRate) : fmtAxisDKK(v * hMul)}
                         label={{
-                          value: showEur
-                            ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
+                          value: showConverted
+                            ? (period === "annual" ? `Net annual salary (${selectedCurrency})` : `Net monthly salary (${selectedCurrency})`)
                             : isStudent
                               ? (period === "annual" ? t('chart.netAnnualIncome' as any) : t('chart.netMonthIncome' as any))
                               : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
@@ -1280,8 +1330,8 @@ export function Results() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
                                 {bracket.label}
                               </p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showConverted ? fmtForeign(gVal, currencyRate) : `${fmtDKK(gVal)} kr`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showConverted ? fmtForeign(nVal, currencyRate) : `${fmtDKK(nVal)} kr`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -1369,14 +1419,14 @@ export function Results() {
             return (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
               {/* ── Salary breakdown pie ── */}
-              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showEur={showEur} eurRate={eurRate} />
+              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showConverted={showConverted} currencyRate={currencyRate} />
 
               <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
                 <h3 className="text-foreground font-medium mb-1">
                   {t("chart.studentNetVsHours" as any)}
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  {t("chart.studentNetVsHours.desc" as any)?.replace("{rate}", showEur ? fmtEUR(studentHourlyRate, eurRate) : `${fmtDKK(studentHourlyRate)} kr`)}
+                  {t("chart.studentNetVsHours.desc" as any)?.replace("{rate}", showConverted ? fmtForeign(studentHourlyRate, currencyRate) : `${fmtDKK(studentHourlyRate)} kr`)}
                 </p>
                 <ResponsiveContainer width="100%" height={450}>
                   <LineChart data={studentHoursCurveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
@@ -1395,10 +1445,10 @@ export function Results() {
                       fontSize={12}
                     />
                     <YAxis
-                      tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * sMul, eurRate) : fmtAxisDKK(v * sMul)}
+                      tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * sMul, currencyRate) : fmtAxisDKK(v * sMul)}
                       label={{
-                        value: showEur
-                          ? (period === "annual" ? t("chart.netAnnualEur" as any) : t("chart.netMonthEur" as any))
+                        value: showConverted
+                          ? (period === "annual" ? `Net annual income (${selectedCurrency})` : `Net monthly income (${selectedCurrency})`)
                           : (period === "annual" ? t("chart.netAnnualIncome" as any) : t("chart.netMonthIncome" as any)),
                         angle: -90,
                         position: "insideLeft",
@@ -1421,7 +1471,7 @@ export function Results() {
                         const totalGross = suVal + workGross + ferieVal;
                         const effectiveRate = totalGross > 0 ? (deductVal / totalGross * 100) : 0;
                         const hrsWeek = (d.hours_month / 4.33).toFixed(1);
-                        const fmt = (v: number) => showEur ? fmtEUR(v, eurRate) : `${fmtDKK(v)} kr`;
+                        const fmt = (v: number) => showConverted ? fmtForeign(v, currencyRate) : `${fmtDKK(v)} kr`;
                         return (
                           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: 8, fontSize: 13, padding: "10px 14px", lineHeight: 1.7, minWidth: 200 }}>
                             {d.over_fribeloeb && (
@@ -1517,7 +1567,7 @@ export function Results() {
               {fribeloebHour && (
                 <div className="flex gap-3 items-start rounded-[var(--radius)] border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-4">
                   <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
-                    {t("chart.fribeloebExplain" as any)?.replace("{hours}", String(fribeloebHour)).replace("{fribeloeb}", showEur ? fmtEUR(r.aars_fribeloeb, eurRate) : `${fmtDKK(r.aars_fribeloeb)} kr`)}
+                    {t("chart.fribeloebExplain" as any)?.replace("{hours}", String(fribeloebHour)).replace("{fribeloeb}", showConverted ? fmtForeign(r.aars_fribeloeb, currencyRate) : `${fmtDKK(r.aars_fribeloeb)} kr`)}
                   </p>
                 </div>
               )}
@@ -1528,7 +1578,7 @@ export function Results() {
           {/* Student with no work (SU only) or multi-job */}
           {isStudent && studentHoursCurveData.length === 0 && (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
-              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showEur={showEur} eurRate={eurRate} />
+              <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showConverted={showConverted} currencyRate={currencyRate} />
 
               {/* Net vs Gross curve for multi-job students */}
               {r._input_student_jobs && r._input_student_jobs.length > 1 && curveData.length > 0 && (() => {
@@ -1553,10 +1603,10 @@ export function Results() {
                         type="number"
                         domain={[0, 140000]}
                         ticks={ticks}
-                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
+                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * cMul, currencyRate) : fmtAxisDKK(v * cMul)}
                         label={{
-                          value: showEur
-                            ? (period === "annual" ? t('chart.grossAnnualEur' as any) : t('chart.grossMonthEur' as any))
+                          value: showConverted
+                            ? (period === "annual" ? `Gross annual income (${selectedCurrency})` : `Gross monthly income (${selectedCurrency})`)
                             : (period === "annual" ? t('chart.grossAnnualIncome' as any) : t('chart.grossMonthIncome' as any)),
                           position: "insideBottom",
                           offset: -5,
@@ -1566,12 +1616,12 @@ export function Results() {
                       />
                       <YAxis
                         type="number"
-                        tickFormatter={(v: number) => showEur ? fmtAxisEUR(v * cMul, eurRate) : fmtAxisDKK(v * cMul)}
+                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * cMul, currencyRate) : fmtAxisDKK(v * cMul)}
                         domain={[0, 140000]}
                         ticks={ticks}
                         label={{
-                          value: showEur
-                            ? (period === "annual" ? t('chart.netAnnualEur' as any) : t('chart.netMonthEur' as any))
+                          value: showConverted
+                            ? (period === "annual" ? `Net annual salary (${selectedCurrency})` : `Net monthly salary (${selectedCurrency})`)
                             : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
                           angle: -90,
                           position: "insideLeft",
@@ -1599,8 +1649,8 @@ export function Results() {
                                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
                                 {bracket.label}
                               </p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showEur ? fmtEUR(gVal, eurRate) : `${fmtDKK(gVal)} kr`}</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showEur ? fmtEUR(nVal, eurRate) : `${fmtDKK(nVal)} kr`}</p>
+                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showConverted ? fmtForeign(gVal, currencyRate) : `${fmtDKK(gVal)} kr`}</p>
+                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showConverted ? fmtForeign(nVal, currencyRate) : `${fmtDKK(nVal)} kr`}</p>
                               <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
                             </div>
                           );
@@ -1641,22 +1691,22 @@ export function Results() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <PensionStat
                     label={`${t("pension.yours")}${perLabel}`}
-                    value={showEur ? fmtEUR(r.employee_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.employee_pension / (period === "annual" ? 1 : 12))} kr`}
+                    value={showConverted ? fmtForeign(r.employee_pension / (period === "annual" ? 1 : 12), currencyRate) : `${fmtDKK(r.employee_pension / (period === "annual" ? 1 : 12))} kr`}
                   />
                   <PensionStat
                     label={`${t("pension.employer")}${perLabel}`}
-                    value={showEur ? fmtEUR(r.employer_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.employer_pension / (period === "annual" ? 1 : 12))} kr`}
+                    value={showConverted ? fmtForeign(r.employer_pension / (period === "annual" ? 1 : 12), currencyRate) : `${fmtDKK(r.employer_pension / (period === "annual" ? 1 : 12))} kr`}
                   />
                   <PensionStat
                     label={`${t("pension.total")}${perLabel}`}
-                    value={showEur ? fmtEUR(r.total_pension / (period === "annual" ? 1 : 12), eurRate) : `${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
+                    value={showConverted ? fmtForeign(r.total_pension / (period === "annual" ? 1 : 12), currencyRate) : `${fmtDKK(r.total_pension / (period === "annual" ? 1 : 12))} kr`}
                     highlight
                   />
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Monthly: {showEur ? fmtEUR(r.employee_pension / 12, eurRate) : `${fmtDKK(r.employee_pension / 12)} kr`} (you) +{" "}
-                  {showEur ? fmtEUR(r.employer_pension / 12, eurRate) : `${fmtDKK(r.employer_pension / 12)} kr`} (employer) ={" "}
-                  <strong>{showEur ? fmtEUR(r.total_pension / 12, eurRate) : `${fmtDKK(r.total_pension / 12)} DKK`}/month</strong>{" "}
+                  Monthly: {showConverted ? fmtForeign(r.employee_pension / 12, currencyRate) : `${fmtDKK(r.employee_pension / 12)} kr`} (you) +{" "}
+                  {showConverted ? fmtForeign(r.employer_pension / 12, currencyRate) : `${fmtDKK(r.employer_pension / 12)} kr`} (employer) ={" "}
+                  <strong>{showConverted ? fmtForeign(r.total_pension / 12, currencyRate) : `${fmtDKK(r.total_pension / 12)} DKK`}/month</strong>{" "}
                   to pension
                 </p>
               </div>
@@ -1724,7 +1774,7 @@ export function Results() {
                           : t("ferie.feriepenge")}
                       </p>
                       <p className="text-lg font-mono text-foreground">
-                        {showEur ? fmtEUR(ferieAmount, eurRate) : `${fmtDKK(ferieAmount)} kr`}
+                        {showConverted ? fmtForeign(ferieAmount, currencyRate) : `${fmtDKK(ferieAmount)} kr`}
                       </p>
                     </div>
                     <div className="bg-[var(--nordic-accent-light)] border border-[var(--nordic-accent)] rounded-[var(--radius-md)] p-4">
@@ -1732,7 +1782,7 @@ export function Results() {
                         {t("ferie.dailyRate")}
                       </p>
                       <p className="text-lg font-mono text-foreground">
-                        {showEur ? fmtEUR(dailyRate, eurRate) : `${fmtDKK(dailyRate)} kr`}
+                        {showConverted ? fmtForeign(dailyRate, currencyRate) : `${fmtDKK(dailyRate)} kr`}
                       </p>
                     </div>
                     {feriefridageDays > 0 && (
@@ -1741,10 +1791,10 @@ export function Results() {
                           {t("ferie.feriefridage")}
                         </p>
                         <p className="text-lg font-mono text-foreground">
-                          {showEur ? fmtEUR(feriefridageValue, eurRate) : `${fmtDKK(feriefridageValue)} kr`}
+                          {showConverted ? fmtForeign(feriefridageValue, currencyRate) : `${fmtDKK(feriefridageValue)} kr`}
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {feriefridageDays} × {showEur ? fmtEUR(dailyRate, eurRate) : `${fmtDKK(dailyRate)} kr`}
+                          {feriefridageDays} × {showConverted ? fmtForeign(dailyRate, currencyRate) : `${fmtDKK(dailyRate)} kr`}
                         </p>
                       </div>
                     )}
@@ -1876,8 +1926,8 @@ export function Results() {
                       {t("fribeloeb.egenindkomst")}
                     </span>
                     <span className="font-mono">
-                      {showEur ? fmtEUR(sr.work_after_am_monthly * 12, eurRate) : fmtDKK(sr.work_after_am_monthly * 12)} /{" "}
-                      {showEur ? fmtEUR(sr.aars_fribeloeb, eurRate) : `${fmtDKK(sr.aars_fribeloeb)} kr`}
+                      {showConverted ? fmtForeign(sr.work_after_am_monthly * 12, currencyRate) : fmtDKK(sr.work_after_am_monthly * 12)} /{" "}
+                      {showConverted ? fmtForeign(sr.aars_fribeloeb, currencyRate) : `${fmtDKK(sr.aars_fribeloeb)} kr`}
                     </span>
                   </div>
                   <div className="w-full h-3 bg-secondary rounded-full overflow-hidden">
@@ -1894,8 +1944,8 @@ export function Results() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     {sr.over_fribeloeb
-                      ? `Over by ${showEur ? fmtEUR(sr.fribeloeb_excess, eurRate) : `${fmtDKK(sr.fribeloeb_excess)} kr`} — SU repayment: ${showEur ? fmtEUR(sr.su_repayment, eurRate) : `${fmtDKK(sr.su_repayment)} kr`} + ${showEur ? fmtEUR(sr.su_repayment_interest, eurRate) : `${fmtDKK(sr.su_repayment_interest)} kr`} interest`
-                      : `${usedPct.toFixed(0)}% used — ${showEur ? fmtEUR(sr.aars_fribeloeb - sr.work_after_am_monthly * 12, eurRate) : `${fmtDKK(sr.aars_fribeloeb - sr.work_after_am_monthly * 12)} kr`} remaining`}
+                      ? `Over by ${showConverted ? fmtForeign(sr.fribeloeb_excess, currencyRate) : `${fmtDKK(sr.fribeloeb_excess)} kr`} — SU repayment: ${showConverted ? fmtForeign(sr.su_repayment, currencyRate) : `${fmtDKK(sr.su_repayment)} kr`} + ${showConverted ? fmtForeign(sr.su_repayment_interest, currencyRate) : `${fmtDKK(sr.su_repayment_interest)} kr`} interest`
+                      : `${usedPct.toFixed(0)}% used — ${showConverted ? fmtForeign(sr.aars_fribeloeb - sr.work_after_am_monthly * 12, currencyRate) : `${fmtDKK(sr.aars_fribeloeb - sr.work_after_am_monthly * 12)} kr`} remaining`}
                   </p>
                 </>
               );
@@ -2053,7 +2103,14 @@ export function Results() {
           >
             {t("btn.adjust")}
           </Button>
-          <Button variant="outline" size="lg" onClick={() => navigate("/")}>
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => {
+              if (serviceId) clearWizardState(serviceId);
+              navigate("/");
+            }}
+          >
             {t("btn.new")}
           </Button>
         </div>

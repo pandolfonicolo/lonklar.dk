@@ -45,6 +45,7 @@ def compute_fulltime(req: FullTimeRequest):
         atp_monthly=req.atp_monthly,
         transport_km=req.transport_km,
         union_fees_annual=req.union_fees_annual,
+        pension_type=req.pension_type,
     )
     return {
         "kommune": req.kommune,
@@ -79,6 +80,7 @@ def compute_parttime(req: PartTimeRequest):
         atp_monthly=req.atp_monthly,
         transport_km=req.transport_km,
         union_fees_annual=req.union_fees_annual,
+        pension_type=req.pension_type,
     )
     return {
         "kommune": req.kommune,
@@ -112,6 +114,7 @@ def compute_student(req: StudentRequest):
         other_pay_annual=req.other_pay_monthly * 12,
         transport_km=req.transport_km,
         union_fees_annual=req.union_fees_annual,
+        pension_type=req.pension_type,
     )
     return {
         "kommune": req.kommune,
@@ -161,6 +164,7 @@ def compute_curve(req: CurveRequest):
             aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
             transport_km=req.transport_km,
             union_fees_annual=req.union_fees_annual,
+            pension_type=req.pension_type,
         )
         data.append({
             "gross_annual": round(gross),
@@ -194,6 +198,7 @@ def compute_hours_curve(req: HoursCurveRequest):
             aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
             transport_km=req.transport_km,
             union_fees_annual=req.union_fees_annual,
+            pension_type=req.pension_type,
         )
         data.append({
             "hours_month": h,
@@ -223,6 +228,7 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
             is_church=req.is_church,
             employer_pension_pct=req.employer_pension_pct / 100,
             aars_fribeloeb=req.aars_fribeloeb,
+            pension_type=req.pension_type,
         )
         data.append({
             "hours_month": h,
