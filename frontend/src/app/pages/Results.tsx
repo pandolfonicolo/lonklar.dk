@@ -886,6 +886,11 @@ export function Results() {
       ? formatSignedCurrency(v, selectedCurrency, currencyRate)
       : formatSignedCurrency(v, "DKK", 1);
 
+  const selectedPeriodLabel = period === "annual" ? "Annual" : "Monthly";
+  const selectedPeriodSuffix = period === "annual" ? "/year" : "/month";
+  const periodAmount = (annualValue: number): number =>
+    period === "annual" ? annualValue : annualValue / 12;
+
   const makeScenario = (overrides: Partial<EmployeeScenarioRequest> = {}): EmployeeScenarioRequest => {
     const input = r as any;
     const employmentType = serviceId === "parttime" ? "parttime" : "fulltime";
@@ -1822,13 +1827,16 @@ export function Results() {
                 <div>
                   <h3 className="text-foreground font-medium">Projection</h3>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Salary growth affects this projection only. It does not change the current-period result above.
+                    Uses the current salary setup as year 1. Salary growth affects projected years only and never changes the current result above.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
-                    <Label className="text-xs text-muted-foreground">Period</Label>
+                    <ExplainedLabel
+                      label="Projection period"
+                      explanation="How many future years to estimate. Contributions, tax, and compensation are accumulated for this many years."
+                    />
                     <Select value={String(projectionYears)} onValueChange={(v) => setProjectionYears(Number(v))}>
                       <SelectTrigger className="h-11 mt-1">
                         <SelectValue />
@@ -1841,7 +1849,10 @@ export function Results() {
                     </Select>
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Annual pension return</Label>
+                    <ExplainedLabel
+                      label="Annual pension return %"
+                      explanation="Applied once per projected year to the previous pension balance before adding that year's new pension contributions. This is a simple estimate and excludes fees, inflation, and tax-law changes."
+                    />
                     <Input
                       type="number"
                       value={projectionReturn}
@@ -1850,7 +1861,10 @@ export function Results() {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Salary growth</Label>
+                    <ExplainedLabel
+                      label="Salary growth %"
+                      explanation="Increases gross salary for future projection years only. Year 1 remains the current salary result."
+                    />
                     <Input
                       type="number"
                       value={projectionGrowth}
@@ -1867,13 +1881,50 @@ export function Results() {
                 {projectionResult ? (
                   <>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                      <PensionStat label="Employee pension" value={formatMoney(projectionResult.totals.employee_pension)} />
-                      <PensionStat label="Employer pension" value={formatMoney(projectionResult.totals.employer_pension)} />
-                      <PensionStat label="Projected balance" value={formatMoney(projectionResult.totals.projected_pension_balance)} highlight />
-                      <PensionStat label="Total compensation" value={formatMoney(projectionResult.totals.total_compensation)} />
+                      <PensionStat label={`Employee pension, ${projectionYears}y total`} value={formatMoney(projectionResult.totals.employee_pension)} />
+                      <PensionStat label={`Employer pension, ${projectionYears}y total`} value={formatMoney(projectionResult.totals.employer_pension)} />
+                      <PensionStat label={`Projected pension balance after ${projectionYears}y`} value={formatMoney(projectionResult.totals.projected_pension_balance)} highlight />
+                      <PensionStat label={`Total compensation, ${projectionYears}y total`} value={formatMoney(projectionResult.totals.total_compensation)} />
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="rounded-[var(--radius-md)] border border-border bg-secondary/20 p-4">
+                      <p className="text-sm text-muted-foreground">
+                        Table values marked {selectedPeriodLabel.toLowerCase()} follow the page toggle. Cumulative totals, such as projected pension balance, remain whole-period values.
+                      </p>
+                    </div>
+
+                    <div className="hidden md:block overflow-x-auto rounded-[var(--radius-md)] border border-border">
+                      <table className="w-full min-w-[860px] text-sm">
+                        <thead className="bg-muted/60 text-muted-foreground">
+                          <tr>
+                            <ProjectionTh label="Year" explanation="Projection year. Year 1 uses the current salary setup without applying salary growth." />
+                            <ProjectionTh label={`${selectedPeriodLabel} gross`} explanation="Gross salary for the selected page period. DKK is calculated first, then optionally converted for display." align="right" />
+                            <ProjectionTh label={`${selectedPeriodLabel} net`} explanation="Estimated cash take-home pay for the selected page period. Pension is not added to cash net salary." align="right" />
+                            <ProjectionTh label={`${selectedPeriodLabel} tax`} explanation="AM-bidrag plus income tax for the selected page period." align="right" />
+                            <ProjectionTh label={`${selectedPeriodLabel} employee pension`} explanation="Your pension contribution for the selected page period." align="right" />
+                            <ProjectionTh label={`${selectedPeriodLabel} employer pension`} explanation="Employer pension for the selected page period. It counts as compensation, not cash salary." align="right" />
+                            <ProjectionTh label={`${selectedPeriodLabel} total comp`} explanation="Cash gross plus employer pension for the selected page period, with §53A employer pension not double-counted." align="right" />
+                            <ProjectionTh label="Projected balance" explanation="Simple projected pension balance after return and yearly contributions." align="right" />
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                          {projectionResult.years.map((row) => (
+                            <tr key={row.year} className="bg-card">
+                              <td className="px-4 py-3 font-medium text-foreground">Year {row.year}</td>
+                              <td className="px-4 py-3 text-right font-mono">{formatMoney(periodAmount(row.gross_annual))}</td>
+                              <td className="px-4 py-3 text-right font-mono">{formatMoney(periodAmount(row.net_annual))}</td>
+                              <td className="px-4 py-3 text-right font-mono">{formatMoney(periodAmount(row.tax))}</td>
+                              <td className="px-4 py-3 text-right font-mono">{formatMoney(periodAmount(row.employee_pension))}</td>
+                              <td className="px-4 py-3 text-right font-mono">{formatMoney(periodAmount(row.employer_pension))}</td>
+                              <td className="px-4 py-3 text-right font-mono">{formatMoney(periodAmount(row.total_compensation))}</td>
+                              <td className="px-4 py-3 text-right font-mono font-semibold">{formatMoney(row.projected_pension_balance)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="space-y-3 md:hidden">
                       {projectionResult.years.map((row) => (
                         <div key={row.year} className="rounded-[var(--radius-md)] border border-border p-4">
                           <div className="flex items-center justify-between gap-3">
@@ -1881,10 +1932,10 @@ export function Results() {
                             <p className="font-mono text-sm text-foreground">{formatMoney(row.projected_pension_balance)}</p>
                           </div>
                           <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                            <MiniMetric label="Gross" value={formatMoney(row.gross_annual)} />
-                            <MiniMetric label="Net" value={formatMoney(row.net_annual)} />
-                            <MiniMetric label="Tax" value={formatMoney(row.tax)} />
-                            <MiniMetric label="Pension" value={formatMoney(row.total_pension)} />
+                            <MiniMetric label={`${selectedPeriodLabel} gross`} value={formatMoney(periodAmount(row.gross_annual))} />
+                            <MiniMetric label={`${selectedPeriodLabel} net`} value={formatMoney(periodAmount(row.net_annual))} />
+                            <MiniMetric label={`${selectedPeriodLabel} tax`} value={formatMoney(periodAmount(row.tax))} />
+                            <MiniMetric label={`${selectedPeriodLabel} pension`} value={formatMoney(periodAmount(row.total_pension))} />
                           </div>
                         </div>
                       ))}
@@ -1923,11 +1974,17 @@ export function Results() {
                     <p className="text-sm font-medium text-foreground mb-3">Scenario B</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <Label className="text-xs text-muted-foreground">Gross monthly</Label>
+                        <ExplainedLabel
+                          label="Gross monthly"
+                          explanation="Scenario B salary input is monthly DKK. It is converted to annual DKK before the backend calculation."
+                        />
                         <Input value={comparisonGrossMonthly} onChange={(e) => setComparisonGrossMonthly(e.target.value)} type="number" className="h-10 mt-1" />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Pension type</Label>
+                        <ExplainedLabel
+                          label="Pension type"
+                          explanation="Standard pension can reduce taxable income. §53A contributions are taxed as salary when contributed."
+                        />
                         <Select value={comparisonPensionType} onValueChange={(v) => setComparisonPensionType(v as PensionType)}>
                           <SelectTrigger className="h-10 mt-1">
                             <SelectValue />
@@ -1939,19 +1996,31 @@ export function Results() {
                         </Select>
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Employee pension %</Label>
+                        <ExplainedLabel
+                          label="Employee pension %"
+                          explanation="Your pension contribution. It is withheld from cash pay and goes into pension."
+                        />
                         <Input value={comparisonPensionPct} onChange={(e) => setComparisonPensionPct(e.target.value)} type="number" className="h-10 mt-1" />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Employer pension %</Label>
+                        <ExplainedLabel
+                          label="Employer pension %"
+                          explanation="Employer-paid pension on top of salary. It counts as total compensation, not cash salary."
+                        />
                         <Input value={comparisonEmployerPct} onChange={(e) => setComparisonEmployerPct(e.target.value)} type="number" className="h-10 mt-1" />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Growth A %</Label>
+                        <ExplainedLabel
+                          label="Growth A %"
+                          explanation="Salary growth assumption used only for Scenario A projection totals."
+                        />
                         <Input value={comparisonGrowthA} onChange={(e) => setComparisonGrowthA(Number(e.target.value))} type="number" className="h-10 mt-1" />
                       </div>
                       <div>
-                        <Label className="text-xs text-muted-foreground">Growth B %</Label>
+                        <ExplainedLabel
+                          label="Growth B %"
+                          explanation="Salary growth assumption used only for Scenario B projection totals."
+                        />
                         <Input value={comparisonGrowthB} onChange={(e) => setComparisonGrowthB(Number(e.target.value))} type="number" className="h-10 mt-1" />
                       </div>
                     </div>
@@ -1965,10 +2034,25 @@ export function Results() {
                 {comparisonResult && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <DifferenceCard label="More cash" value={comparisonResult.delta.net_monthly} suffix="/month" formatSignedMoney={formatSignedMoney} />
-                      <DifferenceCard label="More pension" value={comparisonResult.delta.total_pension} suffix="/year" formatSignedMoney={formatSignedMoney} />
-                      <DifferenceCard label="More total comp" value={comparisonResult.delta.total_compensation} suffix="/year" formatSignedMoney={formatSignedMoney} />
+                      <DifferenceCard label="Cash difference" value={period === "annual" ? comparisonResult.delta.net_annual : comparisonResult.delta.net_monthly} suffix={selectedPeriodSuffix} formatSignedMoney={formatSignedMoney} />
+                      <DifferenceCard label="Pension difference" value={periodAmount(comparisonResult.delta.total_pension)} suffix={selectedPeriodSuffix} formatSignedMoney={formatSignedMoney} />
+                      <DifferenceCard label="Total comp difference" value={periodAmount(comparisonResult.delta.total_compensation)} suffix={selectedPeriodSuffix} formatSignedMoney={formatSignedMoney} />
                     </div>
+
+                    <div className="rounded-[var(--radius-md)] border border-border bg-secondary/20 p-4">
+                      <p className="text-sm text-muted-foreground">
+                        Comparison values follow the page toggle: currently showing {selectedPeriodLabel.toLowerCase()} amounts in {selectedCurrency}. Difference means Scenario B minus Scenario A.
+                      </p>
+                    </div>
+
+                    <ComparisonTable
+                      scenarioA={comparisonResult.scenario_a}
+                      scenarioB={comparisonResult.scenario_b}
+                      delta={comparisonResult.delta}
+                      period={period}
+                      formatMoney={formatMoney}
+                      formatSignedMoney={formatSignedMoney}
+                    />
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                       <ScenarioResultCard title="Scenario A" result={comparisonResult.scenario_a} formatMoney={formatMoney} />
@@ -2466,12 +2550,195 @@ function PensionStat({
   );
 }
 
+function ExplainedLabel({ label, explanation }: { label: string; explanation: string }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Label className="text-xs text-muted-foreground">{label}</Label>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button type="button" className="text-muted-foreground hover:text-foreground" aria-label={`${label} explanation`}>
+              <Info className="w-3.5 h-3.5" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-xs">
+            <p>{explanation}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  );
+}
+
+function ProjectionTh({
+  label,
+  explanation,
+  align = "left",
+}: {
+  label: string;
+  explanation: string;
+  align?: "left" | "right";
+}) {
+  return (
+    <th className={`px-4 py-3 font-medium ${align === "right" ? "text-right" : "text-left"}`}>
+      <div className={`flex items-center gap-1.5 ${align === "right" ? "justify-end" : ""}`}>
+        <span>{label}</span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button type="button" className="text-muted-foreground hover:text-foreground" aria-label={`${label} explanation`}>
+                <Info className="w-3.5 h-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <p>{explanation}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+    </th>
+  );
+}
+
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="font-mono text-sm text-foreground truncate">{value}</p>
     </div>
+  );
+}
+
+function totalComp(result: TaxResult): number {
+  return result.total_gross + result.employer_pension - result.taxable_employer_pension;
+}
+
+function ComparisonTable({
+  scenarioA,
+  scenarioB,
+  delta,
+  period,
+  formatMoney,
+  formatSignedMoney,
+}: {
+  scenarioA: TaxResult;
+  scenarioB: TaxResult;
+  delta: ComparisonResult["delta"];
+  period: "monthly" | "annual";
+  formatMoney: (value: number) => string;
+  formatSignedMoney: (value: number) => string;
+}) {
+  const periodLabel = period === "annual" ? "Annual" : "Monthly";
+  const amount = (annual: number) => (period === "annual" ? annual : annual / 12);
+  const rows = [
+    {
+      label: "Gross salary",
+      tip: "Contract salary before tax and pension. Employer pension is shown separately.",
+      a: scenarioA.gross_annual,
+      b: scenarioB.gross_annual,
+      d: scenarioB.gross_annual - scenarioA.gross_annual,
+    },
+    {
+      label: "Net salary",
+      tip: "Cash take-home pay after tax, employee pension, ATP, and deductions. Pension is not added to cash net salary.",
+      a: scenarioA.net_annual,
+      b: scenarioB.net_annual,
+      d: delta.net_annual,
+    },
+    {
+      label: "Tax",
+      tip: "AM-bidrag plus income tax.",
+      a: scenarioA.am_bidrag + scenarioA.total_income_tax,
+      b: scenarioB.am_bidrag + scenarioB.total_income_tax,
+      d: delta.tax,
+    },
+    {
+      label: "Employee pension",
+      tip: "Your pension contribution. This is pension, not cash salary.",
+      a: scenarioA.employee_pension,
+      b: scenarioB.employee_pension,
+      d: delta.employee_pension,
+    },
+    {
+      label: "Employer pension",
+      tip: "Employer pension on top of salary. Counts as total compensation, not cash salary.",
+      a: scenarioA.employer_pension,
+      b: scenarioB.employer_pension,
+      d: delta.employer_pension,
+    },
+    {
+      label: "Total pension",
+      tip: "Employee plus employer pension contributions.",
+      a: scenarioA.total_pension,
+      b: scenarioB.total_pension,
+      d: delta.total_pension,
+    },
+    {
+      label: "Total compensation",
+      tip: "Cash gross plus employer pension, with §53A taxable employer pension not double-counted.",
+      a: totalComp(scenarioA),
+      b: totalComp(scenarioB),
+      d: delta.total_compensation,
+    },
+  ];
+
+  return (
+    <>
+      <div className="hidden md:block overflow-x-auto rounded-[var(--radius-md)] border border-border">
+        <table className="w-full min-w-[760px] text-sm">
+          <thead className="bg-muted/60 text-muted-foreground">
+            <tr>
+              <ProjectionTh label={`${periodLabel} metric`} explanation="All money columns in this table follow the Monthly/Annual toggle above." />
+              <ProjectionTh label="Scenario A" explanation="The current result from the wizard." align="right" />
+              <ProjectionTh label="Scenario B" explanation="The edited comparison setup." align="right" />
+              <ProjectionTh label="Difference" explanation="Scenario B minus Scenario A. Positive values mean Scenario B is higher." align="right" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {rows.map((row) => (
+              <tr key={row.label} className="bg-card">
+                <td className="px-4 py-3">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-foreground">{row.label}</span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="text-muted-foreground hover:text-foreground" aria-label={`${row.label} explanation`}>
+                            <Info className="w-3.5 h-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs">
+                          <p>{row.tip}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-right font-mono">{formatMoney(amount(row.a))}</td>
+                <td className="px-4 py-3 text-right font-mono">{formatMoney(amount(row.b))}</td>
+                <td className="px-4 py-3 text-right font-mono font-semibold">{formatSignedMoney(amount(row.d))}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {rows.map((row) => (
+          <div key={row.label} className="rounded-[var(--radius-md)] border border-border p-4">
+            <div className="mb-3">
+              <p className="text-sm font-medium text-foreground">{row.label}</p>
+              <p className="text-xs text-muted-foreground">{row.tip}</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <MiniMetric label="A" value={formatMoney(amount(row.a))} />
+              <MiniMetric label="B" value={formatMoney(amount(row.b))} />
+              <MiniMetric label="Diff" value={formatSignedMoney(amount(row.d))} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

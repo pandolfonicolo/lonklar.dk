@@ -217,36 +217,6 @@ const flags: Record<Lang, { label: string; flag: React.ReactNode }> = {
       </svg>
     ),
   },
-  mi: {
-    label: "Te Reo Māori",
-    flag: (
-      <svg viewBox="0 0 640 480" className="w-5 h-3.5 rounded-[2px] shadow-sm" aria-hidden="true">
-        <rect width="640" height="480" fill="#00247D" />
-        <path d="M0 0h320v240H0z" fill="#012169" />
-        <path d="M0 0l320 240M320 0L0 240" stroke="#fff" strokeWidth="48" />
-        <path d="M0 0l320 240M320 0L0 240" stroke="#C8102E" strokeWidth="28" />
-        <path d="M160 0v240M0 120h320" stroke="#fff" strokeWidth="80" />
-        <path d="M160 0v240M0 120h320" stroke="#C8102E" strokeWidth="48" />
-        {[
-          [470, 120, 20],
-          [540, 210, 16],
-          [430, 260, 16],
-          [510, 340, 18],
-        ].map(([cx, cy, r], i) => (
-          <g key={i}>
-            <polygon
-              points={`${cx},${cy - r} ${cx + r * 0.22},${cy - r * 0.22} ${cx + r},${cy} ${cx + r * 0.22},${cy + r * 0.22} ${cx},${cy + r} ${cx - r * 0.22},${cy + r * 0.22} ${cx - r},${cy} ${cx - r * 0.22},${cy - r * 0.22}`}
-              fill="#fff"
-            />
-            <polygon
-              points={`${cx},${cy - r * 0.72} ${cx + r * 0.16},${cy - r * 0.16} ${cx + r * 0.72},${cy} ${cx + r * 0.16},${cy + r * 0.16} ${cx},${cy + r * 0.72} ${cx - r * 0.16},${cy + r * 0.16} ${cx - r * 0.72},${cy} ${cx - r * 0.16},${cy - r * 0.16}`}
-              fill="#CC142B"
-            />
-          </g>
-        ))}
-      </svg>
-    ),
-  },
   da: {
     label: "Dansk",
     flag: (
@@ -310,7 +280,7 @@ const flags: Record<Lang, { label: string; flag: React.ReactNode }> = {
   },
 };
 
-const langOrder: Lang[] = ["en", "mi", "da", "sv", "nb", "de", "it", "es"];
+const langOrder: Lang[] = ["en", "da", "sv", "nb", "de", "it", "es"];
 
 function LangSwitcher() {
   const { lang, setLang } = useI18n();
