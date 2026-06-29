@@ -101,21 +101,22 @@ SUPPORTED_CURRENCIES = {
 }
 
 # Fallback rates (DKK per 1 unit of foreign currency)
+# Approximate rates, updated around 2026-06-29.
 FALLBACK_RATES = {
-    "EUR": 7.45,
-    "NZD": 4.10,
-    "USD": 6.85,
-    "GBP": 8.65,
-    "SEK": 0.65,
-    "NOK": 0.65,
-    "PLN": 1.65,
-    "CHF": 7.75,
-    "JPY": 0.046,
-    "CAD": 5.05,
-    "AUD": 4.45,
-    "INR": 0.082,
-    "BRL": 1.20,
-    "TRY": 0.19,
+    "EUR": 7.47,
+    "NZD": 3.70,
+    "USD": 6.54,
+    "GBP": 8.67,
+    "SEK": 0.67,
+    "NOK": 0.66,
+    "PLN": 1.74,
+    "CHF": 8.10,
+    "JPY": 0.040,
+    "CAD": 4.61,
+    "AUD": 4.51,
+    "INR": 0.069,
+    "BRL": 1.26,
+    "TRY": 0.14,
 }
 
 

@@ -2,7 +2,8 @@ import React, { createContext, useContext, useState, useCallback, type ReactNode
 
 // ── Supported languages ──────────────────────────────────────────────
 
-export type Lang = "en" | "da" | "it" | "de" | "sv" | "es" | "nb";
+export type Lang = "en" | "da" | "it" | "de" | "sv" | "es" | "nb" | "mi";
+type TranslationEntry = { en: string } & Partial<Record<Lang, string>>;
 
 // ── Translation keys ─────────────────────────────────────────────────
 // Convention: English is the primary display language.
@@ -14,7 +15,7 @@ const translations = {
   "nav.calculators": { en: "Calculators", da: "Beregnere", it: "Calcolatori", de: "Rechner", sv: "Kalkylatorer", es: "Calculadoras", nb: "Kalkulatorer" },
   "nav.methodology": { en: "How it works", da: "Sådan fungerer det", it: "Come funziona", de: "So funktioniert es", sv: "Så fungerar det", es: "Cómo funciona", nb: "Slik fungerer det" },
   "nav.feedback": { en: "Contact", da: "Kontakt", it: "Contatti", de: "Kontakt", sv: "Kontakt", es: "Contacto", nb: "Kontakt" },
-  "nav.language": { en: "DA", da: "EN", it: "EN", de: "EN", sv: "EN", es: "EN", nb: "EN" },
+  "nav.language": { en: "DA", da: "EN", it: "EN", de: "EN", sv: "EN", es: "EN", nb: "EN", mi: "EN" },
 
   // ── Home page ──────────────────────────────────────────────────
   "home.hero.title": {
@@ -25,6 +26,7 @@ const translations = {
     sv: "Din danska lön,\ntydligt förklarad",
     es: "Tu salario danés,\nexplicado con claridad",
     nb: "Din danske lønn,\ntydelig forklart",
+    mi: "Tō utu mahi Tenemāka,\nkua whakamāramatia",
   },
   "home.hero.subtitle": {
     en: "Accurate tax breakdown for any employment type.\nAligned with SKAT 2026 rates, always free, always private.",
@@ -34,6 +36,7 @@ const translations = {
     sv: "Exakt skatteberäkning för alla anställningstyper.\nBaserat på SKAT 2026-satser, alltid gratis, alltid privat.",
     es: "Desglose fiscal preciso para cualquier tipo de empleo.\nAlineado con las tasas SKAT 2026, siempre gratuito, siempre privado.",
     nb: "Nøyaktig skatteberegning for enhver ansettelsestype.\nBasert på SKAT 2026-satser, alltid gratis, alltid privat.",
+    mi: "He wehewehenga tāke mō ngā momo mahi katoa.\nE hāngai ana ki ngā reiti SKAT 2026, he kore utu, he matatapu.",
   },
   "home.hero.disclaimer_ref": {
     en: "Estimates only, no guarantees. Your feedback helps.",
@@ -43,6 +46,7 @@ const translations = {
     sv: "Endast uppskattningar, inga garantier. Din feedback hjälper.",
     es: "Solo estimaciones, sin garantías. Tu feedback ayuda.",
     nb: "Kun estimater, ingen garanti. Din tilbakemelding hjelper.",
+    mi: "He tatauranga noa iho, kāore he kupu taurangi. Ka āwhina ō urupare.",
   },
 
   // Salary preview card
@@ -62,12 +66,12 @@ const translations = {
   "home.trust.skat": { en: "SKAT 2026 aligned", da: "SKAT 2026-baseret", it: "Allineato a SKAT 2026", de: "SKAT 2026 konform", sv: "SKAT 2026-baserad", es: "Alineado con SKAT 2026", nb: "SKAT 2026-basert" },
 
   // Section heading above cards
-  "home.cards.heading": { en: "Choose your calculator", da: "Vælg din beregner", it: "Scegli il calcolatore", de: "Wähle deinen Rechner", sv: "Välj din kalkylator", es: "Elige tu calculadora", nb: "Velg din kalkulator" },
-  "home.cards.cta": { en: "Get started", da: "Kom i gang", it: "Inizia", de: "Los geht's", sv: "Kom igång", es: "Empezar", nb: "Kom i gang" },
+  "home.cards.heading": { en: "Choose your calculator", da: "Vælg din beregner", it: "Scegli il calcolatore", de: "Wähle deinen Rechner", sv: "Välj din kalkylator", es: "Elige tu calculadora", nb: "Velg din kalkulator", mi: "Kōwhiria tō tātaitai" },
+  "home.cards.cta": { en: "Get started", da: "Kom i gang", it: "Inizia", de: "Los geht's", sv: "Kom igång", es: "Empezar", nb: "Kom i gang", mi: "Tīmata" },
 
   // Service cards
-  "home.fulltime.title": { en: "Full-time job", da: "Fuldtidsjob", it: "Lavoro full-time", de: "Vollzeitjob", sv: "Heltidsjobb", es: "Trabajo a tiempo completo", nb: "Fulltidsjobb" },
-  "home.fulltime.subtitle": { en: "Fuldtidsløn", da: "Full-time salary", it: "Stipendio mensile", de: "Monatsgehalt", sv: "Heltidslön", es: "Salario a tiempo completo", nb: "Fulltidslønn" },
+  "home.fulltime.title": { en: "Full-time job", da: "Fuldtidsjob", it: "Lavoro full-time", de: "Vollzeitjob", sv: "Heltidsjobb", es: "Trabajo a tiempo completo", nb: "Fulltidsjobb", mi: "Mahi wā-katoa" },
+  "home.fulltime.subtitle": { en: "Fuldtidsløn", da: "Full-time salary", it: "Stipendio mensile", de: "Monatsgehalt", sv: "Heltidslön", es: "Salario a tiempo completo", nb: "Fulltidslønn", mi: "Utu wā-katoa" },
   "home.fulltime.desc": {
     en: "Monthly salaried position: pension, AM-bidrag, feriepenge and every tax bracket, calculated in seconds.",
     da: "Fuldtidsstilling med fast månedsløn: pension, AM-bidrag, feriepenge og alle skattetrin, beregnet på sekunder.",
@@ -77,8 +81,8 @@ const translations = {
     es: "Puesto asalariado mensual: pensión, AM-bidrag, feriepenge y todos los tramos fiscales, calculado en segundos.",
     nb: "Fulltidsstilling med fast månedslønn: pensjon, AM-bidrag, feriepenge og alle skattetrinn, beregnet på sekunder.",
   },
-  "home.parttime.title": { en: "Part-time job", da: "Deltidsjob", it: "Lavoro part-time", de: "Teilzeitjob", sv: "Deltidsjobb", es: "Trabajo a tiempo parcial", nb: "Deltidsjobb" },
-  "home.parttime.subtitle": { en: "Deltid / timeløn", da: "Part-time / hourly", it: "Part-time / a ore", de: "Teilzeit / Stundenlohn", sv: "Deltid / timlön", es: "Tiempo parcial / por horas", nb: "Deltid / timelønn" },
+  "home.parttime.title": { en: "Part-time job", da: "Deltidsjob", it: "Lavoro part-time", de: "Teilzeitjob", sv: "Deltidsjobb", es: "Trabajo a tiempo parcial", nb: "Deltidsjobb", mi: "Mahi wāhanga-wā" },
+  "home.parttime.subtitle": { en: "Deltid / timeløn", da: "Part-time / hourly", it: "Part-time / a ore", de: "Teilzeit / Stundenlohn", sv: "Deltid / timlön", es: "Tiempo parcial / por horas", nb: "Deltid / timelønn", mi: "Wāhanga-wā / utu ā-haora" },
   "home.parttime.desc": {
     en: "Know your hourly rate and weekly hours? See your real take-home pay including 12.5% feriepenge and all deductions.",
     da: "Kender du din timeløn og ugentlige timer? Se din reelle udbetaling inkl. 12,5% feriepenge og alle fradrag.",
@@ -88,8 +92,8 @@ const translations = {
     es: "¿Conoces tu tarifa por hora y horas semanales? Consulta tu salario neto real incluyendo el 12,5% de feriepenge y todas las deducciones.",
     nb: "Kjenner du timelønnen din og ukentlige timer? Se din reelle utbetaling inkl. 12,5% feriepenge og alle fradrag.",
   },
-  "home.student.title": { en: "Student job", da: "Studiejob", it: "Lavoro studentesco", de: "Studentenjob", sv: "Studentjobb", es: "Trabajo de estudiante", nb: "Studentjobb" },
-  "home.student.subtitle": { en: "Studerende (SU + arbejde)", da: "Student (SU + work)", it: "Studente (SU + lavoro)", de: "Student (SU + Arbeit)", sv: "Studerande (SU + arbete)", es: "Estudiante (SU + trabajo)", nb: "Student (SU + arbeid)" },
+  "home.student.title": { en: "Student job", da: "Studiejob", it: "Lavoro studentesco", de: "Studentenjob", sv: "Studentjobb", es: "Trabajo de estudiante", nb: "Studentjobb", mi: "Mahi tauira" },
+  "home.student.subtitle": { en: "Studerende (SU + arbejde)", da: "Student (SU + work)", it: "Studente (SU + lavoro)", de: "Student (SU + Arbeit)", sv: "Studerande (SU + arbete)", es: "Estudiante (SU + trabajo)", nb: "Student (SU + arbeid)", mi: "Tauira (SU + mahi)" },
   "home.student.desc": {
     en: "Combine your SU grant with a student job. See your total income and check how close you are to the fribeløb limit.",
     da: "Kombiner din SU med et studiejob. Se din samlede indkomst og tjek hvor tæt du er på fribeløbsgrænsen.",
@@ -1593,7 +1597,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("dk-income-lang");
-      if (saved === "da" || saved === "en" || saved === "it" || saved === "de" || saved === "sv" || saved === "es" || saved === "nb") return saved;
+      if (saved === "da" || saved === "en" || saved === "it" || saved === "de" || saved === "sv" || saved === "es" || saved === "nb" || saved === "mi") return saved;
     }
     return "en";
   });
@@ -1607,7 +1611,8 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     (key: TranslationKey): string => {
       const entry = translations[key];
       if (!entry) return key;
-      return entry[lang] || entry.en || key;
+      const localized = entry as TranslationEntry;
+      return localized[lang] || localized.en || key;
     },
     [lang]
   );
