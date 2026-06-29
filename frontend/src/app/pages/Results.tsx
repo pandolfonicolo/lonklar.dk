@@ -53,6 +53,7 @@ import {
 } from "../components/ui/collapsible";
 import {
   Tooltip,
+  TooltipProvider,
   TooltipTrigger,
   TooltipContent,
 } from "../components/ui/tooltip";
