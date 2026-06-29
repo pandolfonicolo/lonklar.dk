@@ -16,11 +16,30 @@ export const CURRENCIES: CurrencyConfig[] = [
 ];
 
 export const DEFAULT_DKK_RATES: Record<Exclude<CurrencyCode, "DKK">, number> = {
-  EUR: 7.45,
-  NZD: 4.1,
-  SEK: 0.65,
-  NOK: 0.65,
+  EUR: 7.47,
+  NZD: 3.70,
+  SEK: 0.67,
+  NOK: 0.66,
 };
+
+export const CURRENCY_STORAGE_KEY = "lonklar-display-currency";
+export const CURRENCY_CHANGE_EVENT = "lonklar-currency-change";
+
+export function isCurrencyCode(code: string | null): code is CurrencyCode {
+  return !!code && CURRENCIES.some((currency) => currency.code === code);
+}
+
+export function getStoredCurrency(): CurrencyCode {
+  if (typeof window === "undefined") return "DKK";
+  const saved = window.localStorage.getItem(CURRENCY_STORAGE_KEY);
+  return isCurrencyCode(saved) ? saved : "DKK";
+}
+
+export function setStoredCurrency(code: CurrencyCode) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(CURRENCY_STORAGE_KEY, code);
+  window.dispatchEvent(new CustomEvent(CURRENCY_CHANGE_EVENT, { detail: code }));
+}
 
 export function getCurrencyConfig(code: CurrencyCode): CurrencyConfig {
   return CURRENCIES.find((currency) => currency.code === code) ?? CURRENCIES[0];
@@ -59,6 +78,16 @@ export function formatCurrency(
   }).format(converted);
 
   return `${config.symbol}${formatted}`;
+}
+
+export function formatSignedCurrency(
+  amountDkk: number,
+  code: CurrencyCode,
+  dkkPerCurrency: number,
+  decimals = 0,
+): string {
+  const prefix = amountDkk > 0 ? "+" : amountDkk < 0 ? "-" : "";
+  return `${prefix}${formatCurrency(Math.abs(amountDkk), code, dkkPerCurrency, decimals)}`;
 }
 
 export function formatCurrencyAxis(

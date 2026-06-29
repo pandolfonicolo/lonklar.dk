@@ -72,6 +72,28 @@ def get_meta():
             "fribeloeb_parent_bonus": FRIBELOEB_PARENT_BONUS,
             "su_repayment_interest_rate": SU_REPAYMENT_INTEREST_RATE,
         },
+        "salary_options": {
+            "pension_types": {
+                "standard": {
+                    "supported": True,
+                    "description": "Employee pension reduces taxable income; employer pension is non-cash compensation and is not taxed now.",
+                },
+                "section53a": {
+                    "supported": True,
+                    "description": "Employee and employer pension contributions are taxed as salary when paid into the pension.",
+                },
+            },
+            "tax_schemes": {
+                "standard": {
+                    "supported": True,
+                    "description": "Standard Danish payroll tax calculation with AM-bidrag, state, municipal, and optional church tax.",
+                },
+                "researcher": {
+                    "supported": False,
+                    "description": "Researcher tax scheme is not modeled because eligibility and detailed payroll treatment require individual assessment.",
+                },
+            },
+        },
     }
 
 
@@ -79,7 +101,7 @@ def get_meta():
 #  EXCHANGE RATES (cached 1 hour)
 # ═══════════════════════════════════════════════════════════════════════
 
-_exchange_cache: dict = {"rates": {}, "timestamp": 0.0}
+_exchange_cache: dict = {"rates": {}, "timestamp": 0.0, "date": None, "source": "fallback"}
 _CACHE_TTL = 3600  # 1 hour in seconds
 
 # Currencies to offer (code → symbol)
@@ -128,7 +150,7 @@ async def _fetch_exchange_rates() -> dict[str, float]:
 
     codes = ",".join(SUPPORTED_CURRENCIES.keys())
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=10, follow_redirects=True) as client:
             resp = await client.get(f"https://api.frankfurter.app/latest?from=DKK&to={codes}")
             resp.raise_for_status()
             data = resp.json()
@@ -139,11 +161,16 @@ async def _fetch_exchange_rates() -> dict[str, float]:
                     rates[code] = round(1.0 / rate, 6)
             _exchange_cache["rates"] = rates
             _exchange_cache["timestamp"] = now
+            _exchange_cache["date"] = data.get("date")
+            _exchange_cache["source"] = "frankfurter.app"
             return rates
     except Exception as e:
         print(f"[exchange] fetch failed: {e}, using fallback")
         if _exchange_cache["rates"]:
             return _exchange_cache["rates"]
+        _exchange_cache["timestamp"] = now
+        _exchange_cache["date"] = "2026-06-29"
+        _exchange_cache["source"] = "fallback"
         return FALLBACK_RATES
 
 
@@ -155,5 +182,7 @@ async def get_exchange_rates():
         "base": "DKK",
         "rates": rates,
         "currencies": SUPPORTED_CURRENCIES,
+        "source": _exchange_cache["source"],
+        "date": _exchange_cache["date"],
         "cached_until": int(_exchange_cache["timestamp"] + _CACHE_TTL),
     }

@@ -35,9 +35,17 @@ import {
 } from "recharts";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
 import { Label } from "../components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
 import {
   Collapsible,
   CollapsibleContent,
@@ -54,6 +62,8 @@ import {
   fetchHoursCurve,
   fetchStudentHoursCurve,
   fetchExchangeRates,
+  computeProjection,
+  computeComparison,
   type Meta,
   type TaxResult,
   type StudentResult,
@@ -61,13 +71,20 @@ import {
   type HoursCurvePoint,
   type StudentHoursCurvePoint,
   type ExchangeRates,
+  type EmployeeScenarioRequest,
+  type ProjectionSettings,
+  type ProjectionResult,
+  type ComparisonResult,
+  type PensionType,
 } from "../utils/api";
 import { useI18n } from "../utils/i18n";
 import {
-  CURRENCIES,
+  CURRENCY_CHANGE_EVENT,
   formatCurrency,
   formatCurrencyAxis,
+  formatSignedCurrency,
   getDkkPerCurrency,
+  getStoredCurrency,
   type CurrencyCode,
 } from "../utils/currency";
 import { clearWizardState } from "../utils/wizardPersistence";
@@ -274,6 +291,12 @@ function employeeBreakdown(r: TaxResult): Row[] {
       color: "var(--chart-2)",
     });
   }
+  rows.push({
+    label: "Total compensation (cash + non-cash)",
+    value: r.total_gross + r.employer_pension - r.taxable_employer_pension,
+    bold: true,
+    color: "var(--chart-5)",
+  });
   return rows;
 }
 
@@ -442,6 +465,12 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
       color: "var(--chart-2)",
     });
   }
+  rows.push({
+    label: "Total compensation (cash + pension)",
+    value: r.su_annual_gross + r.work_gross_annual + r.work_feriepenge + (r.other_pay || 0) + r.work_employer_pension,
+    bold: true,
+    color: "var(--chart-5)",
+  });
   return rows;
 }
 
@@ -652,11 +681,22 @@ export function Results() {
 
   // Toggle state
   const [period, setPeriod] = useState<"monthly" | "annual">("monthly");
-  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>("DKK");
+  const [selectedCurrency, setSelectedCurrency] = useState<CurrencyCode>(() => getStoredCurrency());
   const showConverted = selectedCurrency !== "DKK";
   const [meta, setMeta] = useState<Meta | null>(null);
   const [exchangeRates, setExchangeRates] = useState<ExchangeRates | null>(null);
   const [glossaryOpen, setGlossaryOpen] = useState(false);
+  const [projectionYears, setProjectionYears] = useState(5);
+  const [projectionReturn, setProjectionReturn] = useState(4);
+  const [projectionGrowth, setProjectionGrowth] = useState(2);
+  const [projectionResult, setProjectionResult] = useState<ProjectionResult | null>(null);
+  const [comparisonGrossMonthly, setComparisonGrossMonthly] = useState("");
+  const [comparisonPensionPct, setComparisonPensionPct] = useState("");
+  const [comparisonEmployerPct, setComparisonEmployerPct] = useState("");
+  const [comparisonPensionType, setComparisonPensionType] = useState<PensionType>("section53a");
+  const [comparisonGrowthA, setComparisonGrowthA] = useState(2);
+  const [comparisonGrowthB, setComparisonGrowthB] = useState(2);
+  const [comparisonResult, setComparisonResult] = useState<ComparisonResult | null>(null);
 
   // Chart data
   const [curveData, setCurveData] = useState<CurvePoint[]>([]);
@@ -683,6 +723,24 @@ export function Results() {
       .then(setVoteStats)
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const next = (event as CustomEvent<CurrencyCode>).detail;
+      if (next) setSelectedCurrency(next);
+    };
+    window.addEventListener(CURRENCY_CHANGE_EVENT, handler);
+    return () => window.removeEventListener(CURRENCY_CHANGE_EVENT, handler);
+  }, []);
+
+  useEffect(() => {
+    if (!result || serviceId === "student") return;
+    const base = result as TaxResult;
+    setComparisonGrossMonthly(String(Math.round((base.gross_annual || 0) / 12)));
+    setComparisonPensionPct(String((base as any)._input_pension_pct ?? Math.round((base.employee_pension / Math.max(base.gross_annual, 1)) * 1000) / 10));
+    setComparisonEmployerPct(String((base as any)._input_employer_pension_pct ?? Math.round((base.employer_pension / Math.max(base.gross_annual, 1)) * 1000) / 10));
+    setComparisonPensionType(base.pension_type === "standard" ? "section53a" : "standard");
+  }, [result, serviceId]);
 
   // Fetch curve data for charts
   useEffect(() => {
@@ -818,6 +876,81 @@ export function Results() {
     const display = period === "annual" ? v : v / 12;
     if (showConverted) return fmtForeign(display, currencyRate);
     return `${fmtDKK(display)} kr`;
+  };
+
+  const formatMoney = (v: number, decimals = 0): string =>
+    showConverted ? fmtForeign(v, currencyRate) : formatCurrency(v, "DKK", 1, decimals);
+
+  const formatSignedMoney = (v: number): string =>
+    showConverted
+      ? formatSignedCurrency(v, selectedCurrency, currencyRate)
+      : formatSignedCurrency(v, "DKK", 1);
+
+  const makeScenario = (overrides: Partial<EmployeeScenarioRequest> = {}): EmployeeScenarioRequest => {
+    const input = r as any;
+    const employmentType = serviceId === "parttime" ? "parttime" : "fulltime";
+    return {
+      employment_type: employmentType,
+      gross_annual: r.gross_annual,
+      hourly_rate: r.hourly_rate ?? null,
+      hours_month: r.hours_month ?? null,
+      kommune: r.kommune,
+      pension_pct: input._input_pension_pct ?? 0,
+      employer_pension_pct: input._input_employer_pension_pct ?? 0,
+      pension_type: input._input_pension_type ?? r.pension_type ?? "standard",
+      is_church: input._input_is_church ?? r.kirkeskat > 0,
+      atp_monthly: input._input_atp_monthly ?? 0,
+      other_pay_monthly: input._input_other_pay_monthly ?? 0,
+      taxable_benefits_monthly: input._input_taxable_benefits_monthly ?? 0,
+      pretax_deductions_monthly: input._input_pretax_deductions_monthly ?? 0,
+      aftertax_deductions_monthly: input._input_aftertax_deductions_monthly ?? 0,
+      transport_km: input._input_transport_km ?? 0,
+      union_fees_annual: input._input_union_fees_annual ?? 0,
+      ...overrides,
+    };
+  };
+
+  const currentProjectionSettings = (): ProjectionSettings => ({
+    years: projectionYears,
+    annual_return_pct: projectionReturn,
+    salary_growth_pct: projectionGrowth,
+  });
+
+  const runProjection = async () => {
+    if (isStudent) return;
+    try {
+      const next = await computeProjection(makeScenario(), currentProjectionSettings());
+      setProjectionResult(next);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const runComparison = async () => {
+    if (isStudent) return;
+    const base = makeScenario();
+    const compareGrossAnnual = Number(comparisonGrossMonthly || 0) * 12;
+    const scenarioB = makeScenario({
+      gross_annual: compareGrossAnnual,
+      pension_pct: Number(comparisonPensionPct || 0),
+      employer_pension_pct: Number(comparisonEmployerPct || 0),
+      pension_type: comparisonPensionType,
+    });
+    if (scenarioB.employment_type === "parttime" && scenarioB.hours_month) {
+      scenarioB.hourly_rate = compareGrossAnnual / 12 / scenarioB.hours_month;
+    }
+    try {
+      const next = await computeComparison(
+        base,
+        scenarioB,
+        null,
+        { years: projectionYears, annual_return_pct: projectionReturn, salary_growth_pct: comparisonGrowthA },
+        { years: projectionYears, annual_return_pct: projectionReturn, salary_growth_pct: comparisonGrowthB },
+      );
+      setComparisonResult(next);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
@@ -970,23 +1103,6 @@ export function Results() {
             </button>
           </div>
 
-          {/* Currency selector */}
-          <div className="inline-flex items-center rounded-[var(--radius-lg)] bg-muted p-1 gap-0.5">
-            {CURRENCIES.map((currency) => (
-              <button
-                key={currency.code}
-                onClick={() => setSelectedCurrency(currency.code)}
-                className={`px-3.5 py-1.5 text-sm font-medium rounded-[var(--radius-md)] transition-all duration-200 ${
-                  selectedCurrency === currency.code
-                    ? "bg-card text-foreground shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-                aria-label={`${t("currency.convert_to" as any)} ${currency.label}`}
-              >
-                {currency.code}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* ── Quick stats ──────────────────────────────────────── */}
@@ -1030,6 +1146,22 @@ export function Results() {
                 className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
               >
                 <Wallet className="w-4 h-4 mr-1" /> {t("results.tab.pension")}
+              </TabsTrigger>
+            )}
+            {!isStudent && (
+              <TabsTrigger
+                value="projection"
+                className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
+              >
+                <Calendar className="w-4 h-4 mr-1" /> Projection
+              </TabsTrigger>
+            )}
+            {!isStudent && (
+              <TabsTrigger
+                value="comparison"
+                className="rounded-[var(--radius-md)] px-4 py-2 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-foreground"
+              >
+                <BarChart3 className="w-4 h-4 mr-1" /> Compare
               </TabsTrigger>
             )}
             {!(isStudent && (r as StudentResult).work_gross_annual === 0) && (
@@ -1103,6 +1235,8 @@ export function Results() {
               <div className="mt-4 p-4 bg-secondary/30 rounded-[var(--radius-md)]">
                 <p className="text-xs text-muted-foreground">
                   Exchange rate: 1 {selectedCurrency} = {currencyRate} DKK
+                  {exchangeRates?.date ? ` · Updated ${exchangeRates.date}` : ""}
+                  {exchangeRates?.source ? ` · ${exchangeRates.source}` : ""}
                 </p>
               </div>
             )}
@@ -1681,6 +1815,185 @@ export function Results() {
             </TabsContent>
           )}
 
+          {/* ── Projection tab ─────────────────────────────────── */}
+          {!isStudent && (
+            <TabsContent value="projection" className="mt-0">
+              <div className="p-4 sm:p-6 space-y-6">
+                <div>
+                  <h3 className="text-foreground font-medium">Projection</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Salary growth affects this projection only. It does not change the current-period result above.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Period</Label>
+                    <Select value={String(projectionYears)} onValueChange={(v) => setProjectionYears(Number(v))}>
+                      <SelectTrigger className="h-11 mt-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 3, 5, 10].map((year) => (
+                          <SelectItem key={year} value={String(year)}>{year} years</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Annual pension return</Label>
+                    <Input
+                      type="number"
+                      value={projectionReturn}
+                      onChange={(e) => setProjectionReturn(Number(e.target.value))}
+                      className="h-11 mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Salary growth</Label>
+                    <Input
+                      type="number"
+                      value={projectionGrowth}
+                      onChange={(e) => setProjectionGrowth(Number(e.target.value))}
+                      className="h-11 mt-1"
+                    />
+                  </div>
+                </div>
+
+                <Button onClick={runProjection} variant="outline">
+                  Update projection
+                </Button>
+
+                {projectionResult ? (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <PensionStat label="Employee pension" value={formatMoney(projectionResult.totals.employee_pension)} />
+                      <PensionStat label="Employer pension" value={formatMoney(projectionResult.totals.employer_pension)} />
+                      <PensionStat label="Projected balance" value={formatMoney(projectionResult.totals.projected_pension_balance)} highlight />
+                      <PensionStat label="Total compensation" value={formatMoney(projectionResult.totals.total_compensation)} />
+                    </div>
+
+                    <div className="space-y-3">
+                      {projectionResult.years.map((row) => (
+                        <div key={row.year} className="rounded-[var(--radius-md)] border border-border p-4">
+                          <div className="flex items-center justify-between gap-3">
+                            <p className="font-medium text-foreground">Year {row.year}</p>
+                            <p className="font-mono text-sm text-foreground">{formatMoney(row.projected_pension_balance)}</p>
+                          </div>
+                          <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                            <MiniMetric label="Gross" value={formatMoney(row.gross_annual)} />
+                            <MiniMetric label="Net" value={formatMoney(row.net_annual)} />
+                            <MiniMetric label="Tax" value={formatMoney(row.tax)} />
+                            <MiniMetric label="Pension" value={formatMoney(row.total_pension)} />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">Run the projection to estimate salary, tax, pension, and total compensation over time.</p>
+                )}
+              </div>
+            </TabsContent>
+          )}
+
+          {/* ── Comparison tab ─────────────────────────────────── */}
+          {!isStudent && (
+            <TabsContent value="comparison" className="mt-0">
+              <div className="p-4 sm:p-6 space-y-6">
+                <div>
+                  <h3 className="text-foreground font-medium">Compare two salary setups</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Scenario A is your current result. Edit Scenario B to compare offers, pension structures, or §53A treatment.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="rounded-[var(--radius-md)] border border-border p-4">
+                    <p className="text-sm font-medium text-foreground mb-3">Scenario A</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <MiniMetric label="Gross monthly" value={formatMoney(r.gross_annual / 12)} />
+                      <MiniMetric label="Pension type" value={r.pension_type === "section53a" ? "§53A" : "Standard"} />
+                      <MiniMetric label="Employee pension" value={`${(r as any)._input_pension_pct ?? 0}%`} />
+                      <MiniMetric label="Employer pension" value={`${(r as any)._input_employer_pension_pct ?? 0}%`} />
+                    </div>
+                  </div>
+
+                  <div className="rounded-[var(--radius-md)] border border-border p-4">
+                    <p className="text-sm font-medium text-foreground mb-3">Scenario B</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Gross monthly</Label>
+                        <Input value={comparisonGrossMonthly} onChange={(e) => setComparisonGrossMonthly(e.target.value)} type="number" className="h-10 mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Pension type</Label>
+                        <Select value={comparisonPensionType} onValueChange={(v) => setComparisonPensionType(v as PensionType)}>
+                          <SelectTrigger className="h-10 mt-1">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standard</SelectItem>
+                            <SelectItem value="section53a">§53A</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Employee pension %</Label>
+                        <Input value={comparisonPensionPct} onChange={(e) => setComparisonPensionPct(e.target.value)} type="number" className="h-10 mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Employer pension %</Label>
+                        <Input value={comparisonEmployerPct} onChange={(e) => setComparisonEmployerPct(e.target.value)} type="number" className="h-10 mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Growth A %</Label>
+                        <Input value={comparisonGrowthA} onChange={(e) => setComparisonGrowthA(Number(e.target.value))} type="number" className="h-10 mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Growth B %</Label>
+                        <Input value={comparisonGrowthB} onChange={(e) => setComparisonGrowthB(Number(e.target.value))} type="number" className="h-10 mt-1" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Button onClick={runComparison} variant="outline">
+                  Compare scenarios
+                </Button>
+
+                {comparisonResult && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <DifferenceCard label="More cash" value={comparisonResult.delta.net_monthly} suffix="/month" formatSignedMoney={formatSignedMoney} />
+                      <DifferenceCard label="More pension" value={comparisonResult.delta.total_pension} suffix="/year" formatSignedMoney={formatSignedMoney} />
+                      <DifferenceCard label="More total comp" value={comparisonResult.delta.total_compensation} suffix="/year" formatSignedMoney={formatSignedMoney} />
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                      <ScenarioResultCard title="Scenario A" result={comparisonResult.scenario_a} formatMoney={formatMoney} />
+                      <ScenarioResultCard title="Scenario B" result={comparisonResult.scenario_b} formatMoney={formatMoney} />
+                      <div className="rounded-[var(--radius-md)] border border-border p-4">
+                        <p className="text-sm font-medium text-foreground mb-3">Difference (B - A)</p>
+                        <DifferenceRows
+                          delta={comparisonResult.delta}
+                          projectionDelta={comparisonResult.projection_delta ?? null}
+                          formatSignedMoney={formatSignedMoney}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="rounded-[var(--radius-md)] border border-blue-200 dark:border-blue-800/40 bg-blue-50/60 dark:bg-blue-950/20 p-4">
+                  <p className="text-sm text-muted-foreground">
+                    International note: standard pension generally reduces taxable income now; §53A pension is taxed when contributed. Employer pension is pension compensation, not cash salary. Researcher tax is not calculated here because eligibility and payroll treatment require individual assessment. Estimates are not tax advice.
+                  </p>
+                </div>
+              </div>
+            </TabsContent>
+          )}
+
           {/* ── Pension tab ────────────────────────────────────── */}
           {!isStudent && r.total_pension > 0 && (
             <TabsContent value="pension" className="mt-0">
@@ -2149,6 +2462,105 @@ function PensionStat({
     >
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="text-lg font-mono text-foreground">{value}</p>
+    </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-mono text-sm text-foreground truncate">{value}</p>
+    </div>
+  );
+}
+
+function DifferenceCard({
+  label,
+  value,
+  suffix,
+  formatSignedMoney,
+}: {
+  label: string;
+  value: number;
+  suffix: string;
+  formatSignedMoney: (value: number) => string;
+}) {
+  const positive = value > 0;
+  const neutral = Math.abs(value) < 0.5;
+  return (
+    <div className="rounded-[var(--radius-md)] border border-border p-4">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className={`font-mono text-lg ${neutral ? "text-foreground" : positive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"}`}>
+        {formatSignedMoney(value)}
+        <span className="text-xs text-muted-foreground ml-1">{suffix}</span>
+      </p>
+    </div>
+  );
+}
+
+function ScenarioResultCard({
+  title,
+  result,
+  formatMoney,
+}: {
+  title: string;
+  result: TaxResult;
+  formatMoney: (value: number) => string;
+}) {
+  return (
+    <div className="rounded-[var(--radius-md)] border border-border p-4">
+      <p className="text-sm font-medium text-foreground mb-3">{title}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <MiniMetric label="Net monthly" value={formatMoney(result.net_monthly)} />
+        <MiniMetric label="Net annual" value={formatMoney(result.net_annual)} />
+        <MiniMetric label="Tax annual" value={formatMoney(result.am_bidrag + result.total_income_tax)} />
+        <MiniMetric label="Employee pension" value={formatMoney(result.employee_pension)} />
+        <MiniMetric label="Employer pension" value={formatMoney(result.employer_pension)} />
+        <MiniMetric label="Total comp" value={formatMoney(result.total_gross + result.employer_pension - result.taxable_employer_pension)} />
+      </div>
+    </div>
+  );
+}
+
+function DifferenceRows({
+  delta,
+  projectionDelta,
+  formatSignedMoney,
+}: {
+  delta: ComparisonResult["delta"];
+  projectionDelta: ProjectionResult["totals"] | null;
+  formatSignedMoney: (value: number) => string;
+}) {
+  const rows = [
+    ["Net monthly", delta.net_monthly],
+    ["Net annual", delta.net_annual],
+    ["Tax", delta.tax],
+    ["Employee pension", delta.employee_pension],
+    ["Employer pension", delta.employer_pension],
+    ["Total pension", delta.total_pension],
+    ["Total compensation", delta.total_compensation],
+  ] as const;
+  return (
+    <div className="space-y-2">
+      {rows.map(([label, value]) => (
+        <div key={label} className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="font-mono text-foreground">{formatSignedMoney(value)}</span>
+        </div>
+      ))}
+      {projectionDelta && (
+        <div className="mt-3 pt-3 border-t border-border space-y-2">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-muted-foreground">Projected balance</span>
+            <span className="font-mono text-foreground">{formatSignedMoney(projectionDelta.projected_pension_balance)}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <span className="text-muted-foreground">Projected total comp</span>
+            <span className="font-mono text-foreground">{formatSignedMoney(projectionDelta.total_compensation)}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -44,6 +44,10 @@ export interface Meta {
   dkk_per_eur: number;
   kommuner: Record<string, KommuneRates>;
   constants: TaxConstants;
+  salary_options?: {
+    pension_types: Record<string, { supported: boolean; description: string }>;
+    tax_schemes: Record<string, { supported: boolean; description: string }>;
+  };
 }
 
 export type PensionType = "standard" | "section53a";
@@ -173,6 +177,69 @@ export interface StudentHoursCurvePoint {
   feriepenge_monthly: number;
   deductions_monthly: number;
   over_fribeloeb: boolean;
+}
+
+export interface EmployeeScenarioRequest {
+  employment_type: "fulltime" | "parttime";
+  gross_annual?: number | null;
+  hourly_rate?: number | null;
+  hours_month?: number | null;
+  kommune: string;
+  pension_pct: number;
+  employer_pension_pct: number;
+  pension_type?: PensionType;
+  is_church: boolean;
+  other_pay_monthly?: number;
+  taxable_benefits_monthly?: number;
+  pretax_deductions_monthly?: number;
+  aftertax_deductions_monthly?: number;
+  atp_monthly?: number;
+  transport_km?: number;
+  union_fees_annual?: number;
+}
+
+export interface ProjectionSettings {
+  years: number;
+  annual_return_pct: number;
+  salary_growth_pct: number;
+}
+
+export interface ProjectionRow {
+  year: number;
+  gross_annual: number;
+  net_annual: number;
+  net_monthly: number;
+  tax: number;
+  employee_pension: number;
+  employer_pension: number;
+  total_pension: number;
+  total_compensation: number;
+  projected_pension_balance: number;
+}
+
+export interface ProjectionResult {
+  settings: ProjectionSettings;
+  years: ProjectionRow[];
+  totals: Omit<ProjectionRow, "year" | "gross_annual" | "net_monthly"> & {
+    projected_pension_balance: number;
+  };
+}
+
+export interface ComparisonResult {
+  scenario_a: TaxResult;
+  scenario_b: TaxResult;
+  delta: {
+    net_monthly: number;
+    net_annual: number;
+    tax: number;
+    employee_pension: number;
+    employer_pension: number;
+    total_pension: number;
+    total_compensation: number;
+  };
+  projection_a?: ProjectionResult | null;
+  projection_b?: ProjectionResult | null;
+  projection_delta?: ProjectionResult["totals"] | null;
 }
 
 export interface TaxResult {
@@ -311,12 +378,37 @@ export async function fetchStudentHoursCurve(req: StudentHoursCurveRequest): Pro
   return post("/api/compute/student-hours-curve", req);
 }
 
+export async function computeProjection(
+  scenario: EmployeeScenarioRequest,
+  settings: ProjectionSettings,
+): Promise<ProjectionResult> {
+  return post("/api/compute/projection", { scenario, settings });
+}
+
+export async function computeComparison(
+  scenarioA: EmployeeScenarioRequest,
+  scenarioB: EmployeeScenarioRequest,
+  projection?: ProjectionSettings | null,
+  projectionA?: ProjectionSettings | null,
+  projectionB?: ProjectionSettings | null,
+): Promise<ComparisonResult> {
+  return post("/api/compute/comparison", {
+    scenario_a: scenarioA,
+    scenario_b: scenarioB,
+    projection,
+    projection_a: projectionA,
+    projection_b: projectionB,
+  });
+}
+
 // ── Exchange Rates ─────────────────────────────────────────────────
 
 export interface ExchangeRates {
   base: string;
   rates: Record<string, number>; // DKK per 1 unit of foreign currency
   currencies: Record<string, string>; // code → symbol
+  source?: string;
+  date?: string | null;
   cached_until: number;
 }
 

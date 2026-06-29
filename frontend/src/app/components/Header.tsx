@@ -1,7 +1,13 @@
 import React from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { Sun, Moon, ChevronDown, Menu, X } from "lucide-react";
+import { Sun, Moon, ChevronDown, Menu, X, Coins } from "lucide-react";
 import { useI18n, type Lang } from "../utils/i18n";
+import {
+  CURRENCIES,
+  getStoredCurrency,
+  setStoredCurrency,
+  type CurrencyCode,
+} from "../utils/currency";
 
 /* shared styles — every item uses the same size / shape */
 const navBtn =
@@ -77,6 +83,8 @@ export function Header() {
             <div className={divider} />
             <LangSwitcher />
             <div className={divider} />
+            <CurrencySwitcher />
+            <div className={divider} />
             <DarkModeToggle />
           </nav>
 
@@ -123,6 +131,7 @@ export function Header() {
                 <div className="border-t border-border my-1" />
                 <div className="flex items-center justify-between px-4 py-2">
                   <LangSwitcher />
+                  <CurrencySwitcher />
                   <DarkModeToggle />
                 </div>
               </div>
@@ -131,6 +140,65 @@ export function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+function CurrencySwitcher() {
+  const [currency, setCurrency] = React.useState<CurrencyCode>(() => getStoredCurrency());
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handler = (event: Event) => {
+      const next = (event as CustomEvent<CurrencyCode>).detail;
+      if (next) setCurrency(next);
+    };
+    window.addEventListener("lonklar-currency-change", handler);
+    return () => window.removeEventListener("lonklar-currency-change", handler);
+  }, []);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`${iconBtn} gap-1 w-auto px-2`}
+        aria-label="Switch display currency"
+      >
+        <Coins className="w-4 h-4" />
+        <span className="text-xs font-medium">{currency}</span>
+        <ChevronDown className={`w-3 h-3 transition-transform ${open ? "rotate-180" : ""}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-1 py-1 bg-card border border-border rounded-[var(--radius-md)] shadow-lg min-w-[170px] z-50">
+          {CURRENCIES.map((item) => (
+            <button
+              key={item.code}
+              onClick={() => {
+                setStoredCurrency(item.code);
+                setCurrency(item.code);
+                setOpen(false);
+              }}
+              className={`w-full flex items-center justify-between gap-3 px-3 py-1.5 text-sm transition-colors hover:bg-secondary/80 ${
+                item.code === currency ? "text-foreground font-medium" : "text-muted-foreground"
+              }`}
+            >
+              <span>{item.code}</span>
+              <span className="text-xs">{item.symbol}</span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field, field_validator
 
 
 PensionType = Literal["standard", "section53a"]
+EmploymentType = Literal["fulltime", "parttime"]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -45,6 +46,44 @@ class PartTimeRequest(BaseModel):
     atp_monthly: float = Field(0.0, description="Monthly ATP (0 if <9h/week)")
     transport_km: float = Field(0.0, description="Round-trip daily commute in km")
     union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
+
+
+class EmployeeScenarioRequest(BaseModel):
+    employment_type: EmploymentType = Field("fulltime", description="fulltime | parttime")
+    gross_annual: float | None = Field(None, description="Gross annual salary in DKK for fulltime")
+    hourly_rate: float | None = Field(None, description="Hourly rate in DKK for parttime")
+    hours_month: float | None = Field(None, description="Monthly hours for parttime")
+    kommune: str = Field("København", description="Municipality name")
+    pension_pct: float = Field(4.0, description="Employee pension %")
+    employer_pension_pct: float = Field(8.0, description="Employer pension %")
+    pension_type: PensionType = Field("standard", description="standard | section53a")
+    is_church: bool = Field(True, description="Member of Folkekirken?")
+    other_pay_monthly: float = Field(0.0, description="Extra monthly pay")
+    taxable_benefits_monthly: float = Field(0.0, description="Monthly taxable benefits")
+    pretax_deductions_monthly: float = Field(0.0, description="Monthly pre-tax deductions")
+    aftertax_deductions_monthly: float = Field(0.0, description="Monthly after-tax deductions")
+    atp_monthly: float = Field(94.65, description="Monthly ATP contribution")
+    transport_km: float = Field(0.0, description="Round-trip daily commute in km")
+    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
+
+
+class ProjectionSettings(BaseModel):
+    years: int = Field(5, ge=1, le=50)
+    annual_return_pct: float = Field(4.0, ge=-100, le=100)
+    salary_growth_pct: float = Field(2.0, ge=-100, le=100)
+
+
+class ProjectionRequest(BaseModel):
+    scenario: EmployeeScenarioRequest
+    settings: ProjectionSettings = Field(default_factory=ProjectionSettings)
+
+
+class ComparisonRequest(BaseModel):
+    scenario_a: EmployeeScenarioRequest
+    scenario_b: EmployeeScenarioRequest
+    projection: ProjectionSettings | None = None
+    projection_a: ProjectionSettings | None = None
+    projection_b: ProjectionSettings | None = None
 
 
 class StudentRequest(BaseModel):

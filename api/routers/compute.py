@@ -6,10 +6,17 @@ from fastapi import APIRouter
 
 from ..data import KOMMUNER
 from ..tax_engine import compute_tax, compute_student_income
+from ..salary_scenarios import (
+    comparison_delta,
+    compute_employee_scenario,
+    project_employee_scenario,
+)
 from ..models import (
     FullTimeRequest,
     PartTimeRequest,
     StudentRequest,
+    ProjectionRequest,
+    ComparisonRequest,
     CurveRequest,
     HoursCurveRequest,
     StudentHoursCurveRequest,
@@ -121,6 +128,47 @@ def compute_student(req: StudentRequest):
         "kommune_pct": rates["kommuneskat"],
         "kirke_pct": rates["kirkeskat"],
         **res,
+    }
+
+
+@router.post("/compute/projection")
+def compute_projection(req: ProjectionRequest):
+    """Project salary, tax, compensation, and pension over time."""
+    return project_employee_scenario(req.scenario, req.settings)
+
+
+@router.post("/compute/comparison")
+def compute_comparison(req: ComparisonRequest):
+    """Compare two employee salary scenarios side by side."""
+    scenario_a = compute_employee_scenario(req.scenario_a)
+    if "error" in scenario_a:
+        return scenario_a
+    scenario_b = compute_employee_scenario(req.scenario_b)
+    if "error" in scenario_b:
+        return scenario_b
+
+    projection_a = projection_b = projection_delta = None
+    settings_a = req.projection_a or req.projection
+    settings_b = req.projection_b or req.projection
+    if settings_a is not None and settings_b is not None:
+        projection_a = project_employee_scenario(req.scenario_a, settings_a)
+        if "error" in projection_a:
+            return projection_a
+        projection_b = project_employee_scenario(req.scenario_b, settings_b)
+        if "error" in projection_b:
+            return projection_b
+        projection_delta = {
+            key: projection_b["totals"][key] - projection_a["totals"][key]
+            for key in projection_a["totals"]
+        }
+
+    return {
+        "scenario_a": scenario_a,
+        "scenario_b": scenario_b,
+        "delta": comparison_delta(scenario_a, scenario_b),
+        "projection_a": projection_a,
+        "projection_b": projection_b,
+        "projection_delta": projection_delta,
     }
 
 
