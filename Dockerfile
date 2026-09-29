@@ -1,10 +1,12 @@
 # ── Stage 1: Build frontend ──────────────────────────────────────────
 FROM node:20-alpine AS frontend
 
-WORKDIR /build
+WORKDIR /build/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ .
+COPY brand/icon.json /build/brand/icon.json
+COPY scripts/check-brand-icons.mjs /build/scripts/check-brand-icons.mjs
 RUN npm run build
 
 # ── Stage 2: Production image ───────────────────────────────────────
@@ -20,7 +22,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY api/ ./api/
 
 # Copy built frontend from Stage 1
-COPY --from=frontend /build/dist ./static/
+COPY --from=frontend /build/frontend/dist ./static/
 
 # Feedback data volume (persisted externally in production)
 RUN mkdir -p /app/feedback_data

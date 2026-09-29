@@ -1,4 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <circle cx="16" cy="16" r="16" fill="#5B7A9E"/>
-  <text x="16" y="23" text-anchor="middle" font-family="'SF Mono','Monaco','Inconsolata','Fira Code','Fira Mono','Roboto Mono',monospace" font-size="20" font-weight="600" fill="#FFFFFF">l</text>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="#eeece5"/><path d="M28 10H64Q70 10 70 16V19Q70 30 81 30H84Q90 30 90 36V72Q90 90 72 90H28Q10 90 10 72V28Q10 10 28 10Z" fill="#5b7a9e"/><path fill="#eeece5" d="M33.86 32.514H39.446V67.5H33.86ZM42.669 32.514H48.255V52.408L58.349 42.167H65.209L55.507 51.477L66.14 67.5H59.329L51.587 55.201L48.255 58.435V67.5H42.669Z"/></svg>

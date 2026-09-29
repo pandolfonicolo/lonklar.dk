@@ -1,0 +1,36 @@
+name: Validate Lonklar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build production container and verify icons
+        run: docker build -t lonklar-validation .
+      - name: Verify the production server
+        run: |
+          docker run -d --name lonklar-validation -p 8000:8000 lonklar-validation
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://localhost:8000/ -o /tmp/lonklar.html
+          curl -fsS http://localhost:8000/favicon.svg -o /tmp/lonklar.svg
+          curl -fsS http://localhost:8000/apple-touch-icon.png -o /tmp/lonklar.png
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          assert '?v=rientro-' in Path('/tmp/lonklar.html').read_text()
+          expected = json.loads(Path('brand/icon.json').read_text())['files']
+          for local, suffix in [('lonklar.svg', 'favicon.svg'), ('lonklar.png', 'apple-touch-icon.png')]:
+              asset = next(item for item in expected if item['path'].endswith(suffix))
+              assert hashlib.sha256(Path('/tmp', local).read_bytes()).hexdigest() == asset['sha256']
+          PY
