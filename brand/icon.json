@@ -1,0 +1,25 @@
+{
+  "source": "https://github.com/pandolfonicolo/nicolopandolfo.com/blob/main/brand/system.json",
+  "version": "rientro-1",
+  "site": "lonklar",
+  "monogram": "lk",
+  "color": "#5b7a9e",
+  "background": "#eeece5",
+  "shapeSha256": "8f6fec9d3ed171a40851da320c468c56d247fba2e87aa5b9ef4a07c6f20c5969",
+  "files": [
+    {
+      "path": "frontend/public/favicon.svg",
+      "sha256": "6dd0a872a441dd42e1360d200e56e82ba5f945622c000a26da7dd77b0d0a53e4"
+    },
+    {
+      "path": "frontend/public/favicon-32.png",
+      "sha256": "6fba6c43e7cc6ddeeff42a8749c8805b285a2c929963f124595afd77bc770b62",
+      "size": 32
+    },
+    {
+      "path": "frontend/public/apple-touch-icon.png",
+      "sha256": "847442b82d59264973d933b56aab87020b626aa786f725a5de7062b6f9177b81",
+      "size": 180
+    }
+  ]
+}

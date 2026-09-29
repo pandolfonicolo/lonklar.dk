@@ -4,7 +4,8 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
-    "build": "vite build",
+    "build": "npm run icons:check && vite build",
+    "icons:check": "node ../scripts/check-brand-icons.mjs",
     "dev": "vite"
   },
   "dependencies": {

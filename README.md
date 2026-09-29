@@ -2,6 +2,8 @@
 
 **[Lonklar](https://lonklar.dk)** is a free, open-source web app that calculates your net income in Denmark after taxes and deductions. Built for employees, students, and anyone working in Denmark who wants a clear picture of their take-home pay.
 
+The header, favicon and iPhone Home Screen icon use the shared [Rientro identity](brand/README.md). Run `npm run icons:check` from `frontend` to verify the generated assets; the production build performs this check automatically.
+
 ## Features
 
 - **Three calculator modes:** Full-time, Part-time, and Student income
