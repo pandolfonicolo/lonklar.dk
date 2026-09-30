@@ -200,6 +200,7 @@ export interface HoursCurvePoint {
 }
 
 export interface StudentHoursCurvePoint {
+  effective_rate: number;
   hours_month: number;
   net_monthly: number;
   net_annual: number;

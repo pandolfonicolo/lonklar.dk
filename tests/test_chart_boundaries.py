@@ -64,6 +64,16 @@ class ChartBoundaryTests(unittest.TestCase):
         transitions = [p for p in data if p['fribeloeb_boundary']]
         self.assertEqual([p['over_fribeloeb_after'] for p in transitions], [True, False, True])
 
+    def test_student_tooltip_tax_rate_excludes_pension_and_atp(self):
+        data = compute_student_hours_curve(StudentHoursCurveRequest(hourly_rate=180,
+            pension_pct=4, atp_monthly=66, is_church=False))
+        point = next(p for p in data if p['hours_month'] == 80)
+        gross = 7426 + 180 * 80 * 1.125
+        deductions = point['deductions_monthly']
+        # Total deductions include 4% pension and ATP; a tax rate excludes both.
+        expected_tax_rate = (deductions - 180 * 80 * .04 - 66) / gross * 100
+        self.assertAlmostEqual(point['effective_rate'], expected_tax_rate, places=2)
+
 
 if __name__ == '__main__':
     unittest.main()
