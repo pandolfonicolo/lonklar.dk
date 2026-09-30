@@ -68,12 +68,13 @@ export function Wizard() {
 
   usePageMeta({
     title: `${(serviceId ?? "calculator").replace(/^\w/, c => c.toUpperCase())} Salary Calculator – Lonklar | lønklar.dk`,
-    description: `Calculate your Danish net salary for a ${serviceId ?? ""} job. Step-by-step wizard with AM-bidrag, bundskat, pension, and all SKAT 2026 deductions.`,
+    description: `Calculate your Danish net salary for a ${serviceId ?? ""} job. Step-by-step wizard with AM-bidrag, bundskat, pension, and standard 2026 deductions.`,
     path: `/wizard/${serviceId ?? ""}`,
   });
   const [step, setStep] = useState(0);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
   const [extrasOpen, setExtrasOpen] = useState(false);
 
   // Student work input mode: hourly (default) or none (SU-only, no work)
@@ -125,6 +126,9 @@ export function Wizard() {
   const [aftertaxDed, setAftertaxDed] = useState("0");
   const [transportKm, setTransportKm] = useState("0");
   const [unionFees, setUnionFees] = useState("0");
+  const [aKasseFees, setAKasseFees] = useState("0");
+  const [transportDays, setTransportDays] = useState("218");
+  const [suAward, setSuAward] = useState<string | null>(null);
   const [feriefridage, setFeriefridage] = useState("0");
   const [ferieEnabled, setFerieEnabled] = useState(false);
 
@@ -157,6 +161,9 @@ export function Wizard() {
     aftertaxDed: string;
     transportKm: string;
     unionFees: string;
+    aKasseFees: string;
+    transportDays: string;
+    suAward: string | null;
     feriefridage: string;
     ferieEnabled: boolean;
     extrasOpen: boolean;
@@ -257,6 +264,9 @@ export function Wizard() {
       aftertaxDed,
       transportKm,
       unionFees,
+      aKasseFees,
+      transportDays,
+      suAward,
       feriefridage,
       ferieEnabled,
       extrasOpen,
@@ -290,6 +300,10 @@ export function Wizard() {
     setAftertaxDed("0");
     setTransportKm("0");
     setUnionFees("0");
+    setAKasseFees("0");
+    setTransportDays("218");
+    setSuAward(null);
+    setSubmitError(false);
     setFeriefridage("0");
     setFerieEnabled(false);
     setExtrasOpen(false);
@@ -308,7 +322,7 @@ export function Wizard() {
     if (serviceId === "parttime") {
       setPensionPct("0");
       setErPensionPct("0");
-      setAtpEnabled(false);
+      setAtpEnabled(true);
     } else if (serviceId === "student") {
       setPensionPct("0");
       setErPensionPct("0");
@@ -332,7 +346,7 @@ export function Wizard() {
     setGrossMonthly(saved.grossMonthly ?? "42000");
     setHourlyRate(saved.hourlyRate ?? "180");
     setHoursMonth(saved.hoursMonth ?? "80");
-    setAtpEnabled(saved.atpEnabled ?? serviceId !== "parttime");
+    setAtpEnabled(saved.atpEnabled ?? true);
     setAtpCustom(saved.atpCustom ?? null);
     setOtherPay(saved.otherPay ?? "0");
     setTaxBenefits(saved.taxBenefits ?? "0");
@@ -340,6 +354,9 @@ export function Wizard() {
     setAftertaxDed(saved.aftertaxDed ?? "0");
     setTransportKm(saved.transportKm ?? "0");
     setUnionFees(saved.unionFees ?? "0");
+    setAKasseFees(saved.aKasseFees ?? "0");
+    setTransportDays(saved.transportDays ?? "218");
+    setSuAward(saved.suAward ?? null);
     setFeriefridage(saved.feriefridage ?? "0");
     setFerieEnabled(saved.ferieEnabled ?? false);
     setExtrasOpen(saved.extrasOpen ?? false);
@@ -398,6 +415,9 @@ export function Wizard() {
     aftertaxDed,
     transportKm,
     unionFees,
+    aKasseFees,
+    transportDays,
+    suAward,
     feriefridage,
     ferieEnabled,
     extrasOpen,
@@ -428,17 +448,11 @@ export function Wizard() {
 
   const weeklyHours = Number(hoursMonth) / 4.33;
 
-  const atpDefault = useMemo(() => {
-    if (serviceId === "student") return 0;
-    if (serviceId === "parttime") {
-      if (weeklyHours < 9) return 0;
-      if (weeklyHours < 18) return 0;
-      if (weeklyHours < 27) return c?.atp_monthly_parttime?.["18-26"] ?? 33;
-      if (weeklyHours < 37) return c?.atp_monthly_parttime?.["27-36"] ?? 66;
-      return c?.atp_monthly_fulltime ?? 99;
-    }
-    return c?.atp_monthly_fulltime ?? 99;
-  }, [serviceId, weeklyHours, c]);
+  // Ordinary monthly A-rate payroll. Calculate each employer separately.
+  const monthlyAtp = (hours: number) => hours < 39 ? 0 : hours < 78 ? 33 : hours < 117 ? 66 : 99;
+  const atpDefault = serviceId === "student"
+    ? (studentWorkMode === "none" ? 0 : studentJobs.reduce((sum, job) => sum + monthlyAtp(jobMonthlyHours(job)), 0))
+    : serviceId === "parttime" ? monthlyAtp(Number(hoursMonth)) : (c?.atp_monthly_fulltime ?? 99);
 
   const atpMonthly = useMemo(() => {
     if (!atpEnabled) return 0;
@@ -447,10 +461,11 @@ export function Wizard() {
   }, [atpEnabled, atpCustom, atpDefault]);
 
   // Student SU + fribeloeb
-  const suMonthlyAmount = useMemo(() => {
-    if (!c) return 7426;
-    return livingSituation === "ude" ? c.su_udeboende_month : c.su_hjemmeboende_max;
-  }, [livingSituation, c]);
+  const suMonthlyAmount = suAward !== null && suAward !== ""
+    ? Number(suAward)
+    : (livingSituation === "ude" && eduType === "vid" ? (c?.su_udeboende_month ?? 7426) : 0);
+  const needsSuAward = serviceId === "student" && Number(suMonths) > 0
+    && (livingSituation === "hjemme" || eduType === "ungdom") && (suAward === null || suAward === "");
 
   const fribeloebLaveste = useMemo(() => {
     if (!c) return 20749;
@@ -473,6 +488,8 @@ export function Wizard() {
   // ── Submit ─────────────────────────────────────────────────────
 
   const handleSubmit = async () => {
+    if (needsSuAward) { setStep(0); return; }
+    setSubmitError(false);
     setLoading(true);
     try {
       let result;
@@ -491,6 +508,8 @@ export function Wizard() {
           aftertax_deductions_monthly: Number(aftertaxDed),
           transport_km: Number(transportKm),
           union_fees_annual: Number(unionFees),
+          a_kasse_fees_annual: Number(aKasseFees),
+          transport_days: Number(transportDays),
         });
       } else if (serviceId === "parttime") {
         result = await computePartTime({
@@ -508,10 +527,13 @@ export function Wizard() {
           aftertax_deductions_monthly: Number(aftertaxDed),
           transport_km: Number(transportKm),
           union_fees_annual: Number(unionFees),
+          a_kasse_fees_annual: Number(aKasseFees),
+          transport_days: Number(transportDays),
         });
       } else {
         result = await computeStudent({
           su_monthly: suMonthlyAmount,
+          su_months: Number(suMonths),
           work_gross_monthly: effectiveWorkMonthly,
           kommune,
           pension_pct: studentWorkMode === "none" ? 0 : Number(pensionPct),
@@ -525,6 +547,8 @@ export function Wizard() {
           other_pay_monthly: studentWorkMode === "none" ? 0 : Number(otherPay),
           transport_km: Number(transportKm),
           union_fees_annual: Number(unionFees),
+          a_kasse_fees_annual: Number(aKasseFees),
+          transport_days: Number(transportDays),
         });
       }
       navigate(`/results/${serviceId}`, { state: {
@@ -540,6 +564,10 @@ export function Wizard() {
         _input_aftertax_deductions_monthly: Number(aftertaxDed),
         _input_transport_km: Number(transportKm),
         _input_union_fees_annual: Number(unionFees),
+        _input_a_kasse_fees_annual: Number(aKasseFees),
+        _input_transport_days: Number(transportDays),
+        _input_atp_auto: atpEnabled && atpCustom === null,
+        _input_study_period: studyPeriod,
         _input_feriefridage: Number(feriefridage),
         _input_student_hourly_rate: serviceId === "student" && studentWorkMode !== "none" && studentJobs.length === 1 ? Number(studentJobs[0].hourlyRate) : 0,
         _input_student_hours_month: serviceId === "student" && studentWorkMode !== "none" && studentJobs.length === 1 ? jobMonthlyHours(studentJobs[0]) : 0,
@@ -552,6 +580,7 @@ export function Wizard() {
         })) : undefined,
       } });
     } catch (err) {
+      setSubmitError(true);
       console.error(err);
     } finally {
       setLoading(false);
@@ -701,10 +730,10 @@ export function Wizard() {
                 {t("results.monthly").toLowerCase()} · {weeklyHours.toFixed(1)} h / week
               </p>
             </div>
-            {weeklyHours > 0 && weeklyHours < 9 && (
+            {Number(hoursMonth) > 0 && Number(hoursMonth) < 39 && (
               <Warning>{t("warn.atp.noHours")}</Warning>
             )}
-            {weeklyHours >= 9 && weeklyHours < 15 && (
+            {Number(hoursMonth) >= 39 && Number(hoursMonth) < 117 && (
               <Warning variant="info">{t("warn.atp.lowHours")}</Warning>
             )}
           </div>
@@ -885,7 +914,7 @@ export function Wizard() {
                   max={String(enrolledMonths)}
                   value={suMonths}
                   onChange={(e) => {
-                    const v = Math.min(enrolledMonths, Math.max(0, Number(e.target.value)));
+                    const v = Math.min(enrolledMonths, Math.max(0, Math.floor(Number(e.target.value))));
                     setSuMonths(String(v));
                     const remaining = enrolledMonths - v;
                     if (Number(optedOutMonths) > remaining)
@@ -904,7 +933,7 @@ export function Wizard() {
                   value={optedOutMonths}
                   onChange={(e) => {
                     const max = enrolledMonths - Number(suMonths);
-                    const v = Math.min(max, Math.max(0, Number(e.target.value)));
+                    const v = Math.min(max, Math.max(0, Math.floor(Number(e.target.value))));
                     setOptedOutMonths(String(v));
                   }}
                   className={`h-12 rounded-[var(--radius-md)] transition-colors ${
@@ -914,6 +943,13 @@ export function Wizard() {
               </Field>
             </div>
 
+            <Field label={t("input.suAward")} tooltip={t("input.suAward.tip")}>
+              <Input aria-label={t("input.suAward")} type="number" min="0" max="50000"
+                value={suAward ?? (livingSituation === "ude" && eduType === "vid" ? String(suMonthlyAmount) : "")}
+                onChange={(e) => setSuAward(e.target.value)} placeholder="Enter your award" className="h-12" />
+            </Field>
+            {needsSuAward && <Warning>{t("input.suAward.required")}</Warning>}
+            {studyPeriod !== "full" && <Warning variant="info">{t("scope.periodisation")}</Warning>}
             {/* Auto-calculated preview */}
             <div className="rounded-[var(--radius-md)] bg-secondary/50 p-4 space-y-2">
               <div className="flex justify-between text-sm">
@@ -1171,6 +1207,7 @@ export function Wizard() {
                 <div className="flex-1 min-w-0">
                   <Label htmlFor="student-atp">{t("input.atp")}</Label>
                   <p className="text-xs text-muted-foreground">{t("input.atp.sub")}</p>
+                  <p className="text-xs text-muted-foreground">{t("input.atp.assumption")}</p>
                 </div>
                 <Tip text={t("input.atp.tip")} />
               </div>
@@ -1231,11 +1268,18 @@ export function Wizard() {
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("input.personalDeductions")}</p>
 
                 <Field label={t("input.transportKm")} tooltip={t("input.transportKm.tip")}>
-                  <Input type="number" min="0" step="1" value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
+                  <Input type="number" min="0" step="1" aria-label={t("input.transportKm")} value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
                 </Field>
                 <Field label={t("input.unionFees")} tooltip={t("input.unionFees.tip")}>
-                  <Input type="number" min="0" step="500" value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
+                  <Input type="number" min="0" step="500" aria-label={t("input.unionFees")} value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
                 </Field>
+                <Field label={t("input.aKasseFees")} tooltip={t("input.aKasseFees.tip")}>
+                  <Input aria-label={t("input.aKasseFees")} type="number" min="0" value={aKasseFees} onChange={(e) => setAKasseFees(e.target.value)} className="h-12" />
+                </Field>
+                <Field label={t("input.transportDays")} tooltip={t("input.transportDays.tip")}>
+                  <Input aria-label={t("input.transportDays")} type="number" min="0" max="366" step="1" value={transportDays} onChange={(e) => setTransportDays(String(Math.min(366, Math.max(0, Math.floor(Number(e.target.value))))))} className="h-12" />
+                </Field>
+                {Number(transportKm) > 0 && <p className="text-xs text-muted-foreground sm:col-span-2">{t("scope.commuting")}</p>}
               </CollapsibleContent>
             </Collapsible>
           </div>
@@ -1372,6 +1416,7 @@ export function Wizard() {
           <div className="flex-1 min-w-0">
             <Label htmlFor="atp">{t("input.atp")}</Label>
             <p className="text-xs text-muted-foreground">{t("input.atp.sub")}</p>
+                  <p className="text-xs text-muted-foreground">{t("input.atp.assumption")}</p>
           </div>
           <Tip text={t("input.atp.tip")} />
         </div>
@@ -1483,11 +1528,18 @@ export function Wizard() {
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{t("input.personalDeductions")}</p>
 
           <Field label={t("input.transportKm")} tooltip={t("input.transportKm.tip")}>
-            <Input type="number" min="0" step="1" value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
+            <Input type="number" min="0" step="1" aria-label={t("input.transportKm")} value={transportKm} onChange={(e) => setTransportKm(e.target.value)} className="h-12" />
           </Field>
           <Field label={t("input.unionFees")} tooltip={t("input.unionFees.tip")}>
-            <Input type="number" min="0" step="500" value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
+            <Input type="number" min="0" step="500" aria-label={t("input.unionFees")} value={unionFees} onChange={(e) => setUnionFees(e.target.value)} className="h-12" />
           </Field>
+                <Field label={t("input.aKasseFees")} tooltip={t("input.aKasseFees.tip")}>
+                  <Input aria-label={t("input.aKasseFees")} type="number" min="0" value={aKasseFees} onChange={(e) => setAKasseFees(e.target.value)} className="h-12" />
+                </Field>
+                <Field label={t("input.transportDays")} tooltip={t("input.transportDays.tip")}>
+                  <Input aria-label={t("input.transportDays")} type="number" min="0" max="366" step="1" value={transportDays} onChange={(e) => setTransportDays(String(Math.min(366, Math.max(0, Math.floor(Number(e.target.value))))))} className="h-12" />
+                </Field>
+                {Number(transportKm) > 0 && <p className="text-xs text-muted-foreground sm:col-span-2">{t("scope.commuting")}</p>}
         </CollapsibleContent>
       </Collapsible>
     </div>
@@ -1541,6 +1593,8 @@ export function Wizard() {
         label: `SU / ${lang === "da" ? "md" : "month"}`,
         value: `${fmt(suMonthlyAmount)} DKK`,
       });
+      rows.push({ label: t("input.suMonths"), value: suMonths });
+      rows.push({ label: t("results.suGrossAnnual"), value: `${fmt(suMonthlyAmount * Number(suMonths))} DKK` });
       rows.push({
         label: lang === "da" ? "Årligt fribeløb" : "Annual fribeløb",
         value: `${fmt(aarsFribeloeb)} DKK`,
@@ -1590,7 +1644,7 @@ export function Wizard() {
       rows.push({ label: t("input.pension.employer"), value: `${erPensionPct} %` });
     }
 
-    if (serviceId !== "student") {
+    {
       rows.push({ label: `ATP / ${lang === "da" ? "md" : "month"}`, value: `${fmt(atpMonthly)} DKK` });
       if (Number(otherPay) > 0)
         rows.push({ label: t("input.otherPay"), value: `${otherPay} DKK` });
@@ -1604,6 +1658,8 @@ export function Wizard() {
         rows.push({ label: t("input.transportKm"), value: `${transportKm} km` });
       if (Number(unionFees) > 0)
         rows.push({ label: t("input.unionFees"), value: `${unionFees} DKK` });
+      if (Number(aKasseFees) > 0) rows.push({ label: t("input.aKasseFees"), value: `${aKasseFees} DKK` });
+      if (Number(transportKm) > 0) rows.push({ label: t("input.transportDays"), value: transportDays });
       if (Number(feriefridage) > 0)
         rows.push({ label: t("input.feriefridage"), value: `${feriefridage} ${lang === "da" ? "dage" : "days"}` });
     }
@@ -1614,6 +1670,8 @@ export function Wizard() {
   const renderReview = () => (
     <div>
       <h2 className="text-2xl mb-6 text-foreground">{t("review.title")}</h2>
+      <p className="text-sm text-muted-foreground mb-4">{t("scope.general")}</p>
+      {submitError && <p role="alert" className="text-sm text-destructive mb-4">{t("calculation.error")}</p>}
       <div className="space-y-3">
         {reviewRows().map((r, i) => (
           <div
@@ -1659,7 +1717,7 @@ export function Wizard() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 {t("btn.reset" as any)}
               </Button>
-              <Button onClick={handleNext} disabled={loading}>
+              <Button onClick={handleNext} disabled={loading || needsSuAward}>
                 {loading
                   ? t("btn.calculating")
                   : isReview

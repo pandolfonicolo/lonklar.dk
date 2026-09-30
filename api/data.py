@@ -8,6 +8,8 @@ Sources:
 """
 
 TAX_YEAR = 2026
+CALCULATION_VERSION = "2026-09-30.1"
+SU_LOAN_MONTHLY = 3_799
 
 # ── AM-bidrag (labour-market contribution) ───────────────────────────
 AM_RATE = 0.08
@@ -26,7 +28,7 @@ TOPSKAT_RATE         = 0.075     # 7.5 %
 TOPTOPSKAT_THRESHOLD = 2_592_700 # kr/year
 TOPTOPSKAT_RATE      = 0.05      # 5 %
 
-# ── Skatteloft (tax ceiling — state + municipal, excl. kirkeskat) ────
+# ── Skatteloft (tax ceiling — bundskat + kommune + mellemskat only) ────
 SKATTELOFT = 0.4457  # 44.57 %
 
 # ── Beskæftigelsesfradrag (employment deduction) ────────────────────
@@ -53,8 +55,6 @@ FRIBELOEB_HOEJESTE       = 45_420   # kr/month — not enrolled / no SU right / 
 FRIBELOEB_NEDSAT         = 3_921    # kr/month — months with handicap supplement
 FRIBELOEB_PARENT_BONUS   = 34_129   # kr/child/year — forhøjelse for children under 18
 
-# SU repayment interest (lifeindenmark.borger.dk, Jan 2026)
-SU_REPAYMENT_INTEREST_RATE = 0.0975  # 9.75 % p.a. on SU to be repaid
 
 # ── Feriepenge / ferietillæg (ferieloven) ────────────────────────────
 FERIETILLAEG_RATE = 0.01    # 1 % for salaried (månedslønnet) employees
@@ -62,14 +62,14 @@ FERIEPENGE_RATE   = 0.125   # 12.5 % for hourly (timelønnet) workers
 
 # ── Befordringsfradrag (transport deduction, skat.dk 2026) ───────────
 # Only for >24 km round trip per day (>12 km one way)
-BEFORDRING_RATE_LOW    = 1.98  # DKK/km for 25–120 km round trip
-BEFORDRING_RATE_HIGH   = 0.99  # DKK/km above 120 km round trip
+BEFORDRING_RATE_LOW    = 3.17  # DKK/km for 25–120 km round trip
+BEFORDRING_RATE_HIGH   = 1.59  # DKK/km above 120 km round trip
 BEFORDRING_THRESHOLD   = 24    # minimum round trip km (below → no deduction)
 BEFORDRING_HIGH_THRESHOLD = 120 # km where rate drops
-BEFORDRING_LOW_INCOME  = 375_800  # below this annual income → extra deduction
+BEFORDRING_LOW_INCOME  = 391_500  # below this annual income → extra deduction
 
 # ── Fagforening / A-kasse (trade union, skat.dk 2026) ────────────────
-FAGFORENING_MAX = 7_000  # max annual deductible union + a-kasse fees
+FAGFORENING_MAX = 7_000  # max annual deductible union fees; a-kasse has no such cap
 
 # ── Exchange rate (fallback) ─────────────────────────────────────────
 DKK_PER_EUR = 7.45  # fallback; app auto-fetches live rate
@@ -77,10 +77,11 @@ DKK_PER_EUR = 7.45  # fallback; app auto-fetches live rate
 # ── ATP (from 2024, lov om Arbejdsmarkedets Tillægspension § 15) ────
 ATP_ANNUAL  = 1_188.00   # kr/year (employee side, full-time ≥ 117 h/month)
 ATP_MONTHLY = 99.00      # kr/month (employee 1/3 of total 297 kr)
-ATP_MONTHLY_PARTTIME = {  # employee share by weekly hours
-    "27-36":  66.00,      # B-sats: 2/3 of full
-    "18-26":  33.00,      # C-sats: 1/3 of full
-    "9-17":    0.00,      # under threshold → no ATP
+ATP_MONTHLY_PARTTIME = {  # Monthly A-rate payroll: employee share by hours/month
+    "0-38": 0.0,
+    "39-77": 33.0,
+    "78-116": 66.0,
+    "117+": 99.0,
 }
 ATP_EMPLOYER_FACTOR = 2   # employer pays 2× the employee share
 

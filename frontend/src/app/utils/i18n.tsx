@@ -27,15 +27,7 @@ const translations = {
     es: "Tu salario danés,\nexplicado con claridad",
     nb: "Din danske lønn,\ntydelig forklart",
   },
-  "home.hero.subtitle": {
-    en: "Accurate tax breakdown for any employment type.\nAligned with SKAT 2026 rates, always free, always private.",
-    da: "Præcis skatteberegning for enhver ansættelsestype.\nBaseret på SKAT 2026-satser, altid gratis, altid privat.",
-    it: "Calcolo fiscale preciso per qualsiasi tipo di impiego.\nAllineato alle aliquote SKAT 2026, sempre gratuito, sempre privato.",
-    de: "Genaue Steueraufschlüsselung für jede Beschäftigungsart.\nBasierend auf SKAT 2026-Sätzen, immer kostenlos, immer privat.",
-    sv: "Exakt skatteberäkning för alla anställningstyper.\nBaserat på SKAT 2026-satser, alltid gratis, alltid privat.",
-    es: "Desglose fiscal preciso para cualquier tipo de empleo.\nAlineado con las tasas SKAT 2026, siempre gratuito, siempre privado.",
-    nb: "Nøyaktig skatteberegning for enhver ansettelsestype.\nBasert på SKAT 2026-satser, alltid gratis, alltid privat.",
-  },
+  "home.hero.subtitle": {"en": "Estimate Danish salary and SU using 2026 tax rules.\nSee the assumptions, deductions and income breakdown.", "da": "Beregn et estimat for dansk løn og SU med 2026-skatteregler.\nSe forudsætninger, fradrag og fordeling af indkomsten."},
   "home.hero.disclaimer_ref": {
     en: "Estimates only, no guarantees. Your feedback helps.",
     da: "Kun estimater, ingen garanti. Din feedback hjælper.",
@@ -55,10 +47,10 @@ const translations = {
   "preview.net": { en: "Net salary", da: "Nettoløn", it: "Stipendio netto", de: "Nettogehalt", sv: "Nettolön", es: "Salario neto", nb: "Nettolønn" },
   "preview.effectiveRate": { en: "Effective tax rate", da: "Effektiv skattesats", it: "Aliquota fiscale effettiva", de: "Effektiver Steuersatz", sv: "Effektiv skattesats", es: "Tasa impositiva efectiva", nb: "Effektiv skattesats" },
   "preview.example": { en: "Example", da: "Eksempel", it: "Esempio", de: "Beispiel", sv: "Exempel", es: "Ejemplo", nb: "Eksempel" },
-  "preview.illustrative": { en: "Illustrative only. Your result may differ.", da: "Illustrativt. Din beregning kan afvige.", it: "Solo illustrativo. Il risultato può variare.", de: "Nur zur Veranschaulichung. Ihr Ergebnis kann abweichen.", sv: "Endast illustrativt. Ditt resultat kan avvika.", es: "Solo ilustrativo. Tu resultado puede variar.", nb: "Kun illustrativt. Resultatet ditt kan avvike." },
+  "preview.illustrative": {"en": "Example: Copenhagen, no pension/church tax, ATP 99 kr, excluding holiday pay. Your result may differ.", "da": "Eksempel: København, ingen pension/kirkeskat, ATP 99 kr., ekskl. feriepenge/-tillæg. Dit resultat kan afvige."},
 
   // Trust signals (inline hero)
-  "home.trust.noads": { en: "No ads or tracking", da: "Ingen reklamer eller sporing", it: "Nessuna pubblicità né tracciamento", de: "Keine Werbung oder Tracking", sv: "Ingen reklam eller spårning", es: "Sin anuncios ni rastreo", nb: "Ingen reklame eller sporing" },
+  "home.trust.noads": {"en": "No ads", "da": "Ingen reklamer"},
   "home.trust.transparent": { en: "Open & transparent", da: "Åben og gennemsigtig", it: "Aperto e trasparente", de: "Offen und transparent", sv: "Öppen och transparent", es: "Abierto y transparente", nb: "Åpen og gjennomsiktig" },
   "home.trust.skat": { en: "SKAT 2026 aligned", da: "SKAT 2026-baseret", it: "Allineato a SKAT 2026", de: "SKAT 2026 konform", sv: "SKAT 2026-baserad", es: "Alineado con SKAT 2026", nb: "SKAT 2026-basert" },
 
@@ -80,15 +72,7 @@ const translations = {
   },
   "home.parttime.title": { en: "Part-time job", da: "Deltidsjob", it: "Lavoro part-time", de: "Teilzeitjob", sv: "Deltidsjobb", es: "Trabajo a tiempo parcial", nb: "Deltidsjobb" },
   "home.parttime.subtitle": { en: "Deltid / timeløn", da: "Part-time / hourly", it: "Part-time / a ore", de: "Teilzeit / Stundenlohn", sv: "Deltid / timlön", es: "Tiempo parcial / por horas", nb: "Deltid / timelønn" },
-  "home.parttime.desc": {
-    en: "Know your hourly rate and weekly hours? See your real take-home pay including 12.5% feriepenge and all deductions.",
-    da: "Kender du din timeløn og ugentlige timer? Se din reelle udbetaling inkl. 12,5% feriepenge og alle fradrag.",
-    it: "Conosci la tua paga oraria e le ore settimanali? Vedi il tuo netto reale incluso il 12,5% di feriepenge e tutte le deduzioni.",
-    de: "Kennst du deinen Stundenlohn und die wöchentlichen Stunden? Sieh dein tatsächliches Nettogehalt inkl. 12,5% Urlaubsgeld und aller Abzüge.",
-    sv: "Vet du din timlön och veckotimmar? Se din verkliga nettolön inklusive 12,5% feriepenge och alla avdrag.",
-    es: "¿Conoces tu tarifa por hora y horas semanales? Consulta tu salario neto real incluyendo el 12,5% de feriepenge y todas las deducciones.",
-    nb: "Kjenner du timelønnen din og ukentlige timer? Se din reelle utbetaling inkl. 12,5% feriepenge og alle fradrag.",
-  },
+  "home.parttime.desc": {"en": "Enter your hourly rate and monthly hours to estimate net income, with holiday pay shown separately.", "da": "Angiv timeløn og månedlige timer for at anslå nettobeløbet, med feriepenge vist separat."},
   "home.student.title": { en: "Student job", da: "Studiejob", it: "Lavoro studentesco", de: "Studentenjob", sv: "Studentjobb", es: "Trabajo de estudiante", nb: "Studentjobb" },
   "home.student.subtitle": { en: "Studerende (SU + arbejde)", da: "Student (SU + work)", it: "Studente (SU + lavoro)", de: "Student (SU + Arbeit)", sv: "Studerande (SU + arbete)", es: "Estudiante (SU + trabajo)", nb: "Student (SU + arbeid)" },
   "home.student.desc": {
@@ -362,15 +346,7 @@ const translations = {
 
   // Student periodisering
   "input.studyPeriod": { en: "Study period this year", da: "Studieperiode i år", it: "Periodo di studio quest'anno", de: "Studienzeit dieses Jahr", sv: "Studieperiod i år", es: "Período de estudio este año", nb: "Studieperiode i år" },
-  "input.studyPeriod.tip": {
-    en: "If you start or finish education mid-year, only months you're enrolled count for fribeløb. This can save you from repayment.",
-    da: "Hvis du starter eller afslutter uddannelse midt i året, tæller kun de måneder du er indskrevet med i fribeløbet. Det kan forhindre tilbagebetaling.",
-    it: "Se inizi o finisci gli studi a metà anno, solo i mesi in cui sei iscritto contano per il fribeløb. Questo può evitarti il rimborso.",
-    de: "Wenn du mitten im Jahr anfngst oder aufhörst zu studieren, zählen nur die eingeschriebenen Monate für den fribeløb. Das kann dich vor einer Rückzahlung bewahren.",
-    sv: "Om du börjar eller slutar studera mitt i året räknas bara de månader du är inskriven för fribeløb. Det kan skydda dig från återbetalning.",
-    es: "Si comienzas o terminas los estudios a mitad de año, solo los meses en que estés inscrito cuentan para el fribeløb. Esto puede evitarte el reembolso.",
-    nb: "Hvis du starter eller avslutter utdanning midt i året, teller bare månedene du er innskrevet for fribeløb. Det kan hindre tilbakebetaling.",
-  },
+  "input.studyPeriod.tip": {"en": "These dates determine month categories in your annual limit. Special start/finish-year periodisation has additional conditions and is not calculated here. Work is still annualised over 12 months.", "da": "Datoerne bestemmer månedskategorier i årsfribeløbet. Særlig periodisering ved studiestart/-slut har flere betingelser og beregnes ikke her. Arbejde regnes stadig over 12 måneder."},
   "input.studyPeriod.full": { en: "Full year", da: "Hele året", it: "Anno intero", de: "Ganzes Jahr", sv: "Helår", es: "Año completo", nb: "Hele året" },
   "input.studyPeriod.start": { en: "Starting mid-year", da: "Starter midt i året", it: "Inizio a metà anno", de: "Beginn Mitte des Jahres", sv: "Börjar mitt i året", es: "Comienza a mitad de año", nb: "Starter midt i året" },
   "input.studyPeriod.finish": { en: "Finishing mid-year", da: "Afslutter midt i året", it: "Fine a metà anno", de: "Ende Mitte des Jahres", sv: "Slutar mitt i året", es: "Termina a mitad de año", nb: "Avslutter midt i året" },
@@ -465,15 +441,7 @@ const translations = {
   // ATP
   "input.atp": { en: "ATP", da: "ATP", it: "ATP", de: "ATP", sv: "ATP", es: "ATP", nb: "ATP" },
   "input.atp.sub": { en: "Arbejdsmarkedets Tillægspension", da: "Labour-market supplementary pension", it: "Pensione integrativa del mercato del lavoro", de: "Arbeitsmarkt-Zusatzrente", sv: "Arbetsmarknadens tilläggspension", es: "Pensión complementaria del mercado laboral", nb: "Arbeidsmarkedets tilleggspensjon" },
-  "input.atp.tip": {
-    en: "Mandatory pension contribution. Your share is ~95 kr/month (full-time). Check your lønseddel — look for 'ATP' in the deduction lines. Your employer also pays ~190 kr on top.",
-    da: "Obligatorisk pensionsbidrag. Din andel er ~95 kr/md (fuldtid). Tjek din lønseddel — find 'ATP' i fradragslinjerne. Din arbejdsgiver betaler også ~190 kr oveni.",
-    it: "Contributo pensionistico obbligatorio. La tua quota è ~95 kr/mese (tempo pieno). Controlla la lønseddel — cerca 'ATP' nelle righe delle deduzioni. Il datore di lavoro paga anche ~190 kr in aggiunta.",
-    de: "Pflichtbeitrag zur Rente. Dein Anteil beträgt ~95 kr/Monat (Vollzeit). Prüfe deinen lønseddel — suche nach 'ATP' in den Abzugszeilen. Dein Arbeitgeber zahlt zusätzlich ~190 kr.",
-    sv: "Obligatoriskt pensionsbidrag. Din andel är ~95 kr/månad (heltid). Kontrollera din lønseddel — sök efter 'ATP' i avdragsraderna. Din arbetsgivare betalar också ~190 kr utöver.",
-    es: "Contribución obligatoria a la pensión. Tu parte es ~95 kr/mes (tiempo completo). Consulta tu lønseddel — busca 'ATP' en las líneas de deducción. Tu empleador también paga ~190 kr adicionales.",
-    nb: "Obligatorisk pensjonsbidrag. Din andel er ~95 kr/mnd (fulltid). Sjekk lønseddelen — se etter 'ATP' i fradragslinjene. Arbeidsgiver betaler også ~190 kr i tillegg.",
-  },
+  "input.atp.tip": {"en": "Monthly A-rate employee share: 0 kr below 39 hours; 33 kr at 39–77 hours; 66 kr at 78–116 hours; 99 kr from 117 hours. Override if your payroll differs.", "da": "Månedlig A-sats, medarbejderandel: 0 kr. under 39 timer; 33 kr. ved 39–77; 66 kr. ved 78–116; 99 kr. fra 117 timer. Tilpas, hvis din løn anvender en anden sats."},
 
   // Extras
   "input.extras.title": { en: "Pay, benefits & deductions", da: "Løn, goder & fradrag", it: "Paga, benefit e deduzioni", de: "Gehalt, Leistungen & Abzüge", sv: "Lön, förmåner & avdrag", es: "Paga, beneficios y deducciones", nb: "Lønn, goder & fradrag" },
@@ -520,45 +488,13 @@ const translations = {
   },
   "input.personalDeductions": { en: "Personal tax deductions", da: "Personlige skattefradrag", it: "Deduzioni fiscali personali", de: "Persönliche Steuerabzüge", sv: "Personliga skatteavdrag", es: "Deducciones fiscales personales", nb: "Personlige skattefradrag" },
   "input.transportKm": { en: "Daily round-trip commute (km)", da: "Daglig transport tur/retur (km)", it: "Tragitto giornaliero andata/ritorno (km)", de: "Täglicher Hin- und Rückweg (km)", sv: "Daglig tur och retur-pendling (km)", es: "Trayecto diario ida y vuelta (km)", nb: "Daglig transport tur/retur (km)" },
-  "input.transportKm.tip": {
-    en: "Your daily ROUND-TRIP distance home ↔ work (both ways). Use Google Maps to check. Only kicks in above 24 km. Example: 40 km round-trip → 16 km × 1.98 kr × 218 days = ~6,900 kr/year deduction → saves ~1,800 kr in tax.",
-    da: "Din daglige TUR/RETUR-afstand hjem ↔ arbejde (begge veje). Brug Google Maps til at tjekke. Gælder kun over 24 km. Eksempel: 40 km tur/retur → 16 km × 1,98 kr × 218 dage = ~6.900 kr/år fradrag → sparer ~1.800 kr i skat.",
-    it: "La tua distanza giornaliera ANDATA/RITORNO casa ↔ lavoro (entrambi i tragitti). Usa Google Maps per verificare. Si applica solo oltre 24 km. Esempio: 40 km andata/ritorno → 16 km × 1,98 kr × 218 giorni = ~6.900 kr/anno di deduzione → risparmi ~1.800 kr di tasse.",
-    de: "Deine tägliche HIN- UND RÜCKFAHRT-Strecke Wohnung ↔ Arbeit (beide Wege). Prüfe mit Google Maps. Gilt erst ab 24 km. Beispiel: 40 km Hin/Rück → 16 km × 1,98 kr × 218 Tage = ~6.900 kr/Jahr Abzug → spart ~1.800 kr Steuer.",
-    sv: "Din dagliga TUR OCH RETUR-sträcka hem ↔ arbete (båda vägarna). Använd Google Maps för att kontrollera. Gäller bara över 24 km. Exempel: 40 km tur/retur → 16 km × 1,98 kr × 218 dagar = ~6 900 kr/år avdrag → sparar ~1 800 kr i skatt.",
-    es: "Tu distancia diaria IDA Y VUELTA casa ↔ trabajo (ambos trayectos). Usa Google Maps para verificar. Solo aplica a partir de 24 km. Ejemplo: 40 km ida/vuelta → 16 km × 1,98 kr × 218 días = ~6.900 kr/año de deducción → ahorras ~1.800 kr en impuestos.",
-    nb: "Din daglige TUR/RETUR-avstand hjem ↔ jobb (begge veier). Bruk Google Maps for å sjekke. Gjelder bare over 24 km. Eksempel: 40 km tur/retur → 16 km × 1,98 kr × 218 dager = ~6 900 kr/år fradrag → sparer ~1 800 kr i skatt.",
-  },
-  "input.unionFees": { en: "Union + A-kasse fees (DKK/year)", da: "Fagforening + A-kasse (DKK/år)", it: "Sindacato + A-kasse (DKK/anno)", de: "Gewerkschaft + A-kasse (DKK/Jahr)", sv: "Fackförening + A-kasse (DKK/år)", es: "Sindicato + A-kasse (DKK/año)", nb: "Fagforening + A-kasse (DKK/år)" },
-  "input.unionFees.tip": {
-    en: "Total yearly cost for trade union + A-kasse (unemployment insurance). Enter the combined annual amount. Max 7,000 kr is deductible. Example: IDA ~6,000 kr + A-kasse ~5,000 kr → enter 11,000 (capped at 7,000). Saves ~1,800 kr/year in tax.",
-    da: "Samlet årlig udgift til fagforening + A-kasse (arbejdsløshedsforsikring). Angiv det samlede årsbeløb. Maks 7.000 kr er fradragsberettiget. Eksempel: IDA ~6.000 kr + A-kasse ~5.000 kr → skriv 11.000 (grænse 7.000). Sparer ~1.800 kr/år i skat.",
-    it: "Costo annuale totale per sindacato + A-kasse (assicurazione contro la disoccupazione). Inserisci l'importo annuale combinato. Massimo 7.000 kr deducibili. Esempio: IDA ~6.000 kr + A-kasse ~5.000 kr → inserisci 11.000 (limite 7.000). Risparmi ~1.800 kr/anno di tasse.",
-    de: "Jährliche Gesamtkosten für Gewerkschaft + A-kasse (Arbeitslosenversicherung). Gib den kombinierten Jahresbetrag ein. Max 7.000 kr absetzbar. Beispiel: IDA ~6.000 kr + A-kasse ~5.000 kr → gib 11.000 ein (gedeckelt bei 7.000). Spart ~1.800 kr/Jahr Steuer.",
-    sv: "Total årskostnad för fackförening + A-kasse (arbetslöshetsförsäkring). Ange det kombinerade årsbeloppet. Max 7 000 kr är avdragsgillt. Exempel: IDA ~6 000 kr + A-kasse ~5 000 kr → ange 11 000 (tak 7 000). Sparar ~1 800 kr/år i skatt.",
-    es: "Coste anual total de sindicato + A-kasse (seguro de desempleo). Introduce el importe anual combinado. Máximo 7.000 kr deducibles. Ejemplo: IDA ~6.000 kr + A-kasse ~5.000 kr → introduce 11.000 (límite 7.000). Ahorras ~1.800 kr/año en impuestos.",
-    nb: "Total årskostnad for fagforening + A-kasse (arbeidsløshetsforsikring). Oppgi samlet årsbeløp. Maks 7 000 kr er fradragsberettiget. Eksempel: IDA ~6 000 kr + A-kasse ~5 000 kr → skriv 11 000 (grense 7 000). Sparer ~1 800 kr/år i skatt.",
-  },
+  "input.transportKm.tip": {"en": "Daily return distance to paid work. Standard 2026 rates: nothing for the first 24 km, 3.17 kr/km for km 25–120 and 1.59 kr/km beyond 120.", "da": "Daglig afstand tur/retur til lønnet arbejde. Standardsatser 2026: 0 kr. for de første 24 km, 3,17 kr./km for km 25–120 og 1,59 kr./km over 120."},
+  "input.unionFees": {"en": "Trade union fees (DKK/year)", "da": "Fagforeningskontingent (DKK/år)"},
+  "input.unionFees.tip": {"en": "Trade union fees only. Up to 7,000 kr per year is deductible. Enter A-kasse separately.", "da": "Kun fagforeningskontingent. Højst 7.000 kr. om året kan fradrages. Angiv A-kasse separat."},
 
   // Warnings
-  "warn.atp.noHours": {
-    en: "Below 9 hours/week — no ATP obligation. Your employer is not required to pay ATP.",
-    da: "Under 9 timer/uge — ingen ATP-pligt. Din arbejdsgiver er ikke forpligtet til at betale ATP.",
-    it: "Sotto le 9 ore/settimana — nessun obbligo ATP. Il tuo datore di lavoro non è tenuto a pagare ATP.",
-    de: "Unter 9 Stunden/Woche — keine ATP-Pflicht. Dein Arbeitgeber ist nicht verpflichtet, ATP zu zahlen.",
-    sv: "Under 9 timmar/vecka — ingen ATP-skyldighet. Din arbetsgivare är inte skyldig att betala ATP.",
-    es: "Menos de 9 horas/semana — sin obligación de ATP. Tu empleador no está obligado a pagar ATP.",
-    nb: "Under 9 timer/uke — ingen ATP-plikt. Arbeidsgiveren din er ikke forpliktet til å betale ATP.",
-  },
-  "warn.atp.lowHours": {
-    en: "Below 15 hours/week — check if your hourly rate meets the collective agreement minimum (overenskomst).",
-    da: "Under 15 timer/uge — tjek om din timeløn opfylder overenskomstens mindsteløn.",
-    it: "Sotto le 15 ore/settimana — verifica se la tua tariffa oraria rispetta il minimo del contratto collettivo (overenskomst).",
-    de: "Unter 15 Stunden/Woche — prüfe, ob dein Stundenlohn den Tarifvertragsmindestlohn (overenskomst) erfüllt.",
-    sv: "Under 15 timmar/vecka — kontrollera om din timlön uppfyller kollektivavtalets minimilön (overenskomst).",
-    es: "Menos de 15 horas/semana — verifica si tu tarifa por hora cumple con el mínimo del convenio colectivo (overenskomst).",
-    nb: "Under 15 timer/uke — sjekk om timelønnen din oppfyller overenskomstens minstelønn.",
-  },
+  "warn.atp.noHours": {"en": "Below 39 hours/month, automatic monthly A-rate ATP is zero.", "da": "Under 39 timer/md. er automatisk ATP ved månedlig A-sats 0 kr."},
+  "warn.atp.lowHours": {"en": "ATP is selected from your monthly hours. Check the amount against your payslip.", "da": "ATP vælges ud fra dine månedlige timer. Kontroller beløbet på din lønseddel."},
 
   // Review
   "review.title": { en: "Review your inputs", da: "Gennemse dine indtastninger", it: "Rivedi i tuoi dati", de: "Überprüfe deine Eingaben", sv: "Granska dina uppgifter", es: "Revisa tus datos", nb: "Gjennomgå dine inndata" },
@@ -622,15 +558,7 @@ const translations = {
     es: "Se paga por separado a través de FerieKonto — lo solicitas al tomar vacaciones",
     nb: "Utbetales separat via FerieKonto — du ber om det når du tar ferie",
   },
-  "results.marginTooltip": {
-    en: "This is an estimate. The actual amount may vary by ±1.5% due to ferietillæg/feriepenge timing (paid monthly vs. reserved), rounding across tax brackets, municipality-specific rates, and individual deduction differences.",
-    da: "Dette er et estimat. Det faktiske beløb kan variere med ±1,5% pga. ferietillæg/feriepenge-håndtering (udbetalt månedligt vs. opsparet), afrunding i skattetrin, kommunespecifikke satser og individuelle fradragsforskelle.",
-    it: "Questa è una stima. L'importo effettivo può variare del ±1,5% a causa della gestione del ferietillæg/feriepenge (pagato mensilmente o accantonato), degli arrotondamenti fiscali, delle aliquote comunali e delle differenze nelle detrazioni individuali.",
-    de: "Dies ist eine Schätzung. Der tatsächliche Betrag kann um ±1,5% abweichen — durch die Handhabung von Ferietillæg/Feriepenge (monatlich ausgezahlt vs. angespart), Rundungen in Steuerstufen, gemeindespezifische Sätze und individuelle Abzugsunterschiede.",
-    sv: "Detta är en uppskattning. Det faktiska beloppet kan variera med ±1,5% på grund av hanteringen av ferietillæg/feriepenge (utbetald månadsvis eller sparad), avrundning i skattesteg, kommunspecifika satser och individuella avdragsskillnader.",
-    es: "Esta es una estimación. El monto real puede variar en ±1,5% debido a la gestión del ferietillæg/feriepenge (pagado mensualmente o reservado), redondeo en tramos fiscales, tasas municipales y diferencias en deducciones individuales.",
-    nb: "Dette er et estimat. Det faktiske beløpet kan variere med ±1,5% pga. ferietillæg/feriepenge-håndtering (utbetalt månedlig vs. oppspart), avrunding i skattetrinn, kommunespesifikke satser og individuelle fradragsforskjeller.",
-  },
+  "results.marginTooltip": {"en": "An annual estimate using 2026 rules and the inputs you provide. Your tax card, payment timing and unsupported deductions can change the result. No fixed accuracy percentage has been established.", "da": "Et årsestimat med 2026-regler og dine oplysninger. Skattekort, udbetalingstidspunkt og fradrag uden for modellen kan ændre resultatet. Ingen fast nøjagtighedsprocent er dokumenteret."},
   "results.monthly": { en: "Monthly", da: "Månedlig", it: "Mensile", de: "Monatlich", sv: "Månatlig", es: "Mensual", nb: "Månedlig" },
   "results.annual": { en: "Annual", da: "Årlig", it: "Annuale", de: "Jährlich", sv: "Årlig", es: "Anual", nb: "Årlig" },
   "results.showEur": { en: "Show EUR", da: "Vis EUR", it: "Mostra EUR", de: "EUR anzeigen", sv: "Visa EUR", es: "Mostrar EUR", nb: "Vis EUR" },
@@ -649,15 +577,7 @@ const translations = {
 
   // Charts
   "chart.netVsGross": { en: "Net vs gross income", da: "Netto vs brutto indkomst", it: "Netto vs lordo", de: "Netto vs Brutto", sv: "Netto vs brutto inkomst", es: "Neto vs bruto", nb: "Netto vs brutto inntekt" },
-  "chart.netVsGross.desc": {
-    en: "Monthly net income across different gross salary levels",
-    da: "Månedlig nettoindkomst ved forskellige bruttolønniveauer",
-    it: "Reddito netto mensile a diversi livelli di stipendio lordo",
-    de: "Monatliches Nettoeinkommen bei verschiedenen Bruttogehaltsstufen",
-    sv: "Månatlig nettoinkomst vid olika bruttolönenivåer",
-    es: "Ingreso neto mensual a diferentes niveles de salario bruto",
-    nb: "Månedlig nettoinntekt ved ulike bruttolønnsnivåer",
-  },
+  "chart.netVsGross.desc": {"en": "Annual-average monthly net, including holiday pay, across gross salary levels", "da": "Gennemsnitligt månedligt nettobeløb inkl. feriepenge/-tillæg ved forskellige bruttolønninger"},
   "chart.netVsHours": { en: "Net income vs hours worked", da: "Nettoindkomst vs arbejdstimer", it: "Reddito netto vs ore lavorate", de: "Nettoeinkommen vs Arbeitsstunden", sv: "Nettoinkomst vs arbetade timmar", es: "Ingreso neto vs horas trabajadas", nb: "Nettoinntekt vs arbeidstimer" },
   "chart.studentNetVsHours": { en: "Total net income vs hours worked", da: "Samlet nettoindkomst vs arbejdstimer", it: "Reddito netto totale vs ore lavorate", de: "Gesamtnettoeinkommen vs Arbeitsstunden", sv: "Total nettoinkomst vs arbetade timmar", es: "Ingreso neto total vs horas trabajadas", nb: "Total nettoinntekt vs arbeidstimer" },
   "chart.studentNetVsHours.desc": { en: "How your total net income (SU + work) changes as you work more hours at {rate}/hour", da: "Hvordan din samlede nettoindkomst (SU + arbejde) ændrer sig med flere timer til {rate}/time", it: "Come cambia il tuo reddito netto totale (SU + lavoro) all'aumentare delle ore a {rate}/ora", de: "Wie sich dein Gesamtnettoeinkommen (SU + Arbeit) mit mehr Stunden zu {rate}/Stunde verändert", sv: "Hur din totala nettoinkomst (SU + arbete) förändras med fler timmar till {rate}/timme", es: "Cómo cambia tu ingreso neto total (SU + trabajo) al trabajar más horas a {rate}/hora", nb: "Hvordan din samlede nettoinntekt (SU + arbeid) endrer seg med flere timer til {rate}/time" },
@@ -673,7 +593,7 @@ const translations = {
   "chart.taxDed": { en: "Tax + ded.", da: "Skat + fradrag", it: "Tasse + deduzioni", de: "Steuer + Abzüge", sv: "Skatt + avdrag", es: "Impuestos + ded.", nb: "Skatt + fradrag" },
   "chart.hoursMonth": { en: "hours/month", da: "timer/md", it: "ore/mese", de: "Stunden/Monat", sv: "timmar/månad", es: "horas/mes", nb: "timer/mnd" },
   "chart.hoursWeek": { en: "hours/week", da: "timer/uge", it: "ore/sett.", de: "Std./Woche", sv: "tim/vecka", es: "horas/sem.", nb: "timer/uke" },
-  "chart.fribeloebExplain": { en: "The inflection point at ~{hours} hours/month is due to the fribeløb (annual tax-free allowance of {fribeloeb}). Once your annual work income exceeds this threshold, you must repay part of your SU — which reduces total net income despite working more hours.", da: "Knækpunktet ved ~{hours} timer/md skyldes fribeløbet (årligt skattefrit beløb på {fribeloeb}). Når din årlige arbejdsindkomst overstiger denne grænse, skal du tilbagebetale en del af din SU — hvilket reducerer den samlede nettoindkomst trods flere timer.", it: "Il punto di flessione a ~{hours} ore/mese è dovuto al fribeløb (franchigia annuale di {fribeloeb}). Quando il tuo reddito annuo da lavoro supera questa soglia, devi restituire parte della SU — riducendo il reddito netto totale nonostante lavori più ore.", de: "Der Knickpunkt bei ~{hours} Stunden/Monat entsteht durch den Freibetrag (jährlicher steuerfreier Betrag von {fribeloeb}). Sobald dein jährliches Arbeitseinkommen diesen Schwellenwert überschreitet, musst du einen Teil deines SU zurückzahlen — was das Gesamtnettoeinkommen trotz mehr Stunden senkt.", sv: "Brytpunkten vid ~{hours} timmar/månad beror på fribeloppet (årligt skattefritt belopp på {fribeloeb}). När din årliga arbetsinkomst överstiger denna gräns måste du betala tillbaka en del av din SU — vilket minskar den totala nettoinkomsten trots fler timmar.", es: "El punto de inflexión en ~{hours} horas/mes se debe al fribeløb (deducción anual libre de impuestos de {fribeloeb}). Cuando tus ingresos anuales de trabajo superan este umbral, debes devolver parte de tu SU — lo que reduce el ingreso neto total a pesar de trabajar más horas.", nb: "Knekpunktet ved ~{hours} timer/mnd skyldes fribeløpet (årlig skattefri grense på {fribeloeb}). Når din årlige arbeidsinntekt overstiger denne grensen, må du betale tilbake deler av SU-en — noe som reduserer total nettoinntekt til tross for flere timer." },
+  "chart.fribeloebExplain": {"en": "At about {hours} hours/month, the entered work income exceeds your annual limit of {fribeloeb}. The chart shows income before any later SU repayment; review the separate repayment estimate.", "da": "Ved ca. {hours} timer/md. overstiger den angivne arbejdsindkomst årsfribeløbet på {fribeloeb}. Grafen viser indkomst før senere SU-tilbagebetaling; se det separate estimat."},
   "chart.grossMonth": { en: "Gross monthly salary (DKK)", da: "Bruttoløn pr. måned (DKK)", it: "Stipendio lordo mensile (DKK)", de: "Bruttogehalt pro Monat (DKK)", sv: "Bruttolön per månad (DKK)", es: "Salario bruto mensual (DKK)", nb: "Bruttolønn per måned (DKK)" },
   "chart.grossAnnual": { en: "Gross annual salary (DKK)", da: "Bruttoløn pr. år (DKK)", it: "Stipendio lordo annuale (DKK)", de: "Bruttogehalt pro Jahr (DKK)", sv: "Bruttolön per år (DKK)", es: "Salario bruto anual (DKK)", nb: "Bruttolønn per år (DKK)" },
   "chart.grossMonthEur": { en: "Gross monthly salary (EUR)", da: "Bruttoløn pr. måned (EUR)", it: "Stipendio lordo mensile (EUR)", de: "Bruttogehalt pro Monat (EUR)", sv: "Bruttolön per månad (EUR)", es: "Salario bruto mensual (EUR)", nb: "Bruttolønn per måned (EUR)" },
@@ -702,7 +622,7 @@ const translations = {
   "perLabel.month": { en: "/month", da: "/md", it: "/mese", de: "/Monat", sv: "/månad", es: "/mes", nb: "/mnd" },
   "chart.pie.title": { en: "Your salary breakdown", da: "Din lønfordeling", it: "Ripartizione del tuo stipendio", de: "Deine Gehaltsaufteilung", sv: "Din lönefördelning", es: "Desglose de tu salario", nb: "Din lønnsfordeling" },
   "chart.pie.net": { en: "Net pay", da: "Nettoløn", it: "Stipendio netto", de: "Nettogehalt", sv: "Nettolön", es: "Salario neto", nb: "Nettolønn" },
-  "chart.pie.feriepenge": { en: "Feriepenge (FerieKonto)", da: "Feriepenge (FerieKonto)", it: "Feriepenge (FerieKonto)", de: "Feriepenge (FerieKonto)", sv: "Feriepenge (FerieKonto)", es: "Feriepenge (FerieKonto)", nb: "Feriepenger (FerieKonto)" },
+  "chart.pie.feriepenge": {"en": "Holiday pay / supplement", "da": "Feriepenge / ferietillæg"},
   "chart.pie.incomeTax": { en: "Income tax", da: "Indkomstskat", it: "Imposta sul reddito", de: "Einkommensteuer", sv: "Inkomstskatt", es: "Impuesto sobre la renta", nb: "Inntektsskatt" },
   "chart.pie.am": { en: "AM-bidrag", da: "AM-bidrag", it: "AM-bidrag", de: "AM-Beitrag", sv: "AM-bidrag", es: "AM-bidrag", nb: "AM-bidrag" },
   "chart.pie.pension": { en: "Pension", da: "Pension", it: "Pensione", de: "Rente", sv: "Pension", es: "Pensión", nb: "Pensjon" },
@@ -906,15 +826,7 @@ const translations = {
   },
 
   "glossary.topskat.term": { en: "Topskat", da: "Topskat", it: "Topskat", de: "Topskat", sv: "Topskat", es: "Topskat", nb: "Topskat" },
-  "glossary.topskat.desc": {
-    en: "7.5% bracket tax on income exceeding 777,900 kr/year after AM-bidrag. Subject to the skatteloft ceiling.",
-    da: "7,5 % trinsskat på indkomst over 777.900 kr/år efter AM-bidrag. Underlagt skatteloftet.",
-    it: "Imposta a scaglioni del 7,5% sul reddito superiore a 777.900 kr/anno dopo AM-bidrag. Soggetta al tetto fiscale skatteloft.",
-    de: "7,5 % Stufensteuer auf Einkommen über 777.900 kr/Jahr nach AM-bidrag. Unterliegt dem Skatteloft (Steuerdeckel).",
-    sv: "7,5 % trappskatt på inkomst över 777 900 kr/år efter AM-bidrag. Omfattas av skatteloft (skattetak).",
-    es: "Impuesto escalonado del 7,5% sobre ingresos superiores a 777.900 kr/año después de AM-bidrag. Sujeto al techo fiscal skatteloft.",
-    nb: "7,5 % trinnsskatt på inntekt over 777 900 kr/år etter AM-bidrag. Underlagt skatteloftet.",
-  },
+  "glossary.topskat.desc": {"en": "Additional 7.5% tax on personal income above 777,900 kr/year after AM-bidrag. It is added above mellemskat and is not limited by its 44.57% ceiling.", "da": "Yderligere 7,5 % skat af personlig indkomst over 777.900 kr./år efter AM-bidrag. Lægges oven i mellemskat og er ikke begrænset af loftet på 44,57 %."},
 
   "glossary.toptopskat.term": { en: "Toptopskat", da: "Toptopskat", it: "Toptopskat", de: "Toptopskat", sv: "Toptopskat", es: "Toptopskat", nb: "Toptopskat" },
   "glossary.toptopskat.desc": {
@@ -961,26 +873,10 @@ const translations = {
   },
 
   "glossary.befordring.term": { en: "Befordringsfradrag", da: "Befordringsfradrag", it: "Befordringsfradrag", de: "Befordringsfradrag", sv: "Befordringsfradrag", es: "Befordringsfradrag", nb: "Befordringsfradrag" },
-  "glossary.befordring.desc": {
-    en: "Transport deduction for commuting >24 km round-trip: 1.98 kr/km for km 25–120, 0.99 kr/km above 120 km. A ligningsmæssigt fradrag — reduces municipal/church tax only (~26% tax value).",
-    da: "Transportfradrag for pendling >24 km tur-retur: 1,98 kr/km for km 25–120, 0,99 kr/km over 120 km. Et ligningsmæssigt fradrag — reducerer kun kommune-/kirkeskat (~26 % skatteværdi).",
-    it: "Detrazione per il trasporto per pendolari >24 km andata e ritorno: 1,98 kr/km per km 25–120, 0,99 kr/km oltre 120 km. Un ligningsmæssigt fradrag — riduce solo l'imposta comunale/ecclesiastica (~26% di valore fiscale).",
-    de: "Transportabzug für Pendler >24 km Hin- und Rückfahrt: 1,98 kr/km für km 25–120, 0,99 kr/km über 120 km. Ein ligningsmæssigt fradrag — reduziert nur die Kommunal-/Kirchensteuer (~26 % Steuerwert).",
-    sv: "Transportavdrag för pendling >24 km tur och retur: 1,98 kr/km för km 25–120, 0,99 kr/km över 120 km. Ett ligningsmæssigt fradrag — minskar bara kommunal-/kyrkoskatt (~26 % skattevärde).",
-    es: "Deducción por transporte para desplazamientos >24 km ida y vuelta: 1,98 kr/km para km 25–120, 0,99 kr/km por encima de 120 km. Un ligningsmæssigt fradrag — reduce solo el impuesto municipal/eclesiástico (~26% de valor fiscal).",
-    nb: "Transportfradrag for pendling >24 km tur-retur: 1,98 kr/km for km 25–120, 0,99 kr/km over 120 km. Et ligningsmæssigt fradrag — reduserer bare kommune-/kirkeskatt (~26 % skatteverdi).",
-  },
+  "glossary.befordring.desc": {"en": "Standard transport deduction: first 24 km/day excluded, then 3.17 kr/km through 120 km and 1.59 kr/km beyond. Applied to actual commuting days; special additions are not included.", "da": "Standardbefordringsfradrag: først 24 km/dag uden fradrag, derefter 3,17 kr./km til 120 km og 1,59 kr./km derover. Beregnes for faktiske transportdage; særlige tillæg er ikke med."},
 
   "glossary.fagforening.term": { en: "Fagforening / A-kasse", da: "Fagforening / A-kasse", it: "Fagforening / A-kasse", de: "Fagforening / A-kasse", sv: "Fagforening / A-kasse", es: "Fagforening / A-kasse", nb: "Fagforening / A-kasse" },
-  "glossary.fagforening.desc": {
-    en: "Trade union and unemployment insurance fees. Up to 7,000 kr/year is deductible. A ligningsmæssigt fradrag — reduces municipal/church tax only (~26% tax value).",
-    da: "Fagforeningskontingent og a-kassebidrag. Op til 7.000 kr/år er fradragsberettiget. Et ligningsmæssigt fradrag — reducerer kun kommune-/kirkeskat (~26 % skatteværdi).",
-    it: "Quote sindacali e assicurazione contro la disoccupazione. Fino a 7.000 kr/anno sono deducibili. Un ligningsmæssigt fradrag — riduce solo l'imposta comunale/ecclesiastica (~26% di valore fiscale).",
-    de: "Gewerkschaftsbeiträge und Arbeitslosenversicherung. Bis zu 7.000 kr/Jahr sind absetzbar. Ein ligningsmæssigt fradrag — reduziert nur die Kommunal-/Kirchensteuer (~26 % Steuerwert).",
-    sv: "Fackföreningsavgifter och arbetslöshetsförsäkring. Upp till 7 000 kr/år är avdragsgilla. Ett ligningsmæssigt fradrag — minskar bara kommunal-/kyrkoskatt (~26 % skattevärde).",
-    es: "Cuotas sindicales y seguro de desempleo. Hasta 7.000 kr/año son deducibles. Un ligningsmæssigt fradrag — reduce solo el impuesto municipal/eclesiástico (~26% de valor fiscal).",
-    nb: "Fagforeningskontingent og a-kasseavgift. Opptil 7 000 kr/år er fradragsberettiget. Et ligningsmæssigt fradrag — reduserer bare kommune-/kirkeskatt (~26 % skatteverdi).",
-  },
+  "glossary.fagforening.desc": {"en": "Union fees are deductible up to 7,000 kr/year. A-kasse contributions are separate and have no such cap. Both reduce municipal/church tax.", "da": "Fagforening kan fradrages op til 7.000 kr./år. A-kasse er separat uden samme grænse. Begge reducerer kommune-/kirkeskat."},
 
   "glossary.ligningsfradrag.term": { en: "Ligningsmæssige fradrag", da: "Ligningsmæssige fradrag", it: "Ligningsmæssige fradrag", de: "Ligningsmæssige fradrag", sv: "Ligningsmæssige fradrag", es: "Ligningsmæssige fradrag", nb: "Ligningsmæssige fradrag" },
   "glossary.ligningsfradrag.desc": {
@@ -994,15 +890,7 @@ const translations = {
   },
 
   "glossary.skatteloft.term": { en: "Skatteloft", da: "Skatteloft", it: "Skatteloft", de: "Skatteloft", sv: "Skatteloft", es: "Skatteloft", nb: "Skatteloft" },
-  "glossary.skatteloft.desc": {
-    en: "Tax ceiling (44.57%). Caps the combined state + municipal marginal tax rate so it never exceeds this limit.",
-    da: "Skatteloft (44,57 %). Begrænser den samlede stats- + kommunale marginale skattesats, så den aldrig overstiger denne grænse.",
-    it: "Tetto fiscale (44,57%). Limita l'aliquota marginale combinata statale + comunale in modo che non superi mai questo limite.",
-    de: "Steuerdeckel (44,57 %). Begrenzt den kombinierten staatlichen + kommunalen Grenzsteuersatz, sodass er diese Grenze nie überschreitet.",
-    sv: "Skattetak (44,57 %). Begränsar den kombinerade statliga + kommunala marginalskattesatsen så att den aldrig överstiger denna gräns.",
-    es: "Techo fiscal (44,57%). Limita la tasa impositiva marginal combinada estatal + municipal para que nunca supere este límite.",
-    nb: "Skattetak (44,57 %). Begrenser den samlede statlige + kommunale marginale skattesatsen slik at den aldri overstiger denne grensen.",
-  },
+  "glossary.skatteloft.desc": {"en": "The 44.57% ceiling applies to bundskat + municipal tax + mellemskat. Topskat and toptopskat are additional; church tax is excluded from the ceiling.", "da": "Loftet på 44,57 % gælder bundskat + kommuneskat + mellemskat. Topskat og toptopskat kommer oveni; kirkeskat er uden for loftet."},
 
   "glossary.feriepenge.term": { en: "Feriepenge", da: "Feriepenge", it: "Feriepenge", de: "Feriepenge", sv: "Feriepenge", es: "Feriepenge", nb: "Feriepenge" },
   "glossary.feriepenge.desc": {
@@ -1049,30 +937,14 @@ const translations = {
   },
 
   "glossary.fribeloeb.term": { en: "Fribeløb", da: "Fribeløb", it: "Fribeløb", de: "Fribeløb", sv: "Fribeløb", es: "Fribeløb", nb: "Fribeløb" },
-  "glossary.fribeloeb.desc": {
-    en: "Annual earnings limit for SU recipients. Three tiers exist: laveste (SU months), mellemste (enrolled but opted out), and højeste (not enrolled). Exceeding it requires repaying SU krone-for-krone on the excess, plus 9.75% interest.",
-    da: "Årlig indtægtsgrænse for SU-modtagere. Der findes tre niveauer: laveste (SU-måneder), mellemste (indskrevet men fravalgt) og højeste (ikke indskrevet). Overskridelse kræver tilbagebetaling af SU krone for krone af det overskydende samt 9,75 % rente.",
-    it: "Limite di reddito annuale per i beneficiari di SU. Esistono tre livelli: laveste (mesi SU), mellemste (iscritto ma rinunciato) e højeste (non iscritto). Superarlo richiede il rimborso del SU corona per corona sull'eccedenza, più il 9,75% di interessi.",
-    de: "Jährliche Einkommensgrenze für SU-Empfänger. Es gibt drei Stufen: laveste (SU-Monate), mellemste (eingeschrieben, aber abgemeldet) und højeste (nicht eingeschrieben). Bei Überschreitung muss SU Krone für Krone auf den Überschuss zurückgezahlt werden, plus 9,75 % Zinsen.",
-    sv: "Årlig inkomstgräns för SU-mottagare. Tre nivåer finns: laveste (SU-månader), mellemste (inskriven men avvald) och højeste (inte inskriven). Överskridande kräver återbetalning av SU krona för krona på överskottet, plus 9,75 % ränta.",
-    es: "Límite anual de ingresos para los beneficiarios de SU. Existen tres niveles: laveste (meses de SU), mellemste (matriculado pero renunciado) y højeste (no matriculado). Superarlo requiere devolver el SU corona por corona sobre el exceso, más un 9,75% de interés.",
-    nb: "Årlig inntektsgrense for SU-mottakere. Tre nivåer finnes: laveste (SU-måneder), mellemste (innskrevet men fravalgt) og højeste (ikke innskrevet). Overskridelse krever tilbakebetaling av SU krone for krone på overskuddet, pluss 9,75 % rente.",
-  },
+  "glossary.fribeloeb.desc": {"en": "Annual limit on income alongside SU. SU itself is excluded; holiday pay and other income can count. Excess income may lead to a later repayment with a first-band discount and a conditional 7% supplement.", "da": "Årsgrænse for indkomst ved siden af SU. SU tæller ikke med; feriepenge og anden indkomst kan tælle med. Overskridelse kan føre til senere tilbagebetaling med rabat på første interval og evt. 7 % tillæg."},
 
   // Fribeloeb status
   "fribeloeb.title": { en: "Fribeløb status", da: "Fribeløb-status", it: "Stato fribeløb", de: "Fribeløb-Status", sv: "Fribeløb-status", es: "Estado del fribeløb", nb: "Fribeløb-status" },
   "fribeloeb.egenindkomst": { en: "Egenindkomst (work after AM)", da: "Egenindkomst (arbejde efter AM)", it: "Egenindkomst (lavoro dopo AM)", de: "Egenindkomst (Arbeit nach AM)", sv: "Egenindkomst (arbete efter AM)", es: "Egenindkomst (trabajo después de AM)", nb: "Egenindkomst (arbeid etter AM)" },
 
   // Disclaimer
-  "disclaimer": {
-    en: "Estimates are typically within ±1.5% of your actual net pay. Differences arise because ferietillæg is spread across 12 months, and your personal fradrag from forskudsopgørelsen may include deductions we can't account for (e.g. mortgage interest).",
-    da: "Estimater er typisk inden for ±1,5% af din faktiske nettoløn. Forskelle skyldes at ferietillæg fordeles over 12 måneder, og dit personlige fradrag fra forskudsopgørelsen kan indeholde fradrag vi ikke kan tage højde for (f.eks. rentefradrag).",
-    it: "Le stime sono generalmente entro ±1,5% della tua retribuzione netta effettiva. Le differenze derivano dal fatto che il ferietillæg viene distribuito su 12 mesi e il tuo fradrag personale dalla forskudsopgørelse può includere detrazioni che non possiamo considerare (es. interessi sul mutuo).",
-    de: "Schätzungen liegen typischerweise innerhalb von ±1,5% Ihres tatsächlichen Nettogehalts. Abweichungen entstehen, weil Ferietillæg auf 12 Monate verteilt wird und Ihr persönlicher Fradrag aus der Forskudsopgørelse Abzüge enthalten kann, die wir nicht berücksichtigen können (z.B. Hypothekenzinsen).",
-    sv: "Uppskattningar ligger vanligtvis inom ±1,5% av din faktiska nettolön. Skillnader beror på att ferietillæg fördelas över 12 månader och ditt personliga fradrag från forskudsopgørelsen kan innehålla avdrag vi inte kan ta hänsyn till (t.ex. bolåneränta).",
-    es: "Las estimaciones están típicamente dentro de ±1,5% de tu salario neto real. Las diferencias se deben a que el ferietillæg se distribuye en 12 meses y tu fradrag personal de la forskudsopgørelse puede incluir deducciones que no podemos considerar (ej. intereses hipotecarios).",
-    nb: "Estimater er vanligvis innenfor ±1,5% av din faktiske nettolønn. Forskjeller skyldes at ferietillæg fordeles over 12 måneder, og ditt personlige fradrag fra forskudsoppgaven kan inneholde fradrag vi ikke kan ta hensyn til (f.eks. boliglånsrenter).",
-  },
+  "disclaimer": {"en": "An annual estimate using 2026 rules and the inputs you provide. Your tax card, payment timing and unsupported deductions can change the result. No fixed accuracy percentage has been established.", "da": "Et årsestimat med 2026-regler og dine oplysninger. Skattekort, udbetalingstidspunkt og fradrag uden for modellen kan ændre resultatet. Ingen fast nøjagtighedsprocent er dokumenteret."},
 
   // Months
   "month.1": { en: "January", da: "Januar", it: "Gennaio", de: "Januar", sv: "Januari", es: "Enero", nb: "Januar" },
@@ -1304,7 +1176,7 @@ const translations = {
   "method.calc.fulltime.bundskat": { en: "Bundskat: 12.01 % (income after AM minus personfradrag)", da: "Bundskat: 12,01 % (indkomst efter AM minus personfradrag)", it: "Bundskat: 12,01 % (reddito dopo AM meno personfradrag)", de: "Bundskat: 12,01 % (Einkommen nach AM minus Personfradrag)", sv: "Bundskat: 12,01 % (inkomst efter AM minus personfradrag)", es: "Bundskat: 12,01 % (ingreso después de AM menos personfradrag)", nb: "Bundskat: 12,01 % (inntekt etter AM minus personfradrag)" },
   "method.calc.fulltime.kommune": { en: "Kommuneskat: actual kommun rate applied to reduced base", da: "Kommuneskat: den faktiske kommunesats anvendt på reduceret grundlag", it: "Kommuneskat: aliquota comunale effettiva applicata alla base ridotta", de: "Kommuneskat: tatsächlicher Gemeindesteuersatz auf reduzierter Bemessungsgrundlage", sv: "Kommuneskat: faktisk kommunalskattesats på reducerad bas", es: "Kommuneskat: tasa municipal real aplicada a la base reducida", nb: "Kommuneskat: faktisk kommuneskattesats på redusert grunnlag" },
   "method.calc.fulltime.progressive": { en: "Progressive brackets: mellemskat 7.5 %, topskat 7.5 %, toptopskat 5 %", da: "Progressive trin: mellemskat 7,5 %, topskat 7,5 %, toptopskat 5 %", it: "Scaglioni progressivi: mellemskat 7,5 %, topskat 7,5 %, toptopskat 5 %", de: "Progressive Stufen: Mellemskat 7,5 %, Topskat 7,5 %, Toptopskat 5 %", sv: "Progressiva steg: mellemskat 7,5 %, topskat 7,5 %, toptopskat 5 %", es: "Tramos progresivos: mellemskat 7,5 %, topskat 7,5 %, toptopskat 5 %", nb: "Progressive trinn: mellemskat 7,5 %, topskat 7,5 %, toptopskat 5 %" },
-  "method.calc.fulltime.skatteloft": { en: "Skatteloft: combined state + municipal rate capped at 44.57 %", da: "Skatteloft: samlet stats- og kommuneskattesats begrænset til 44,57 %", it: "Skatteloft: aliquota combinata statale + comunale limitata al 44,57 %", de: "Skatteloft: kombinierter Staats- + Gemeindesteuersatz begrenzt auf 44,57 %", sv: "Skatteloft: kombinerad stats- och kommunalskattesats begränsad till 44,57 %", es: "Skatteloft: tasa combinada estatal + municipal limitada al 44,57 %", nb: "Skatteloft: samlet stats- og kommuneskattesats begrenset til 44,57 %" },
+  "method.calc.fulltime.skatteloft": {"en": "Skatteloft: bundskat + municipal tax + mellemskat capped at 44.57%; topskat and toptopskat are additional.", "da": "Skatteloft: bundskat + kommuneskat + mellemskat begrænses til 44,57 %; topskat og toptopskat kommer oveni."},
   "method.calc.fulltime.beskfradrag": { en: "Beskæftigelsesfradrag: 12.75 % (max 63,300 kr/yr)", da: "Beskæftigelsesfradrag: 12,75 % (maks. 63.300 kr/år)", it: "Beskæftigelsesfradrag: 12,75 % (max 63.300 kr/anno)", de: "Beskæftigelsesfradrag: 12,75 % (max. 63.300 kr/Jahr)", sv: "Beskæftigelsesfradrag: 12,75 % (max 63 300 kr/år)", es: "Beskæftigelsesfradrag: 12,75 % (máx. 63.300 kr/año)", nb: "Beskæftigelsesfradrag: 12,75 % (maks. 63 300 kr/år)" },
   "method.calc.fulltime.jobfradrag": { en: "Jobfradrag: 4.50 % of income above 235,200 kr (max 3,100 kr/yr)", da: "Jobfradrag: 4,50 % af indkomst over 235.200 kr (maks. 3.100 kr/år)", it: "Jobfradrag: 4,50 % del reddito oltre 235.200 kr (max 3.100 kr/anno)", de: "Jobfradrag: 4,50 % des Einkommens über 235.200 kr (max. 3.100 kr/Jahr)", sv: "Jobfradrag: 4,50 % av inkomst över 235 200 kr (max 3 100 kr/år)", es: "Jobfradrag: 4,50 % del ingreso sobre 235.200 kr (máx. 3.100 kr/año)", nb: "Jobfradrag: 4,50 % av inntekt over 235 200 kr (maks. 3 100 kr/år)" },
   "method.calc.fulltime.atp": { en: "ATP: deducted from pay", da: "ATP: trukket fra løn", it: "ATP: detratto dalla retribuzione", de: "ATP: vom Gehalt abgezogen", sv: "ATP: dras från lönen", es: "ATP: deducido del salario", nb: "ATP: trukket fra lønn" },
@@ -1316,8 +1188,8 @@ const translations = {
   "method.calc.student.su_no_am": { en: "SU is not subject to AM-bidrag", da: "SU er ikke underlagt AM-bidrag", it: "La SU non è soggetta all'AM-bidrag", de: "SU unterliegt nicht dem AM-Beitrag", sv: "SU är inte föremål för AM-bidrag", es: "El SU no está sujeto al AM-bidrag", nb: "SU er ikke underlagt AM-bidrag" },
   "method.calc.student.work_am": { en: "Work income is subject to AM-bidrag", da: "Arbejdsindkomst er underlagt AM-bidrag", it: "Il reddito da lavoro è soggetto all'AM-bidrag", de: "Arbeitseinkommen unterliegt dem AM-Beitrag", sv: "Arbetsinkomst är föremål för AM-bidrag", es: "El ingreso laboral está sujeto al AM-bidrag", nb: "Arbeidsinntekt er underlagt AM-bidrag" },
   "method.calc.student.fribeloeb": { en: "Fribeløb (earned income limit): checked against annual threshold", da: "Fribeløb (indkomstgrænse): kontrolleres mod den årlige grænse", it: "Fribeløb (limite di reddito): verificato rispetto alla soglia annuale", de: "Fribeløb (Einkommensgrenze): wird gegen den Jahrsschwellenwert geprüft", sv: "Fribeløb (inkomstgräns): kontrolleras mot årligt tröskelvärde", es: "Fribeløb (límite de ingresos): verificado contra el umbral anual", nb: "Fribeløb (inntektsgrense): kontrolleres mot årlig terskel" },
-  "method.calc.student.excess": { en: "Excess above fribeløb triggers krone-for-krone SU repayment", da: "Overskridelse af fribeløb udløser krone-for-krone SU-tilbagebetaling", it: "L'eccedenza oltre il fribeløb attiva il rimborso SU corona per corona", de: "Überschuss über Fribeløb löst Krone-für-Krone SU-Rückzahlung aus", sv: "Överskridande av fribeløb utlöser krona-för-krona SU-återbetalning", es: "El exceso sobre el fribeløb activa la devolución del SU corona por corona", nb: "Overskridelse av fribeløb utløser krone-for-krone SU-tilbakebetaling" },
-  "method.calc.student.interest": { en: "Repayment interest: 9.75 % p.a.", da: "Tilbagebetalingsrente: 9,75 % p.a.", it: "Interesse di rimborso: 9,75 % annuo", de: "Rückzahlungszins: 9,75 % p.a.", sv: "Återbetalningsränta: 9,75 % p.a.", es: "Interés de devolución: 9,75 % anual", nb: "Tilbakebetalingsrente: 9,75 % p.a." },
+  "method.calc.student.excess": {"en": "Repayment estimate includes a first-band discount and a conditional 7% supplement; shown separately from cash income.", "da": "Tilbagebetalingsestimat inkluderer rabat på første interval og evt. 7 % tillæg; vises separat fra indkomst."},
+  "method.calc.student.interest": {"en": "Later interest depends on assessment/payment dates and is not estimated.", "da": "Senere renter afhænger af krav- og betalingsdatoer og beregnes ikke."},
   "method.calc.student.personfradrag": { en: "Personfradrag covers combined SU + work income", da: "Personfradrag dækker samlet SU + arbejdsindkomst", it: "Il personfradrag copre il reddito combinato SU + lavoro", de: "Personfradrag deckt kombiniertes SU + Arbeitseinkommen", sv: "Personfradrag täcker kombinerad SU + arbetsinkomst", es: "Personfradrag cubre el ingreso combinado de SU + trabajo", nb: "Personfradrag dekker samlet SU + arbeidsinntekt" },
   "method.calc.student.feriepenge": { en: "Feriepenge: 12.5 % of work gross — counts as egenindkomst towards fribeløb", da: "Feriepenge: 12,5 % af arbejdsbrutto — tæller som egenindkomst ift. fribeløb", it: "Feriepenge: 12,5 % del lordo lavorativo — conta come egenindkomst verso il fribeløb", de: "Feriepenge: 12,5 % des Arbeitsbrutto — zählt als Egenindkomst für den Freibetrag", sv: "Feriepenge: 12,5 % av arbetsbrutto — räknas som egenindkomst mot fribeloppet", es: "Feriepenge: 12,5 % del bruto laboral — cuenta como egenindkomst hacia el fribeløb", nb: "Feriepenge: 12,5 % av arbeidsbrutto — teller som egenindkomst mot fribeløpet" },
   "method.calc.student.multijob": { en: "Multiple jobs supported: income from all jobs is combined for tax and fribeløb calculation", da: "Flere jobs understøttes: indkomst fra alle jobs kombineres til skat og fribeløb-beregning", it: "Supporto multi-lavoro: il reddito di tutti i lavori viene combinato per il calcolo delle tasse e del fribeløb", de: "Mehrere Jobs unterstützt: Einkommen aus allen Jobs wird für Steuer- und Fribeløb-Berechnung zusammengefasst", sv: "Flera jobb stöds: inkomst från alla jobb kombineras för skatte- och fribeløb-beräkning", es: "Múltiples trabajos soportados: los ingresos de todos los trabajos se combinan para el cálculo de impuestos y fribeløb", nb: "Flere jobber støttes: inntekt fra alle jobber kombineres for skatte- og fribeløb-beregning" },
@@ -1333,11 +1205,11 @@ const translations = {
   "method.sources.ferielov": { en: "Ferieloven (retsinformation.dk)", da: "Ferieloven (retsinformation.dk)", it: "Ferieloven (retsinformation.dk)", de: "Ferieloven (retsinformation.dk)", sv: "Ferieloven (retsinformation.dk)", es: "Ferieloven (retsinformation.dk)", nb: "Ferieloven (retsinformation.dk)" },
   "method.sources.ferielov.desc": { en: "Ferietillæg (1% for salaried) and feriepenge (12.5% for hourly workers)", da: "Ferietillæg (1% for funktionærer) og feriepenge (12,5% for timelønnede)", it: "Ferietillæg (1% per stipendiati) e feriepenge (12,5% per lavoratori a ore)", de: "Ferietillæg (1% für Angestellte) und Feriepenge (12,5% für Stundenlöhner)", sv: "Ferietillæg (1% för tjänstemän) och feriepenge (12,5% för timanställda)", es: "Ferietillæg (1% para asalariados) y feriepenge (12,5% para trabajadores por hora)", nb: "Ferietillæg (1% for funksjonærer) og feriepenge (12,5% for timelønte)" },
   "method.sources.atp": { en: "ATP — Livslang Pension (atp.dk)", da: "ATP — Livslang Pension (atp.dk)", it: "ATP — Livslang Pension (atp.dk)", de: "ATP — Livslang Pension (atp.dk)", sv: "ATP — Livslang Pension (atp.dk)", es: "ATP — Livslang Pension (atp.dk)", nb: "ATP — Livslang Pension (atp.dk)" },
-  "method.sources.atp.desc": { en: "ATP employee contribution: 99 kr/mo (full-time), with part-time rates by weekly hours", da: "ATP medarbejderbidrag: 99 kr/md (fuldtid), med deltidssatser efter ugentlige timer", it: "Contributo ATP dipendente: 99 kr/mese (tempo pieno), con tariffe part-time per ore settimanali", de: "ATP Arbeitnehmerbeitrag: 99 kr/Mo (Vollzeit), mit Teilzeitsätzen nach Wochenstunden", sv: "ATP anställdas bidrag: 99 kr/mån (heltid), med deltidssatser per veckoantal", es: "Contribución ATP del empleado: 99 kr/mes (tiempo completo), con tasas parciales por horas semanales", nb: "ATP arbeidstakerbidrag: 99 kr/md (heltid), med deltidssatser etter ukentlige timer" },
+  "method.sources.atp.desc": {"en": "Monthly A-rate ATP employee shares: 0 / 33 / 66 / 99 kr by hours per employer. Other payroll periods require a manual amount.", "da": "Månedlig A-sats for ATP: medarbejderandel 0 / 33 / 66 / 99 kr. efter timer pr. arbejdsgiver. Andre lønperioder kræver manuel tilpasning."},
   "method.sources.exchange": { en: "Frankfurter API (ECB data)", da: "Frankfurter API (ECB-data)", it: "Frankfurter API (dati BCE)", de: "Frankfurter API (EZB-Daten)", sv: "Frankfurter API (ECB-data)", es: "Frankfurter API (datos del BCE)", nb: "Frankfurter API (ESB-data)" },
   "method.sources.exchange.desc": { en: "Live DKK exchange rates for supported currencies, with local fallbacks. Data sourced from the European Central Bank.", da: "Aktuelle DKK-kurser for understøttede valutaer, med lokale fallback-satser. Data fra Den Europæiske Centralbank.", it: "Tassi di cambio DKK in tempo reale (fallback: 7,45 DKK/EUR). Dati dalla Banca Centrale Europea.", de: "Live DKK-Wechselkurse (Fallback: 7,45 DKK/EUR). Daten von der Europäischen Zentralbank.", sv: "Live DKK-växelkurser (fallback: 7,45 DKK/EUR). Data från Europeiska centralbanken.", es: "Tipos de cambio DKK en vivo (respaldo: 7,45 DKK/EUR). Datos del Banco Central Europeo.", nb: "Live DKK-vekslingskurser (fallback: 7,45 DKK/EUR). Data fra Den europeiske sentralbanken." },
   "method.sources.life": { en: "Life in Denmark (borger.dk)", da: "Life in Denmark (borger.dk)", it: "Life in Denmark (borger.dk)", de: "Life in Denmark (borger.dk)", sv: "Life in Denmark (borger.dk)", es: "Life in Denmark (borger.dk)", nb: "Life in Denmark (borger.dk)" },
-  "method.sources.life.desc": { en: "SU repayment interest rate: 9.75 % p.a.", da: "SU-tilbagebetalingsrente: 9,75 % p.a.", it: "Tasso di rimborso SU: 9,75 % annuo", de: "SU-Rückzahlungszins: 9,75 % p.a.", sv: "SU-återbetalningsränta: 9,75 % p.a.", es: "Interés de devolución SU: 9,75 % anual", nb: "SU-tilbakebetalingsrente: 9,75 % p.a." },
+  "method.sources.life.desc": {"en": "Official student-debt payment and interest information; no automatic interest deduction in this estimate.", "da": "Officiel information om betaling og renter på studiegæld; ingen automatisk rentefradrag i estimatet."},
   "method.sources.updated": { en: "All rates are for tax year 2026. Last verified: February 2026.", da: "Alle satser er for skatteåret 2026. Sidst verificeret: februar 2026.", it: "Tutte le aliquote sono per l'anno fiscale 2026. Ultima verifica: febbraio 2026.", de: "Alle Sätze gelten für das Steuerjahr 2026. Zuletzt überprüft: Februar 2026.", sv: "Alla satser gäller för skatteåret 2026. Senast verifierad: februari 2026.", es: "Todas las tasas son para el año fiscal 2026. Última verificación: febrero de 2026.", nb: "Alle satser er for skatteåret 2026. Sist verifisert: februar 2026." },
   "method.disclaimer.title": { en: "Disclaimer", da: "Ansvarsfraskrivelse", it: "Avvertenza", de: "Haftungsausschluss", sv: "Ansvarsfriskrivning", es: "Descargo de responsabilidad", nb: "Ansvarsfraskrivelse" },
   "method.disclaimer.important": {
@@ -1440,7 +1312,7 @@ const translations = {
   "about.privacy.title": {
     en: "Privacy & trust", da: "Privatliv og tillid", it: "Privacy e fiducia", de: "Datenschutz und Vertrauen", sv: "Integritet och förtroende", es: "Privacidad y confianza", nb: "Personvern og tillit",
   },
-  "about.privacy.noads": { en: "No ads, no cookies, no tracking", da: "Ingen reklamer, ingen cookies, ingen sporing", it: "Nessuna pubblicità, nessun cookie, nessun tracciamento", de: "Keine Werbung, keine Cookies, kein Tracking", sv: "Ingen reklam, inga cookies, ingen spårning", es: "Sin anuncios, sin cookies, sin rastreo", nb: "Ingen reklame, ingen informasjonskapsler, ingen sporing" },
+  "about.privacy.noads": {"en": "No ads or analytics cookies", "da": "Ingen reklamer eller analysecookies"},
   "about.privacy.nodata": {
     en: "No personal data stored. Calculations happen in real time and are discarded.",
     da: "Ingen persondata gemmes. Beregninger sker i realtid og kasseres.",
@@ -1482,15 +1354,7 @@ const translations = {
     nb: "Ja, 100% gratis. Ingen abonnement, ingen skjulte avgifter.",
   },
   "about.faq.accuracy.q": { en: "How accurate is the estimate?", da: "Hvor nøjagtigt er estimatet?", it: "Quanto è accurata la stima?", de: "Wie genau ist die Schätzung?", sv: "Hur exakt är uppskattningen?", es: "¿Qué tan precisa es la estimación?", nb: "Hvor nøyaktig er estimatet?" },
-  "about.faq.accuracy.a": {
-    en: "Lonklar uses official SKAT 2026 rates and is typically within ±1.5% of the actual result. It is an estimate, not an official tax document.",
-    da: "Lonklar er baseret på officielle SKAT 2026-satser og er typisk inden for ±1,5% af det faktiske resultat. Det er et estimat, ikke et officielt skattedokument.",
-    it: "Lonklar utilizza le aliquote ufficiali SKAT 2026 ed è generalmente entro il ±1,5% del risultato effettivo. È una stima, non un documento fiscale ufficiale.",
-    de: "Lonklar verwendet die offiziellen SKAT 2026-Sätze und liegt typischerweise innerhalb von ±1,5% des tatsächlichen Ergebnisses. Es ist eine Schätzung, kein offizielles Steuerdokument.",
-    sv: "Lonklar använder officiella SKAT 2026-satser och är vanligtvis inom ±1,5% av det faktiska resultatet. Det är en uppskattning, inte ett officiellt skattedokument.",
-    es: "Lonklar utiliza las tasas oficiales SKAT 2026 y generalmente está dentro del ±1,5% del resultado real. Es una estimación, no un documento fiscal oficial.",
-    nb: "Lonklar bruker offisielle SKAT 2026-satser og er vanligvis innenfor ±1,5% av det faktiske resultatet. Det er et estimat, ikke et offisielt skattedokument.",
-  },
+  "about.faq.accuracy.a": {"en": "An annual estimate using 2026 rules and the inputs you provide. Your tax card, payment timing and unsupported deductions can change the result. No fixed accuracy percentage has been established.", "da": "Et årsestimat med 2026-regler og dine oplysninger. Skattekort, udbetalingstidspunkt og fradrag uden for modellen kan ændre resultatet. Ingen fast nøjagtighedsprocent er dokumenteret."},
   "about.faq.data.q": { en: "Do you store my data?", da: "Gemmer I mine data?", it: "I miei dati vengono memorizzati?", de: "Werden meine Daten gespeichert?", sv: "Sparar ni mina uppgifter?", es: "¿Almacenan mis datos?", nb: "Lagrer dere dataene mine?" },
   "about.faq.data.a": {
     en: "No. Your numbers are sent to our API for computation and immediately discarded. We use Umami for privacy-friendly analytics with no cookies.",
@@ -1572,6 +1436,42 @@ const translations = {
     es: "Con tus actuales {hours} horas/semana, excedes el fribeløb. Considera reducir a ~{maxHours} horas/semana para mantenerte dentro del umbral.",
     nb: "Med dine nåværende {hours} timer/uke overskrider du fribeløbet. Vurder å redusere til ~{maxHours} timer/uke for å holde deg innenfor grensen.",
   },
+  "input.aKasseFees": {"en": "A-kasse fees (DKK/year)", "da": "A-kasse (DKK/år)"},
+  "input.aKasseFees.tip": {"en": "Annual unemployment insurance contributions. These do not share the 7,000 kr union-fee cap.", "da": "Årligt kontingent til arbejdsløshedskasse. Grænsen på 7.000 kr. for fagforening gælder ikke her."},
+  "input.transportDays": {"en": "Actual commuting days / year", "da": "Faktiske transportdage / år"},
+  "input.transportDays.tip": {"en": "Only days you travel to paid work. Exclude holidays, sickness and working from home. The initial 218 days is an assumption; adjust it.", "da": "Kun dage med transport til lønnet arbejde. Udelad ferie, sygdom og hjemmearbejde. De 218 dage er et udgangspunkt; tilpas antallet."},
+  "input.atp.assumption": {"en": "Automatic ATP assumes monthly A-rate payroll, separately per employer. For weekly/fortnightly pay or another rate, enter your monthly equivalent from payroll.", "da": "Automatisk ATP bruger månedlig A-sats, separat pr. arbejdsgiver. Ved uge-/14-dagesløn eller en anden sats skal du angive dit månedlige beløb fra lønnen."},
+  "input.suAward": {"en": "Your SU award before tax (DKK/payment month)", "da": "Din SU før skat (DKK pr. udbetalingsmåned)"},
+  "input.suAward.tip": {"en": "Use the amount on your SU award notice. For higher education living away, 7,426 kr is the standard 2026 rate. Home-living and youth awards depend on your situation.", "da": "Brug beløbet på din støttemeddelelse. For udeboende på videregående uddannelse er standardsatsen 7.426 kr. i 2026. Andre satser afhænger af din situation."},
+  "input.suAward.required": {"en": "Enter your actual SU award to continue; we cannot infer it from your living situation alone.", "da": "Angiv din faktiske SU for at fortsætte; bopælsoplysninger alene er ikke nok."},
+  "results.suGrossAnnual": {"en": "SU received before tax / year", "da": "SU modtaget før skat / år"},
+  "results.ordinaryCash": {"en": "Estimated monthly cash, excluding holiday pay", "da": "Anslået månedligt beløb, ekskl. feriepenge/-tillæg"},
+  "results.studentCash": {"en": "Estimated monthly SU + work, excluding holiday pay", "da": "Anslået månedlig SU + arbejde, ekskl. feriepenge"},
+  "results.annualTotal": {"en": "Estimated annual net, including holiday pay", "da": "Anslået årligt nettobeløb, inkl. feriepenge/-tillæg"},
+  "results.estimate": {"en": "Estimate", "da": "Estimat"},
+  "results.holidayAverage": {"en": "holiday pay earned after estimated tax, monthly average", "da": "optjente feriepenge/-tillæg efter anslået skat, månedligt gennemsnit"},
+  "results.annualAverage": {"en": "Annual-average net including holiday pay / month", "da": "Årets gennemsnitlige nettobeløb inkl. feriepenge/-tillæg pr. måned"},
+  "results.cashBasis": {"en": "Annual tax estimate averaged over 12 months. Monthly cash excludes estimated net holiday pay; actual payment timing and your tax card can change a payslip.", "da": "Årlig skatteberegning fordelt over 12 måneder. Månedligt beløb er ekskl. anslåede nettoferiepenge/-tillæg; udbetalingstidspunkt og skattekort kan ændre din lønseddel."},
+  "results.suGrossNote": {"en": "SU included: {months} payments, {annual} kr/year before tax. Net SU depends on how your tax card is allocated.", "da": "SU inkluderet: {months} udbetalinger, {annual} kr./år før skat. Netto-SU afhænger af fordelingen af dit skattekort."},
+  "results.suRepaymentRisk": {"en": "Estimated later SU repayment", "da": "Anslået senere tilbagebetaling af SU"},
+  "results.suRepaymentDetail": {"en": "Includes the first-band discount and any fixed 7% supplement. Shown separately from monthly cash. Loans, later interest and any tax refund are not included; verify your case with SU.", "da": "Inkluderer rabat på første interval og evt. fast tillæg på 7 %. Vises separat fra månedligt beløb. Lån, senere renter og evt. skatterefusion er ikke med; kontroller hos SU."},
+  "results.excess": {"en": "income above the limit", "da": "indkomst over fribeløbet"},
+  "results.suExcluded": {"en": "SU is excluded from this limit. Counted here: work and holiday pay, less eligible payroll pension/ATP and AM-bidrag. Other income may also count.", "da": "SU tæller ikke med i fribeløbet. Her medregnes arbejde og feriepenge minus berettiget pension/ATP og AM-bidrag. Anden indkomst kan også tælle med."},
+  "results.verifiedDate": {"en": "Rules checked: 30 September 2026", "da": "Regler kontrolleret: 30. september 2026"},
+  "scope.general": {"en": "For adults with full-year Danish tax liability and steady work income. This estimates annual tax, not your personal tax-card withholding. Special relief, investment income and partial-year residency are not fully modeled.", "da": "For voksne med fuld dansk skattepligt hele året og jævn arbejdsindkomst. Beregner årlig skat, ikke dit personlige skattetræk. Særlige fradrag, investeringsindkomst og skattepligt en del af året er ikke fuldt medregnet."},
+  "scope.pension": {"en": "Standard pension assumes deductible payroll contributions. Extra age-dependent pension relief, pension limits, insurance components and special pension cases are not fully modeled. Confirm these with SKAT or your pension provider.", "da": "Standardpension forudsætter fradragsberettigede bidrag via lønnen. Ekstra aldersafhængigt pensionsfradrag, beløbsgrænser, forsikringer og særlige ordninger er ikke fuldt medregnet. Kontroller hos SKAT eller pensionsselskabet."},
+  "scope.commuting": {"en": "Standard commuting deduction only. Bridge/ferry costs, outer-municipality/island rates and the additional low-income deduction are not included. Check these in TastSelv.", "da": "Kun standardbefordringsfradrag. Bro/færge, yderkommuner/småøer og ekstra fradrag ved lav indkomst er ikke med. Kontroller disse i TastSelv."},
+  "scope.student": {"en": "SU months affect annual SU received. Work income is assumed steady across all 12 months. SU loans, other income, disability supplements and special periodisation are not modeled; check your annual limit with SU.", "da": "SU-måneder ændrer årets SU. Arbejdsindkomst antages jævn over alle 12 måneder. SU-lån, anden indkomst, handicaptillæg og særlig periodisering er ikke med; kontroller årsfribeløbet hos SU."},
+  "scope.periodisation": {"en": "These dates set the annual limit categories only. They do not limit work to those months or establish eligibility for SU periodisation. Check start/finish-year rules with SU.", "da": "Datoerne bestemmer kun kategorierne i årsfribeløbet. De begrænser ikke arbejdet til disse måneder og afgør ikke retten til periodisering. Kontroller reglerne hos SU."},
+  "calculation.error": {"en": "The calculation could not be completed. Your inputs are kept; please try again.", "da": "Beregningen kunne ikke gennemføres. Dine indtastninger er bevaret; prøv igen."},
+  "accuracy.payMonth": {"en": "Pay month (2026)", "da": "Lønmåned (2026)"},
+  "accuracy.includesHoliday": {"en": "The actual amount includes a holiday payment (comparison uses the annual average).", "da": "Det faktiske beløb inkluderer feriepenge/-tillæg (sammenlignes med årsgennemsnittet)."},
+  "accuracy.includesSu": {"en": "I entered the combined net amount from SU and work, not just my salary.", "da": "Jeg har angivet samlet nettobeløb fra SU og arbejde, ikke kun lønnen."},
+  "accuracy.comparison": {"en": "Monthly estimate being compared", "da": "Månedligt estimat, der sammenlignes"},
+  "accuracy.error": {"en": "Could not save. Your entries are kept. Please retry.", "da": "Kunne ikke gemme. Dine indtastninger er bevaret. Prøv igen."},
+  "results.secondaryBasis": {"en": "Breakdown, curves, comparisons and projections show annual totals or annual averages including holiday pay. These can differ from the monthly cash estimate above.", "da": "Opgørelse, grafer, sammenligninger og fremskrivninger viser årstal eller årsgennemsnit inkl. feriepenge/-tillæg. De kan afvige fra det månedlige beløb ovenfor."},
+  "scope.multiJobChart": {"en": "The breakdown includes all entered jobs and SU. An income curve for changing several jobs at once is not available.", "da": "Opgørelsen inkluderer alle angivne jobs og SU. En indkomstkurve for ændringer i flere jobs på én gang er ikke tilgængelig."},
+  "results.recalculate": { en: "Please calculate again to use the current rules and result definitions.", da: "Beregn igen for at bruge de aktuelle regler og definitioner." },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

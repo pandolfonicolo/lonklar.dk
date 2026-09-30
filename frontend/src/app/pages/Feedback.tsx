@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { useI18n } from "../utils/i18n";
 import { usePageMeta } from "../utils/usePageMeta";
 
-const API = import.meta.env.DEV ? "http://localhost:8000" : "";
+const API = "";
 
 type FeedbackType = "bug" | "feature" | "general";
 

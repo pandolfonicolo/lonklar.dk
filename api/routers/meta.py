@@ -18,7 +18,7 @@ from ..data import (
     SU_UDEBOENDE_MONTH, SU_HJEMMEBOENDE_BASE, SU_HJEMMEBOENDE_MAX,
     FRIBELOEB_LAVESTE_UNGDOM, FRIBELOEB_LAVESTE_VID,
     FRIBELOEB_MELLEMSTE, FRIBELOEB_HOEJESTE,
-    FRIBELOEB_PARENT_BONUS, SU_REPAYMENT_INTEREST_RATE,
+    FRIBELOEB_PARENT_BONUS,
     FERIETILLAEG_RATE, FERIEPENGE_RATE,
     ATP_MONTHLY, ATP_MONTHLY_PARTTIME,
 )
@@ -70,7 +70,6 @@ def get_meta():
             "fribeloeb_mellemste": FRIBELOEB_MELLEMSTE,
             "fribeloeb_hoejeste": FRIBELOEB_HOEJESTE,
             "fribeloeb_parent_bonus": FRIBELOEB_PARENT_BONUS,
-            "su_repayment_interest_rate": SU_REPAYMENT_INTEREST_RATE,
         },
         "salary_options": {
             "pension_types": {

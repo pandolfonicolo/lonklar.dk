@@ -13,10 +13,10 @@ export function SalaryPreview() {
 
   const rows = [
     { label: t("preview.gross"), value: 42000, type: "gross" as const },
-    { label: t("preview.am"), value: -3360, type: "deduction" as const },
-    { label: t("preview.incomeTax"), value: -9814, type: "deduction" as const },
-    { label: t("preview.atp"), value: -94, type: "deduction" as const },
-    { label: t("preview.net"), value: 28732, type: "net" as const },
+    { label: t("preview.am"), value: -3352, type: "deduction" as const },
+    { label: t("preview.incomeTax"), value: -10756, type: "deduction" as const },
+    { label: t("preview.atp"), value: -99, type: "deduction" as const },
+    { label: t("preview.net"), value: 27793, type: "net" as const },
   ];
 
   const rowKeys = ["gross", "am", "tax", "atp", "net"];
@@ -87,7 +87,7 @@ export function SalaryPreview() {
               {t("preview.effectiveRate")}
             </span>
             <span className="text-xs font-mono font-semibold text-[var(--nordic-accent-dark)]">
-              31,6%
+              33,6%
             </span>
           </div>
         </div>

@@ -12,7 +12,7 @@ export function About() {
 
   usePageMeta({
     title: "About Lonklar – Free Danish Salary Calculator | lønklar.dk",
-    description: "Learn about Lonklar — a free, open, privacy-friendly Danish salary calculator. No ads, no tracking, aligned with official SKAT 2026 tax rates.",
+    description: "Learn about Lonklar — a free, open, privacy-friendly Danish salary calculator. No ads, with explained assumptions and SKAT 2026 rates.",
     path: "/about",
   });
 

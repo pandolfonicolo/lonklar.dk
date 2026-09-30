@@ -26,9 +26,11 @@ class FullTimeRequest(BaseModel):
     taxable_benefits_monthly: float = Field(0.0, description="Monthly taxable benefits")
     pretax_deductions_monthly: float = Field(0.0, description="Monthly pre-tax deductions")
     aftertax_deductions_monthly: float = Field(0.0, description="Monthly after-tax deductions")
-    atp_monthly: float = Field(94.65, description="Monthly ATP contribution")
+    atp_monthly: float = Field(99.0, description="Monthly ATP contribution")
     transport_km: float = Field(0.0, description="Round-trip daily commute in km")
-    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
+    transport_days: int = Field(218, ge=0, le=366, description="Actual commuting days in the tax year")
+    a_kasse_fees_annual: float = Field(0.0, ge=0, description="Annual A-kasse fees; no union cap")
+    union_fees_annual: float = Field(0.0, description="Annual trade union fees (cap 7,000 DKK)")
 
 
 class PartTimeRequest(BaseModel):
@@ -43,9 +45,11 @@ class PartTimeRequest(BaseModel):
     taxable_benefits_monthly: float = Field(0.0)
     pretax_deductions_monthly: float = Field(0.0)
     aftertax_deductions_monthly: float = Field(0.0)
-    atp_monthly: float = Field(0.0, description="Monthly ATP (0 if <9h/week)")
+    atp_monthly: float = Field(0.0, description="Monthly employee ATP contribution; monthly A-rate assumed")
     transport_km: float = Field(0.0, description="Round-trip daily commute in km")
-    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
+    transport_days: int = Field(218, ge=0, le=366, description="Actual commuting days in the tax year")
+    a_kasse_fees_annual: float = Field(0.0, ge=0, description="Annual A-kasse fees; no union cap")
+    union_fees_annual: float = Field(0.0, description="Annual trade union fees (cap 7,000 DKK)")
 
 
 class EmployeeScenarioRequest(BaseModel):
@@ -62,9 +66,11 @@ class EmployeeScenarioRequest(BaseModel):
     taxable_benefits_monthly: float = Field(0.0, description="Monthly taxable benefits")
     pretax_deductions_monthly: float = Field(0.0, description="Monthly pre-tax deductions")
     aftertax_deductions_monthly: float = Field(0.0, description="Monthly after-tax deductions")
-    atp_monthly: float = Field(94.65, description="Monthly ATP contribution")
+    atp_monthly: float = Field(99.0, description="Monthly ATP contribution")
     transport_km: float = Field(0.0, description="Round-trip daily commute in km")
-    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
+    transport_days: int = Field(218, ge=0, le=366, description="Actual commuting days in the tax year")
+    a_kasse_fees_annual: float = Field(0.0, ge=0, description="Annual A-kasse fees; no union cap")
+    union_fees_annual: float = Field(0.0, description="Annual trade union fees (cap 7,000 DKK)")
 
 
 class ProjectionSettings(BaseModel):
@@ -87,7 +93,8 @@ class ComparisonRequest(BaseModel):
 
 
 class StudentRequest(BaseModel):
-    su_monthly: float = Field(7426.0, description="Monthly SU before tax")
+    su_monthly: float = Field(7426.0, ge=0, le=50000, description="Monthly SU before tax")
+    su_months: int = Field(12, ge=0, le=12, description="Number of SU payments received in the tax year")
     work_gross_monthly: float = Field(..., description="Monthly gross work income")
     kommune: str = Field("København", description="Municipality name")
     pension_pct: float = Field(0.0, description="Employee pension %")
@@ -100,7 +107,9 @@ class StudentRequest(BaseModel):
     aftertax_deductions_monthly: float = Field(0.0, description="Monthly after-tax deductions")
     other_pay_monthly: float = Field(0.0, description="Extra monthly pay")
     transport_km: float = Field(0.0, description="Round-trip daily commute in km")
-    union_fees_annual: float = Field(0.0, description="Annual trade union + a-kasse fees")
+    transport_days: int = Field(218, ge=0, le=366, description="Actual commuting days in the tax year")
+    a_kasse_fees_annual: float = Field(0.0, ge=0, description="Annual A-kasse fees; no union cap")
+    union_fees_annual: float = Field(0.0, description="Annual trade union fees (cap 7,000 DKK)")
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -114,12 +123,14 @@ class CurveRequest(BaseModel):
     pension_type: PensionType = Field("standard")
     is_church: bool = Field(True)
     is_hourly: bool = Field(False)
-    atp_monthly: float = Field(94.65)
+    atp_monthly: float = Field(99.0)
     other_pay_monthly: float = Field(0.0)
     taxable_benefits_monthly: float = Field(0.0)
     pretax_deductions_monthly: float = Field(0.0)
     aftertax_deductions_monthly: float = Field(0.0)
     transport_km: float = Field(0.0)
+    transport_days: int = Field(218, ge=0, le=366, description="Actual commuting days in the tax year")
+    a_kasse_fees_annual: float = Field(0.0, ge=0, description="Annual A-kasse fees; no union cap")
     union_fees_annual: float = Field(0.0)
     max_gross: float = Field(1_200_000)
     min_gross: float = Field(0)
@@ -140,21 +151,34 @@ class HoursCurveRequest(BaseModel):
     pretax_deductions_monthly: float = Field(0.0)
     aftertax_deductions_monthly: float = Field(0.0)
     transport_km: float = Field(0.0)
+    transport_days: int = Field(218, ge=0, le=366, description="Actual commuting days in the tax year")
+    a_kasse_fees_annual: float = Field(0.0, ge=0, description="Annual A-kasse fees; no union cap")
     union_fees_annual: float = Field(0.0)
+    atp_auto: bool = False
     max_hours: int = Field(220)
 
 
 class StudentHoursCurveRequest(BaseModel):
     hourly_rate: float = Field(..., description="Student hourly wage in DKK")
-    su_monthly: float = Field(7426.0, description="Monthly SU before tax")
+    su_monthly: float = Field(7426.0, ge=0, le=50000, description="Monthly SU before tax")
+    su_months: int = Field(12, ge=0, le=12, description="Number of SU payments received in the tax year")
     kommune: str = Field("København")
     pension_pct: float = Field(0.0)
     employer_pension_pct: float = Field(0.0)
     pension_type: PensionType = Field("standard")
     is_church: bool = Field(True)
     aars_fribeloeb: float | None = Field(None)
+    atp_monthly: float = Field(0, ge=0)
+    atp_auto: bool = False
+    other_pay_monthly: float = 0
+    pretax_deductions_monthly: float = 0
+    aftertax_deductions_monthly: float = 0
+    transport_km: float = Field(0, ge=0)
+    transport_days: int = Field(218, ge=0, le=366)
+    union_fees_annual: float = Field(0, ge=0)
+    a_kasse_fees_annual: float = Field(0, ge=0)
     max_hours: int = Field(220)
-    step: int = Field(5)
+    step: int = Field(5, ge=1)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -175,6 +199,12 @@ class FeedbackRequest(BaseModel):
 
 
 class AccuracyReportRequest(BaseModel):
+    report_id: str | None = Field(None, pattern=r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+    pay_month: str | None = Field(None, pattern=r"^2026-(0[1-9]|1[0-2])$")
+    actual_includes_su: bool | None = None
+    actual_includes_holiday: bool | None = None
+    estimate_definition: Literal["ordinary_monthly_cash", "annual_average_including_holiday"] | None = None
+    calculation_version: str | None = Field(None, max_length=40)
     service_type: str = Field(..., description="fulltime | parttime | student", max_length=20)
     estimated_net_monthly: float = Field(..., ge=0, le=10_000_000)
     actual_net_monthly: float = Field(..., ge=0, le=10_000_000)

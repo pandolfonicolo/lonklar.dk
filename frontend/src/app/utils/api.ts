@@ -36,7 +36,6 @@ export interface TaxConstants {
   fribeloeb_mellemste: number;
   fribeloeb_hoejeste: number;
   fribeloeb_parent_bonus: number;
-  su_repayment_interest_rate: number;
 }
 
 export interface Meta {
@@ -65,6 +64,8 @@ export interface FullTimeRequest {
   aftertax_deductions_monthly?: number;
   atp_monthly?: number;
   transport_km?: number;
+  transport_days?: number;
+  a_kasse_fees_annual?: number;
   union_fees_annual?: number;
 }
 
@@ -82,11 +83,14 @@ export interface PartTimeRequest {
   aftertax_deductions_monthly?: number;
   atp_monthly?: number;
   transport_km?: number;
+  transport_days?: number;
+  a_kasse_fees_annual?: number;
   union_fees_annual?: number;
 }
 
 export interface StudentRequest {
   su_monthly: number;
+  su_months?: number;
   work_gross_monthly: number;
   kommune: string;
   pension_pct: number;
@@ -99,6 +103,8 @@ export interface StudentRequest {
   aftertax_deductions_monthly?: number;
   other_pay_monthly?: number;
   transport_km?: number;
+  transport_days?: number;
+  a_kasse_fees_annual?: number;
   union_fees_annual?: number;
 }
 
@@ -115,6 +121,8 @@ export interface CurveRequest {
   pretax_deductions_monthly?: number;
   aftertax_deductions_monthly?: number;
   transport_km?: number;
+  transport_days?: number;
+  a_kasse_fees_annual?: number;
   union_fees_annual?: number;
   max_gross?: number;
   min_gross?: number;
@@ -135,19 +143,32 @@ export interface HoursCurveRequest {
   pretax_deductions_monthly?: number;
   aftertax_deductions_monthly?: number;
   transport_km?: number;
+  transport_days?: number;
+  a_kasse_fees_annual?: number;
   union_fees_annual?: number;
+  atp_auto?: boolean;
   max_hours?: number;
 }
 
 export interface StudentHoursCurveRequest {
   hourly_rate: number;
   su_monthly: number;
+  su_months?: number;
   kommune: string;
   pension_pct: number;
   employer_pension_pct: number;
   pension_type?: PensionType;
   is_church: boolean;
   aars_fribeloeb?: number | null;
+  atp_monthly?: number;
+  atp_auto?: boolean;
+  other_pay_monthly?: number;
+  pretax_deductions_monthly?: number;
+  aftertax_deductions_monthly?: number;
+  transport_km?: number;
+  transport_days?: number;
+  union_fees_annual?: number;
+  a_kasse_fees_annual?: number;
   max_hours?: number;
   step?: number;
 }
@@ -158,6 +179,7 @@ export interface CurvePoint {
   net_monthly: number;
   ferie_net_monthly: number;
   effective_rate: number;
+  tax_band: "Bundskat" | "Mellemskat" | "Topskat" | "Toptopskat";
 }
 
 export interface HoursCurvePoint {
@@ -166,6 +188,7 @@ export interface HoursCurvePoint {
   net_monthly: number;
   ferie_net_monthly: number;
   effective_rate: number;
+  tax_band: "Bundskat" | "Mellemskat" | "Topskat" | "Toptopskat";
 }
 
 export interface StudentHoursCurvePoint {
@@ -195,6 +218,8 @@ export interface EmployeeScenarioRequest {
   aftertax_deductions_monthly?: number;
   atp_monthly?: number;
   transport_km?: number;
+  transport_days?: number;
+  a_kasse_fees_annual?: number;
   union_fees_annual?: number;
 }
 
@@ -243,6 +268,9 @@ export interface ComparisonResult {
 }
 
 export interface TaxResult {
+  calculation_version: string;
+  ordinary_net_monthly: number;
+  a_kasse_deduction: number;
   kommune: string;
   kommune_pct: number;
   kirke_pct: number;
@@ -287,14 +315,23 @@ export interface TaxResult {
 }
 
 export interface StudentResult {
+  calculation_version: string;
+  ordinary_net_monthly: number;
+  a_kasse_deduction: number;
+  effective_tax_rate: number;
+  topskat: number;
+  toptopskat: number;
+  su_repayment_supplement: number;
+  su_repayment_total: number;
   kommune: string;
   kommune_pct: number;
   kirke_pct: number;
   su_annual_gross: number;
   su_annual: number;
   su_monthly: number;
+  su_months?: number;
   su_repayment: number;
-  su_repayment_interest: number;
+  su_repayment_interest: number | null;
   aars_fribeloeb: number;
   fribeloeb_excess: number;
   work_feriepenge: number;
