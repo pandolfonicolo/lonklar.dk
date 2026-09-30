@@ -1528,8 +1528,7 @@ export function Results() {
                         const ferieVal = d.feriepenge_monthly * sMul;
                         const deductVal = d.deductions_monthly * sMul;
                         const nVal = (period === "annual" ? d.net_annual : d.net_monthly);
-                        const totalGross = suVal + workGross + ferieVal;
-                        const effectiveRate = totalGross > 0 ? (deductVal / totalGross * 100) : 0;
+                        const effectiveRate = d.effective_rate;
                         const hrsWeek = (d.hours_month / 4.33).toFixed(1);
                         const fmt = (v: number) => showConverted ? fmtForeign(v, currencyRate) : `${fmtDKK(v)} kr`;
                         return (
@@ -1540,7 +1539,7 @@ export function Results() {
                                 ⚠ {t("chart.overFribeloeb" as any)}
                               </p>
                             )}
-                            <p style={{ fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>{d.hours_month} {t("chart.hoursMonth" as any)} ({hrsWeek} {t("chart.hoursWeek" as any)})</p>
+                            <p style={{ fontWeight: 600, borderBottom: '1px solid var(--border)', paddingBottom: 4, marginBottom: 4 }}>{Number(d.hours_month.toFixed(1))} {t("chart.hoursMonth" as any)} ({hrsWeek} {t("chart.hoursWeek" as any)})</p>
                             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16 }}>
                               <span>SU</span><span>{fmt(suVal)}</span>
                             </div>
@@ -1615,7 +1614,7 @@ export function Results() {
                 </p>
               </div>
 
-              {/* Fribeløb inflection explanation */}
+              {/* Fribeløb repayment-risk explanation */}
               {fribeloebHour != null && (
                 <div className="flex gap-3 items-start rounded-[var(--radius)] border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-4">
                   <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">

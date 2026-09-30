@@ -322,6 +322,7 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
     limit = evaluate(0)["aars_fribeloeb"]
     for h, r, boundary in sample_boundaries(values, evaluate, "work_after_am", [(limit, "fribeloeb")]):
         data.append({
+            "effective_rate": round(r["effective_tax_rate"], 2),
             "fribeloeb_boundary": boundary is not None,
             "over_fribeloeb_after": evaluate(min(req.max_hours, h + 0.00001))["over_fribeloeb"] if boundary else None,
             "hours_month": h,
