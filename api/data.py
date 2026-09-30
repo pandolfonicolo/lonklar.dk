@@ -9,6 +9,7 @@ Sources:
 
 TAX_YEAR = 2026
 CALCULATION_VERSION = "2026-09-30.1"
+RULES_VERIFIED_ON = "2026-09-30"  # Advance only after an official-source review.
 SU_LOAN_MONTHLY = 3_799
 
 # ── AM-bidrag (labour-market contribution) ───────────────────────────

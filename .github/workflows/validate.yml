@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Build production container and verify icons
-        run: docker build -t lonklar-validation .
+        run: docker build --build-arg APP_UPDATED_AT="$(git log -1 --format=%cI)" -t lonklar-validation .
       - name: Verify the production server
         run: |
           docker run -d --name lonklar-validation -p 8000:8000 lonklar-validation
@@ -23,12 +23,18 @@ jobs:
             sleep 1
           done
           curl -fsS http://localhost:8000/ -o /tmp/lonklar.html
+          curl -fsSI http://localhost:8000/ -o /dev/null
+          curl -fsSI http://localhost:8000/how-it-works -o /dev/null
+          curl -fsS http://localhost:8000/api/meta -o /tmp/lonklar-meta.json
           curl -fsS http://localhost:8000/favicon.svg -o /tmp/lonklar.svg
           curl -fsS http://localhost:8000/apple-touch-icon.png -o /tmp/lonklar.png
           python3 - <<'PY'
-          import hashlib, json
+          import hashlib, json, subprocess
           from pathlib import Path
           assert '?v=rientro-' in Path('/tmp/lonklar.html').read_text()
+          meta = json.loads(Path('/tmp/lonklar-meta.json').read_text())
+          assert meta['data_freshness']['site_updated_at'] == subprocess.check_output(['git', 'log', '-1', '--format=%cI'], text=True).strip()
+          assert meta['data_freshness']['rules_verified_on']
           expected = json.loads(Path('brand/icon.json').read_text())['files']
           for local, suffix in [('lonklar.svg', 'favicon.svg'), ('lonklar.png', 'apple-touch-icon.png')]:
               asset = next(item for item in expected if item['path'].endswith(suffix))

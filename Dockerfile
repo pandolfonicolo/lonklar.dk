@@ -24,6 +24,10 @@ COPY api/ ./api/
 # Copy built frontend from Stage 1
 COPY --from=frontend /build/frontend/dist ./static/
 
+# Date of the published revision; set by the deployment workflow.
+ARG APP_UPDATED_AT
+ENV APP_UPDATED_AT=${APP_UPDATED_AT}
+
 # Feedback data volume (persisted externally in production)
 RUN mkdir -p /app/feedback_data
 

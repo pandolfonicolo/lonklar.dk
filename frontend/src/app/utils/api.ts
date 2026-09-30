@@ -40,6 +40,10 @@ export interface TaxConstants {
 
 export interface Meta {
   tax_year: number;
+  data_freshness: {
+    rules_verified_on: string;
+    site_updated_at: string | null;
+  };
   dkk_per_eur: number;
   kommuner: Record<string, KommuneRates>;
   constants: TaxConstants;

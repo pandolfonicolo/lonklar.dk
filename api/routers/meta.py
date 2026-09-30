@@ -3,11 +3,12 @@ Reference-data endpoints: tax metadata and live exchange rates.
 """
 
 from fastapi import APIRouter
+import os
 import time
 import httpx
 
 from ..data import (
-    KOMMUNER, TAX_YEAR, DKK_PER_EUR,
+    KOMMUNER, TAX_YEAR, RULES_VERIFIED_ON, DKK_PER_EUR,
     AM_RATE, PERSONFRADRAG, BUNDSKAT_RATE,
     MELLEMSKAT_THRESHOLD, MELLEMSKAT_RATE,
     TOPSKAT_THRESHOLD, TOPSKAT_RATE,
@@ -35,6 +36,10 @@ def get_meta():
     """Return tax year, kommune list, constants, and fallback exchange rate."""
     return {
         "tax_year": TAX_YEAR,
+        "data_freshness": {
+            "rules_verified_on": RULES_VERIFIED_ON,
+            "site_updated_at": os.getenv("APP_UPDATED_AT") or None,
+        },
         "dkk_per_eur": DKK_PER_EUR,
         "kommuner": {
             name: {

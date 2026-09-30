@@ -60,16 +60,16 @@ if STATIC_DIR.is_dir():
     app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
 
     # Explicit routes for SEO files (must be before the SPA catch-all)
-    @app.get("/robots.txt", include_in_schema=False)
+    @app.api_route("/robots.txt", methods=["GET", "HEAD"], include_in_schema=False)
     async def robots_txt():
         return FileResponse(STATIC_DIR / "robots.txt", media_type="text/plain")
 
-    @app.get("/sitemap.xml", include_in_schema=False)
+    @app.api_route("/sitemap.xml", methods=["GET", "HEAD"], include_in_schema=False)
     async def sitemap_xml():
         return FileResponse(STATIC_DIR / "sitemap.xml", media_type="application/xml")
 
     # Serve root static files or fall back to index.html for client-side routing
-    @app.get("/{full_path:path}")
+    @app.api_route("/{full_path:path}", methods=["GET", "HEAD"])
     async def serve_spa(request: Request, full_path: str):
         """Serve static files or fall back to index.html for client-side routing."""
         file = STATIC_DIR / full_path
