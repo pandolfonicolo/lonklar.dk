@@ -5,7 +5,7 @@ import { Input } from "../components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { MessageSquare, BarChart3, ThumbsUp, ThumbsDown, AlertTriangle, Bug, Lightbulb, MessageCircle } from "lucide-react";
 
-const API = import.meta.env.DEV ? "http://localhost:8000" : "";
+const API = "";
 
 interface FeedbackItem {
   type: string;

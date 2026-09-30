@@ -5,7 +5,7 @@ Tax computation endpoints: full-time, part-time, student, and chart curves.
 from fastapi import APIRouter
 
 from ..data import KOMMUNER
-from ..tax_engine import compute_tax, compute_student_income
+from ..tax_engine import compute_tax, compute_student_income, monthly_atp
 from ..salary_scenarios import (
     comparison_delta,
     compute_employee_scenario,
@@ -52,6 +52,8 @@ def compute_fulltime(req: FullTimeRequest):
         atp_monthly=req.atp_monthly,
         transport_km=req.transport_km,
         union_fees_annual=req.union_fees_annual,
+        transport_days=req.transport_days,
+        a_kasse_fees_annual=req.a_kasse_fees_annual,
         pension_type=req.pension_type,
     )
     return {
@@ -87,6 +89,8 @@ def compute_parttime(req: PartTimeRequest):
         atp_monthly=req.atp_monthly,
         transport_km=req.transport_km,
         union_fees_annual=req.union_fees_annual,
+        transport_days=req.transport_days,
+        a_kasse_fees_annual=req.a_kasse_fees_annual,
         pension_type=req.pension_type,
     )
     return {
@@ -108,6 +112,7 @@ def compute_student(req: StudentRequest):
     rates = KOMMUNER[req.kommune]
     res = compute_student_income(
         su_monthly=req.su_monthly,
+        su_months=req.su_months,
         work_gross_monthly=req.work_gross_monthly,
         pension_pct=req.pension_pct / 100,
         kommune_pct=rates["kommuneskat"],
@@ -121,6 +126,8 @@ def compute_student(req: StudentRequest):
         other_pay_annual=req.other_pay_monthly * 12,
         transport_km=req.transport_km,
         union_fees_annual=req.union_fees_annual,
+        transport_days=req.transport_days,
+        a_kasse_fees_annual=req.a_kasse_fees_annual,
         pension_type=req.pension_type,
     )
     return {
@@ -212,6 +219,8 @@ def compute_curve(req: CurveRequest):
             aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
             transport_km=req.transport_km,
             union_fees_annual=req.union_fees_annual,
+            transport_days=req.transport_days,
+            a_kasse_fees_annual=req.a_kasse_fees_annual,
             pension_type=req.pension_type,
         )
         data.append({
@@ -220,6 +229,7 @@ def compute_curve(req: CurveRequest):
             "net_monthly": round(r["net_monthly"]),
             "ferie_net_monthly": round(r["net_ferie_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
+            "tax_band": "Toptopskat" if r["toptopskat"] > 0 else "Topskat" if r["topskat"] > 0 else "Mellemskat" if r["mellemskat"] > 0 else "Bundskat",
         })
     return data
 
@@ -239,13 +249,15 @@ def compute_hours_curve(req: HoursCurveRequest):
             req.is_church,
             employer_pension_pct=req.employer_pension_pct / 100,
             is_hourly=True,
-            atp_monthly=req.atp_monthly,
+            atp_monthly=monthly_atp(h) if req.atp_auto else req.atp_monthly,
             other_pay_annual=req.other_pay_monthly * 12,
             taxable_benefits_annual=req.taxable_benefits_monthly * 12,
             pretax_deductions_annual=req.pretax_deductions_monthly * 12,
             aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
             transport_km=req.transport_km,
             union_fees_annual=req.union_fees_annual,
+            transport_days=req.transport_days,
+            a_kasse_fees_annual=req.a_kasse_fees_annual,
             pension_type=req.pension_type,
         )
         data.append({
@@ -254,6 +266,7 @@ def compute_hours_curve(req: HoursCurveRequest):
             "net_monthly": round(r["net_monthly"]),
             "ferie_net_monthly": round(r["net_ferie_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
+            "tax_band": "Toptopskat" if r["toptopskat"] > 0 else "Topskat" if r["topskat"] > 0 else "Mellemskat" if r["mellemskat"] > 0 else "Bundskat",
         })
     return data
 
@@ -269,6 +282,7 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
         work_gross_monthly = req.hourly_rate * h
         r = compute_student_income(
             su_monthly=req.su_monthly,
+            su_months=req.su_months,
             work_gross_monthly=work_gross_monthly,
             pension_pct=req.pension_pct / 100,
             kommune_pct=rates["kommuneskat"],
@@ -277,6 +291,14 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
             employer_pension_pct=req.employer_pension_pct / 100,
             aars_fribeloeb=req.aars_fribeloeb,
             pension_type=req.pension_type,
+            atp_monthly=monthly_atp(h) if req.atp_auto else req.atp_monthly,
+            other_pay_annual=req.other_pay_monthly * 12,
+            pretax_deductions_annual=req.pretax_deductions_monthly * 12,
+            aftertax_deductions_annual=req.aftertax_deductions_monthly * 12,
+            transport_km=req.transport_km,
+            transport_days=req.transport_days,
+            union_fees_annual=req.union_fees_annual,
+            a_kasse_fees_annual=req.a_kasse_fees_annual,
         )
         data.append({
             "hours_month": h,

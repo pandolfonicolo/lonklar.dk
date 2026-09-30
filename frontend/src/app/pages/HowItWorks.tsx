@@ -19,11 +19,13 @@ am_bidrag      = am_basis × 8%
 income_after_am = am_basis − am_bidrag
 
 // ── deductions ──
-beskæft_fradrag = min(income_after_am × 12.75%, 63 300)
-job_fradrag     = min(max(income_after_am − 235 200, 0) × 4.50%, 3 100)
-befordring      = (daily_km − 24) × 1.98 kr/km × 218 days
+employment_base = am_basis + qualifying_payroll_pension + reported_ATP
+beskæft_fradrag = min(employment_base × 12.75%, 63 300)
+job_fradrag     = min(max(employment_base − 235 200, 0) × 4.50%, 3 100)
+befordring      = (max(min(daily_km, 120) − 24, 0) × 3.17
+                  + max(daily_km − 120, 0) × 1.59) × actual_days
 fagforening     = min(annual_union_fees, 7 000)
-lignings_fradrag = befordring + fagforening
+lignings_fradrag = befordring + fagforening + annual_a_kasse_fees
 
 // ── state tax ──
 bundskat_base   = max(income_after_am − 54 100, 0)
@@ -39,10 +41,11 @@ kirke_base      = max(income_after_am − 54 100
                     − beskæft − job − lignings_fradrag, 0)
 kirkeskat       = kirke_base × kirke_%
 
-// ── progressive brackets (capped by skatteloft 44.57%) ──
-mellemskat      = max(min(income, 777 900) − 641 200, 0) × 7.5%
-topskat         = max(min(income, 2 592 700) − 777 900, 0) × 7.5%
-toptopskat      = max(income − 2 592 700, 0)               × 5.0%
+// ── cumulative progressive taxes (personal income after AM) ──
+mellem_rate     = min(7.5%, max(44.57% − 12.01% − kommune_%, 0))
+mellemskat      = max(income_after_am − 641 200, 0) × mellem_rate
+topskat         = max(income_after_am − 777 900, 0) × 7.5%
+toptopskat      = max(income_after_am − 2 592 700, 0) × 5.0%
 
 // ── net ──
 total_tax       = am_bidrag + bundskat + kommuneskat

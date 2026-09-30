@@ -41,6 +41,8 @@ def compute_employee_scenario(scenario: EmployeeScenarioRequest) -> dict:
         atp_monthly=scenario.atp_monthly,
         transport_km=scenario.transport_km,
         union_fees_annual=scenario.union_fees_annual,
+        transport_days=scenario.transport_days,
+        a_kasse_fees_annual=scenario.a_kasse_fees_annual,
         pension_type=scenario.pension_type,
     )
     return {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router";
 import {
   ArrowLeft,
@@ -218,9 +218,11 @@ function employeeBreakdown(r: TaxResult): Row[] {
       value: r.befordring,
       indent: true,
     });
+  if (r.a_kasse_deduction > 0)
+    rows.push({ label: "A-kasse", value: r.a_kasse_deduction, indent: true });
   if (r.union_deduction > 0)
     rows.push({
-      label: "Fagforening / A-kasse",
+      label: "Fagforening (union)",
       value: r.union_deduction,
       indent: true,
     });
@@ -381,16 +383,6 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
       value: r.fribeloeb_excess,
       color: "var(--destructive)",
     });
-    rows.push({
-      label: "- SU repayment",
-      value: -r.su_repayment,
-      color: "var(--destructive)",
-    });
-    rows.push({
-      label: "- Repayment interest (9.75%)",
-      value: -r.su_repayment_interest,
-      color: "var(--destructive)",
-    });
   }
   rows.push({ label: "", value: 0, spacer: true });
   rows.push({
@@ -409,9 +401,11 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
       value: r.befordring,
       indent: true,
     });
+  if (r.a_kasse_deduction > 0)
+    rows.push({ label: "A-kasse", value: r.a_kasse_deduction, indent: true });
   if (r.union_deduction > 0)
     rows.push({
-      label: "Fagforening / A-kasse",
+      label: "Fagforening (union)",
       value: r.union_deduction,
       indent: true,
     });
@@ -434,6 +428,8 @@ function studentBreakdown(r: StudentResult, jobs?: Array<{ label: string; hourly
     });
   if (r.mellemskat > 0)
     rows.push({ label: "- Mellemskat", value: -r.mellemskat });
+  if (r.topskat > 0) rows.push({ label: "- Topskat", value: -r.topskat });
+  if (r.toptopskat > 0) rows.push({ label: "- Toptopskat", value: -r.toptopskat });
   rows.push({
     label: "Tax",
     value: -r.total_income_tax,
@@ -493,7 +489,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showConverted, cu
   const { t } = useI18n();
 
   const div = period === "annual" ? 1 : 12;
-  const showFerieSplit = serviceId !== "fulltime";
+  const showFerieSplit = true;
 
   // Student pie
   if (isStudent) {
@@ -503,12 +499,12 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showConverted, cu
     if (grossVal <= 0) return null;
 
     const ferieNetVal = showFerieSplit ? Math.round((sr.net_ferie || 0) / div) : 0;
-    const netVal = Math.round(sr.net_annual / div) - ferieNetVal;
+    const netVal = Math.round((sr.net_annual - (sr.net_ferie || 0)) / div);
     const incomeTax = Math.round(sr.total_income_tax / div);
     const am = Math.round(sr.work_am_bidrag / div);
     const pension = Math.round((sr.work_employee_pension || 0) / div);
     const atp = Math.round((sr.atp_annual || 0) / div);
-    const suRepay = Math.round((sr.su_repayment || 0) / div);
+
 
     type Slice = { key: string; value: number };
     const data: Slice[] = [
@@ -519,7 +515,7 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showConverted, cu
     if (am > 0) data.push({ key: "chart.pie.am", value: am });
     if (pension > 0) data.push({ key: "chart.pie.pension", value: pension });
     if (atp > 0) data.push({ key: "chart.pie.atp", value: atp });
-    if (suRepay > 0) data.push({ key: "chart.pie.suRepay", value: suRepay });
+
 
     return (
       <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
@@ -576,8 +572,8 @@ function SalaryBreakdownPie({ r, isStudent, serviceId, period, showConverted, cu
   const tr = r as TaxResult;
   const grossVal = Math.round((tr.gross_annual + tr.feriepenge) / div);
   const ferieNetVal = showFerieSplit ? Math.round((tr.net_ferie || 0) / div) : 0;
-  const netVal = Math.round(tr.net_annual / div) - ferieNetVal;
-  const incomeTax = Math.round(tr.total_income_tax / div);
+  const netVal = Math.round((tr.net_annual - (tr.net_ferie || 0)) / div);
+  const incomeTax = Math.round((tr.total_income_tax - tr.kirkeskat) / div);
   const am = Math.round(tr.am_bidrag / div);
   const pension = Math.round(tr.employee_pension / div);
   const atp = Math.round(tr.atp_annual / div);
@@ -675,7 +671,8 @@ export function Results() {
   const { serviceId } = useParams<{ serviceId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  const result = location.state as TaxResult | StudentResult | null;
+  const savedResult = location.state as TaxResult | StudentResult | null;
+  const result = savedResult?.calculation_version ? savedResult : null;
   const { t, lang } = useI18n();
   // Results pages are dynamic/state-based, no SEO needed
   React.useEffect(() => { document.title = "Results – Lonklar | lønklar.dk"; }, []);
@@ -706,6 +703,11 @@ export function Results() {
 
   // Accuracy report
   const [actualNet, setActualNet] = useState("");
+  const [payMonth, setPayMonth] = useState("");
+  const [actualIncludesHoliday, setActualIncludesHoliday] = useState(false);
+  const [actualIncludesSu, setActualIncludesSu] = useState(false);
+  const accuracySubmission = useRef<{ fingerprint: string; id: string } | null>(null);
+  const [voteError, setVoteError] = useState(false);
   const [accuracyStatus, setAccuracyStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
 
   // Thumbs feedback
@@ -713,13 +715,13 @@ export function Results() {
   const [thumbsSending, setThumbsSending] = useState(false);
   const [voteStats, setVoteStats] = useState<{ up: number; down: number; total: number } | null>(null);
 
-  const API = import.meta.env.DEV ? "http://localhost:8000" : "";
+  const API = "";
 
   useEffect(() => {
     fetchMeta().then(setMeta).catch(console.error);
     fetchExchangeRates().then(setExchangeRates).catch(console.error);
     // Fetch vote stats
-    fetch(`${import.meta.env.DEV ? "http://localhost:8000" : ""}/api/vote/stats`)
+    fetch("/api/vote/stats")
       .then(r => r.json())
       .then(setVoteStats)
       .catch(console.error);
@@ -765,6 +767,8 @@ export function Results() {
       aftertax_deductions_monthly: aftertaxDedMonthly,
       transport_km: transportKm,
       union_fees_annual: unionFeesAnnual,
+      a_kasse_fees_annual: r._input_a_kasse_fees_annual ?? 0,
+      transport_days: r._input_transport_days ?? 218,
     };
     if (serviceId === "fulltime" || serviceId === "parttime") {
       fetchCurve({
@@ -792,6 +796,7 @@ export function Results() {
         is_church: isChurch,
         atp_monthly: atpMonthly,
         ...extraParams,
+        atp_auto: r._input_atp_auto ?? false,
         max_hours: 220,
       })
         .then(setHoursCurveData)
@@ -801,39 +806,29 @@ export function Results() {
       fetchStudentHoursCurve({
         hourly_rate: r._input_student_hourly_rate,
         su_monthly: r.su_monthly,
+        su_months: r.su_months ?? 12,
+        atp_monthly: atpMonthly,
+        ...extraParams,
         kommune: r.kommune,
         pension_pct: pensionPct,
         employer_pension_pct: erPensionPct,
         pension_type: pensionType,
         is_church: isChurch,
         aars_fribeloeb: r.aars_fribeloeb,
+        atp_auto: r._input_atp_auto ?? false,
         max_hours: 220,
         step: 1,
       })
         .then(setStudentHoursCurveData)
         .catch(console.error);
     }
-    // Multi-job students: fetch a net-vs-gross curve (like fulltime)
-    if (serviceId === "student" && r._input_student_jobs && r._input_student_jobs.length > 1) {
-      fetchCurve({
-        kommune: r.kommune,
-        pension_pct: pensionPct,
-        employer_pension_pct: erPensionPct,
-        pension_type: pensionType,
-        is_church: isChurch,
-        is_hourly: false,
-        atp_monthly: 0,
-        max_gross: 1_680_000,
-        step_monthly: 500,
-      })
-        .then(setCurveData)
-        .catch(console.error);
-    }
   }, [result, serviceId]);
 
   if (!result) {
-    navigate("/");
-    return null;
+    return <div className="min-h-screen bg-background"><Header /><main className="max-w-xl mx-auto p-8 space-y-4">
+      <p>{t("results.recalculate")}</p>
+      <Button onClick={() => navigate(["fulltime", "parttime", "student"].includes(serviceId ?? "") ? `/wizard/${serviceId}` : "/")}>{t("btn.adjust")}</Button>
+    </main></div>;
   }
 
   const isStudent = serviceId === "student";
@@ -843,11 +838,9 @@ export function Results() {
   const netAnnual = r.net_annual as number;
   const netFerieMonthly = (r.net_ferie_monthly ?? 0) as number;
   const netFerieAnnual = (r.net_ferie ?? 0) as number;
-  const effectiveRate = isStudent
-    ? ((r.total_deductions /
-        (r.su_annual_gross + r.work_gross_annual + r.work_feriepenge)) *
-        100) || 0
-    : r.effective_tax_rate;
+  const effectiveRate = r.effective_tax_rate ?? 0;
+  const ordinaryNetMonthly = r.ordinary_net_monthly ?? netMonthly - netFerieMonthly;
+
 
   const mul = period === "annual" ? 12 : 1;
   const perLabel = period === "annual" ? t("perLabel.year" as any) : t("perLabel.month" as any);
@@ -858,10 +851,10 @@ export function Results() {
   activeCurrencyCode = selectedCurrency === "DKK" ? "EUR" : selectedCurrency;
 
   const displayAmount = netMonthly * mul;
-  // Only split ferie for parttime/student — their feriepenge is paid separately via FerieKonto
-  const showFerieSplit = serviceId !== "fulltime";
+  // Keep ordinary monthly cash distinct from holiday-inclusive annual totals.
+  const showFerieSplit = true;
   const ferieAmount = showFerieSplit ? (period === "annual" ? netFerieAnnual : netFerieMonthly) : 0;
-  const primaryNetAmount = showFerieSplit ? displayAmount - ferieAmount : displayAmount;
+  const primaryNetAmount = period === "annual" ? netAnnual : ordinaryNetMonthly;
   const breakdown: Row[] = isStudent
     ? studentBreakdown(result as StudentResult, r._input_student_jobs)
     : employeeBreakdown(result as TaxResult);
@@ -912,6 +905,8 @@ export function Results() {
       aftertax_deductions_monthly: input._input_aftertax_deductions_monthly ?? 0,
       transport_km: input._input_transport_km ?? 0,
       union_fees_annual: input._input_union_fees_annual ?? 0,
+      a_kasse_fees_annual: input._input_a_kasse_fees_annual ?? 0,
+      transport_days: input._input_transport_days ?? 218,
       ...overrides,
     };
   };
@@ -977,10 +972,8 @@ export function Results() {
           <div className="flex items-end justify-between flex-wrap gap-4">
             <div>
               <p className="text-sm opacity-90 mb-2">
-                {isStudent
-                  ? (period === "annual" ? t("results.netAnnualIncome" as any) : t("results.netMonthlyIncome" as any))
-                  : (period === "annual" ? t("results.netAnnual") : t("results.netMonthly"))
-                }
+                {period === "annual" ? t("results.annualTotal") : t(isStudent ? "results.studentCash" : "results.ordinaryCash")}
+
               </p>
               <div className="flex items-baseline gap-3 flex-wrap">
                 <h1 className="text-5xl font-mono">
@@ -989,33 +982,14 @@ export function Results() {
                     : `${fmtDKK(primaryNetAmount)} kr`
                   }
                 </h1>
-                {/* ±1.5% margin indicator */}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span
-                      className="inline-flex items-center gap-1.5 text-xl font-mono cursor-help transition-opacity hover:opacity-100"
-                      style={{
-                        color: 'rgba(255,255,255,0.55)',
-                      }}
-                    >
-                      <Info className="w-3.5 h-3.5" />
-                      ±{showConverted
-                        ? fmtForeign(Math.round(displayAmount * 0.015), currencyRate)
-                        : `${fmtDKK(Math.round(displayAmount * 0.015))} kr`
-                      }
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent side="bottom" className="max-w-xs">
-                    {t("results.marginTooltip" as any)}
-                  </TooltipContent>
-                </Tooltip>
+                <span className="text-sm opacity-80">{t("results.estimate")}</span>
               </div>
-              {/* Feriepenge — shown only for parttime/student (paid separately via FerieKonto) */}
-              {showFerieSplit && ferieAmount > 0 && (
+              {/* Holiday pay is earned separately from the ordinary monthly estimate. */}
+              {period === "monthly" && ferieAmount > 0 && (
                 <p className="mt-1.5 text-lg font-mono opacity-80">
                   + {showConverted ? fmtForeign(ferieAmount, currencyRate) : `${fmtDKK(ferieAmount)} kr`}{" "}
                   <span className="text-sm font-sans opacity-70">
-                    {t("results.feriepengeLabel" as any)}
+                    {t("results.holidayAverage")}
                   </span>
                 </p>
               )}
@@ -1023,10 +997,8 @@ export function Results() {
               {isStudent && (
                 <p className="mt-2 text-sm opacity-75 flex items-center gap-1.5">
                   <Info className="w-3.5 h-3.5" />
-                  {lang === "da"
-                    ? `Inkl. SU (netto ca. ${fmtDKK(Math.round((r as StudentResult).su_annual / 12))} kr/md) — du modtager SU separat fra dit studie-job`
-                    : `Includes net SU (~${fmtDKK(Math.round((r as StudentResult).su_annual / 12))} kr/mo) — SU is paid separately from your work income`
-                  }
+                  {t("results.suGrossNote").replace("{months}", String(r.su_months ?? 12)).replace("{annual}", fmtDKK(r.su_annual_gross))}
+
                 </p>
               )}
             </div>
@@ -1038,49 +1010,16 @@ export function Results() {
             </div>
           </div>
 
-          {/* Student fribeloeb warning */}
-          {isStudent && (r as StudentResult).over_fribeloeb && (
+          {isStudent && r.over_fribeloeb && (
             <div className="mt-4 p-3 bg-white/15 rounded-[var(--radius-md)] text-sm">
-              ⚠ You exceed the annual fribeløb by{" "}
-              {showConverted ? fmtForeign((r as StudentResult).fribeloeb_excess, currencyRate) : `${fmtDKK((r as StudentResult).fribeloeb_excess)} kr`} — SU
-              repayment of {showConverted ? fmtForeign((r as StudentResult).su_repayment, currencyRate) : `${fmtDKK((r as StudentResult).su_repayment)} kr`} +
-              interest applies.
+              <p className="font-medium">{t("results.suRepaymentRisk")}: {formatMoney(r.su_repayment_total)} / {t("results.annual").toLowerCase()}</p>
+              <p className="mt-1 opacity-90">{t("results.suRepaymentDetail")}</p>
             </div>
           )}
 
-          {/* Student max hours hint */}
-          {isStudent && r._input_student_hourly_rate > 0 && (() => {
-            const hourlyRate = r._input_student_hourly_rate;
-            const pensionPct = r._input_pension_pct ?? 0;
-            const fribeloeb = (r as StudentResult).aars_fribeloeb;
-            // work_after_am = (annual * (1 + 0.125 - pensionPct)) * 0.92
-            const factor = (1 + 0.125 - pensionPct) * 0.92;
-            const maxAnnualGross = fribeloeb / factor;
-            const maxWeeklyHours = Math.floor(maxAnnualGross / (hourlyRate * 52));
-            const currentHoursMonth = r._input_student_hours_month ?? 0;
-            const currentHoursWeek = Math.round(currentHoursMonth * 12 / 52);
-            const exceeds = (r as StudentResult).over_fribeloeb;
+          <p className="mt-4 text-sm opacity-85 max-w-3xl">{t("results.cashBasis")}</p>
+          {period === "monthly" && <p className="mt-2 text-sm opacity-85">{t("results.annualAverage")}: {formatMoney(netMonthly)}</p>}
 
-            if (maxWeeklyHours <= 0) return null;
-
-            return (
-              <div className={`mt-3 p-3 rounded-[var(--radius-md)] text-sm flex items-start gap-2 ${
-                exceeds ? "bg-yellow-500/20" : "bg-white/10"
-              }`}>
-                <Info className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                <span>
-                  {exceeds
-                    ? t("results.studentMaxHoursExceeded" as any)
-                        .replace("{hours}", String(currentHoursWeek))
-                        .replace("{maxHours}", String(maxWeeklyHours))
-                    : t("results.studentMaxHours" as any)
-                        .replace("{rate}", String(Math.round(hourlyRate)))
-                        .replace("{hours}", String(maxWeeklyHours))
-                  }
-                </span>
-              </div>
-            );
-          })()}
         </div>
 
         {/* ── Toggle controls ──────────────────────────────────── */}
@@ -1111,6 +1050,13 @@ export function Results() {
 
         </div>
 
+        <div className="mb-6 rounded-[var(--radius-md)] border border-border bg-card p-4 text-sm text-muted-foreground space-y-2">
+          <p>{t("scope.general")}</p>
+          {(r.pension > 0 || r.work_pension > 0 || r.employer_pension > 0 || r.work_employer_pension > 0) && <p>{t("scope.pension")}</p>}
+          {r.befordring > 0 && <p>{t("scope.commuting")}</p>}
+          {isStudent && <p>{t("scope.student")}</p>}
+          <p className="text-xs">{t("results.verifiedDate")} · <a className="underline" href="https://skat.dk/hjaelp/bundskat-mellemskat-topskat-og-toptopskat" target="_blank" rel="noreferrer">SKAT</a>{isStudent && <> · <a className="underline" href="https://www.su.dk/su/naar-du-faar-su/saa-meget-maa-du-tjene/du-har-tjent-for-meget" target="_blank" rel="noreferrer">SU</a></>}</p>
+        </div>
         {/* ── Quick stats ──────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Stat label="Kommune" value={r.kommune} />
@@ -1124,12 +1070,13 @@ export function Results() {
           )}
           {isStudent && (
             <Stat
-              label="SU kept"
-              value={`${formatVal((r as StudentResult).su_annual)}${perLabel}`}
+              label={t("results.suGrossAnnual")}
+              value={`${fmtDKK(r.su_annual_gross)} kr`}
             />
           )}
         </div>
 
+        <p className="mb-3 text-xs text-muted-foreground">{t("results.secondaryBasis")}</p>
         {/* ── Tabs ─────────────────────────────────────────────── */}
         <Tabs defaultValue="chart" className="w-full">
          <div className="bg-card border border-border rounded-[var(--radius-lg)] overflow-hidden">
@@ -1324,13 +1271,7 @@ export function Results() {
                           if (!d) return null;
                           const gVal = d.gross_monthly * cMul;
                           const nVal = d.net_monthly * cMul;
-                          const mellemThreshold = Math.round(641200 / 12);
-                          const topThreshold = Math.round(777900 / 12);
-                          const bracket = d.gross_monthly >= topThreshold
-                            ? { label: 'Topskat', color: '#ef4444' }
-                            : d.gross_monthly >= mellemThreshold
-                              ? { label: 'Mellemskat', color: '#f59e0b' }
-                              : { label: 'Bundskat', color: '#22c55e' };
+                          const bracket = { label: d.tax_band, color: d.tax_band === 'Bundskat' ? '#22c55e' : '#ef4444' };
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
                               <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1720,104 +1661,7 @@ export function Results() {
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
               <SalaryBreakdownPie r={r} isStudent={isStudent} serviceId={serviceId!} period={period} showConverted={showConverted} currencyRate={currencyRate} />
 
-              {/* Net vs Gross curve for multi-job students */}
-              {r._input_student_jobs && r._input_student_jobs.length > 1 && curveData.length > 0 && (() => {
-                const cMul = period === "annual" ? 12 : 1;
-                const ticks = Array.from({ length: 8 }, (_, i) => i * 20000);
-                const workGrossMonthly = r.work_gross_monthly || Math.round(r.work_gross_annual / 12);
-                const mellemThreshold = Math.round(641200 / 12);
-                const topThreshold = Math.round(777900 / 12);
-                return (
-                <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6">
-                  <h3 className="text-foreground font-medium mb-1">
-                    {t("chart.netVsGross")}
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {period === "annual" ? t("chart.netVsGross.desc.annual" as any) : t("chart.netVsGross.desc")}
-                  </p>
-                  <ResponsiveContainer width="100%" height={450}>
-                    <LineChart data={curveData} margin={{ top: 5, right: 20, bottom: 20, left: 10 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-                      <XAxis
-                        dataKey="gross_monthly"
-                        type="number"
-                        domain={[0, 140000]}
-                        ticks={ticks}
-                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * cMul, currencyRate) : fmtAxisDKK(v * cMul)}
-                        label={{
-                          value: showConverted
-                            ? (period === "annual" ? `Gross annual income (${selectedCurrency})` : `Gross monthly income (${selectedCurrency})`)
-                            : (period === "annual" ? t('chart.grossAnnualIncome' as any) : t('chart.grossMonthIncome' as any)),
-                          position: "insideBottom",
-                          offset: -5,
-                        }}
-                        stroke="var(--muted-foreground)"
-                        fontSize={12}
-                      />
-                      <YAxis
-                        type="number"
-                        tickFormatter={(v: number) => showConverted ? fmtAxisForeign(v * cMul, currencyRate) : fmtAxisDKK(v * cMul)}
-                        domain={[0, 140000]}
-                        ticks={ticks}
-                        label={{
-                          value: showConverted
-                            ? (period === "annual" ? `Net annual salary (${selectedCurrency})` : `Net monthly salary (${selectedCurrency})`)
-                            : (period === "annual" ? t('chart.netAnnual' as any) : t('chart.netMonth' as any)),
-                          angle: -90,
-                          position: "insideLeft",
-                          style: { textAnchor: 'middle' },
-                          dx: -5,
-                        }}
-                        stroke="var(--muted-foreground)"
-                        fontSize={12}
-                      />
-                      <RTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null;
-                          const d = payload[0]?.payload as CurvePoint | undefined;
-                          if (!d) return null;
-                          const gVal = d.gross_monthly * cMul;
-                          const nVal = d.net_monthly * cMul;
-                          const bracket = d.gross_monthly >= topThreshold
-                            ? { label: 'Topskat', color: '#ef4444' }
-                            : d.gross_monthly >= mellemThreshold
-                              ? { label: 'Mellemskat', color: '#f59e0b' }
-                              : { label: 'Bundskat', color: '#22c55e' };
-                          return (
-                            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
-                              <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span style={{ width: 8, height: 8, borderRadius: '50%', background: bracket.color, display: 'inline-block' }} />
-                                {bracket.label}
-                              </p>
-                              <p style={{ fontWeight: 500 }}>{t('chart.gross')}: {showConverted ? fmtForeign(gVal, currencyRate) : `${fmtDKK(gVal)} kr`}</p>
-                              <p style={{ color: 'var(--nordic-accent)', fontWeight: 500 }}>{t('chart.net')}: {showConverted ? fmtForeign(nVal, currencyRate) : `${fmtDKK(nVal)} kr`}</p>
-                              <p style={{ color: 'var(--muted-foreground)', fontSize: 12 }}>{t('chart.effectiveTax')}: {d.effective_rate.toFixed(1)}%</p>
-                            </div>
-                          );
-                        }}
-                      />
-                      <Line type="monotone" dataKey="gross_monthly" name="Gross" stroke="var(--muted-foreground)" strokeDasharray="5 5" strokeWidth={1.5} dot={false} tooltipType="none" />
-                      <Line type="monotone" dataKey="net_monthly" name="Net" stroke="var(--nordic-accent)" strokeWidth={2.5} dot={false} />
-                      <ReferenceDot x={workGrossMonthly} y={netMonthly} r={6} fill="var(--destructive)" stroke="white" strokeWidth={2} />
-                      {/* Tax bracket zones */}
-                      <ReferenceArea x1={0} x2={mellemThreshold} fill="#22c55e" fillOpacity={0.04} />
-                      <ReferenceArea x1={mellemThreshold} x2={topThreshold} fill="#f59e0b" fillOpacity={0.06} />
-                      <ReferenceArea x1={topThreshold} x2={140000} fill="#ef4444" fillOpacity={0.06} />
-                      <ReferenceLine x={mellemThreshold} stroke="#f59e0b" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
-                      <ReferenceLine x={topThreshold} stroke="#ef4444" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
-                    <Smartphone className="w-3.5 h-3.5 rotate-90" />
-                    {t("tip.rotateMobile" as any)}
-                  </p>
-                  <p className="flex items-center gap-1.5 text-xs text-muted-foreground/70 mt-2 italic">
-                    <Info className="w-3.5 h-3.5 shrink-0" />
-                    {t("chart.suEffectDisclaimer" as any)}
-                  </p>
-                </div>
-                );
-              })()}
+              {r._input_student_jobs?.length > 1 && <p className="text-sm text-muted-foreground">{t("scope.multiJobChart")}</p>}
             </TabsContent>
           )}
 
@@ -2311,6 +2155,7 @@ export function Results() {
             <h3 className="text-foreground font-medium mb-3">
               {t("fribeloeb.title")}
             </h3>
+            <p className="text-sm text-muted-foreground mb-4">{t("results.suExcluded")}</p>
             {(() => {
               const sr = r as StudentResult;
               const usedPct = Math.min(
@@ -2342,7 +2187,7 @@ export function Results() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-2">
                     {sr.over_fribeloeb
-                      ? `Over by ${showConverted ? fmtForeign(sr.fribeloeb_excess, currencyRate) : `${fmtDKK(sr.fribeloeb_excess)} kr`} — SU repayment: ${showConverted ? fmtForeign(sr.su_repayment, currencyRate) : `${fmtDKK(sr.su_repayment)} kr`} + ${showConverted ? fmtForeign(sr.su_repayment_interest, currencyRate) : `${fmtDKK(sr.su_repayment_interest)} kr`} interest`
+                      ? `${t("results.suRepaymentRisk")}: ${formatMoney(sr.su_repayment_total)} (${t("results.excess")}: ${formatMoney(sr.fribeloeb_excess)})`
                       : `${usedPct.toFixed(0)}% used — ${showConverted ? fmtForeign(sr.aars_fribeloeb - sr.work_after_am_monthly * 12, currencyRate) : `${fmtDKK(sr.aars_fribeloeb - sr.work_after_am_monthly * 12)} kr`} remaining`}
                   </p>
                 </>
@@ -2374,13 +2219,15 @@ export function Results() {
                   disabled={thumbsSending}
                   onClick={async () => {
                     setThumbsSending(true);
+                    setVoteError(false);
                     try {
-                      await fetch(`${API}/api/vote`, {
+                      const response = await fetch(`${API}/api/vote`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ vote: "up", service_type: serviceId, estimated_net: netMonthly }),
                       });
-                    } catch { /* noop */ }
+                      if (!response.ok || (await response.json()).status !== "ok") throw new Error("Vote not saved");
+                    } catch { setVoteError(true); setThumbsSending(false); return; }
                     setThumbsVote("up");
                     setVoteStats(prev => prev ? { ...prev, up: prev.up + 1, total: prev.total + 1 } : prev);
                     setThumbsSending(false);
@@ -2394,13 +2241,15 @@ export function Results() {
                   disabled={thumbsSending}
                   onClick={async () => {
                     setThumbsSending(true);
+                    setVoteError(false);
                     try {
-                      await fetch(`${API}/api/vote`, {
+                      const response = await fetch(`${API}/api/vote`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ vote: "down", service_type: serviceId, estimated_net: netMonthly }),
                       });
-                    } catch { /* noop */ }
+                      if (!response.ok || (await response.json()).status !== "ok") throw new Error("Vote not saved");
+                    } catch { setVoteError(true); setThumbsSending(false); return; }
                     setThumbsVote("down");
                     setVoteStats(prev => prev ? { ...prev, down: prev.down + 1, total: prev.total + 1 } : prev);
                     setThumbsSending(false);
@@ -2412,6 +2261,7 @@ export function Results() {
                 </button>
               </div>
             )}
+            {voteError && <p role="alert" className="text-sm text-destructive">{t("accuracy.error")}</p>}
             {/* Vote counter */}
             {voteStats && voteStats.total > 0 && (
               <div className="mt-3 flex items-center gap-4 text-xs text-muted-foreground">
@@ -2447,11 +2297,20 @@ export function Results() {
               <p className="text-xs text-muted-foreground mb-4">{t("accuracy.desc")}</p>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <label className="text-xs text-muted-foreground whitespace-nowrap">{t("accuracy.actual.label")}</label>
+                <p className="text-sm text-muted-foreground">{t("accuracy.comparison")}: {fmtDKK(actualIncludesHoliday ? netMonthly : ordinaryNetMonthly)} kr / {t("results.monthly").toLowerCase()} {isStudent ? "(SU + work)" : ""}</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <label htmlFor="pay-month" className="text-sm">{t("accuracy.payMonth")}</label>
+                  <input id="pay-month" type="month" min="2026-01" max="2026-12" value={payMonth} onChange={(e) => setPayMonth(e.target.value)} className="bg-background border border-border rounded-md px-3 py-2 text-sm" />
+                </div>
+                <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={actualIncludesHoliday} onChange={(e) => setActualIncludesHoliday(e.target.checked)} className="mt-1" />{t("accuracy.includesHoliday")}</label>
+                {isStudent && <label className="flex items-start gap-2 text-sm"><input type="checkbox" checked={actualIncludesSu} onChange={(e) => setActualIncludesSu(e.target.checked)} className="mt-1" />{t("accuracy.includesSu")}</label>}
+                {accuracyStatus === "error" && <p role="alert" className="text-sm text-destructive">{t("accuracy.error")}</p>}
+                <div className="flex flex-wrap items-center gap-3">
+                  <label htmlFor="actual-net" className="text-xs text-muted-foreground">{t("accuracy.actual.label")}</label>
                   <div className="flex items-center gap-2 flex-1 max-w-[280px]">
                     <input
                       type="number"
+                      id="actual-net" min="0" max="10000000"
                       value={actualNet}
                       onChange={(e) => setActualNet(e.target.value)}
                       placeholder={t("accuracy.actual.placeholder")}
@@ -2464,25 +2323,35 @@ export function Results() {
                   size="sm"
                   variant="outline"
                   className="flex items-start gap-2 h-auto py-2 px-3 text-left whitespace-normal"
-                  disabled={!actualNet || accuracyStatus === "sending"}
+                  disabled={!actualNet || Number(actualNet) < 0 || !/^2026-(0[1-9]|1[0-2])$/.test(payMonth) || (isStudent && !actualIncludesSu) || accuracyStatus === "sending"}
                   onClick={async () => {
                     setAccuracyStatus("sending");
+                    const payload = {
+                      service_type: serviceId,
+                      estimated_net_monthly: actualIncludesHoliday ? netMonthly : ordinaryNetMonthly,
+                      actual_net_monthly: Number(actualNet),
+                      pay_month: payMonth,
+                      actual_includes_su: isStudent && actualIncludesSu,
+                      actual_includes_holiday: actualIncludesHoliday,
+                      estimate_definition: actualIncludesHoliday ? "annual_average_including_holiday" : "ordinary_monthly_cash",
+                      calculation_version: r.calculation_version,
+                      inputs: result,
+                    };
+                    const fingerprint = JSON.stringify(payload);
+                    if (accuracySubmission.current?.fingerprint !== fingerprint) {
+                      accuracySubmission.current = { fingerprint, id: crypto.randomUUID() };
+                    }
                     try {
                       const res = await fetch(`${API}/api/accuracy-report`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          service_type: serviceId,
-                          estimated_net_monthly: netMonthly,
-                          actual_net_monthly: parseFloat(actualNet),
-                          inputs: result,
-                        }),
+                        body: JSON.stringify({ ...payload, report_id: accuracySubmission.current.id }),
                       });
-                      if (!res.ok) throw new Error("Failed");
+                      if (!res.ok || (await res.json()).status !== "ok") throw new Error("Report not saved");
+                      setAccuracyStatus("success");
                     } catch {
-                      // Still show success to the user even if API is down
+                      setAccuracyStatus("error");
                     }
-                    setAccuracyStatus("success");
                   }}
                 >
                   <span className="text-xs leading-relaxed text-muted-foreground">{t("accuracy.consent")}</span>

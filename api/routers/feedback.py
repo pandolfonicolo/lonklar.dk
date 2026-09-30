@@ -11,6 +11,7 @@ Security features:
 """
 
 import os
+import fcntl
 from fastapi import APIRouter, Request, Header, HTTPException
 import json
 from datetime import datetime, timezone, date
@@ -53,6 +54,8 @@ def _append_jsonl(basename: str, record: dict):
 
     with open(filepath, "a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
 
 
 @router.post("/feedback")
@@ -60,6 +63,36 @@ def _append_jsonl(basename: str, record: dict):
 async def submit_feedback(req: FeedbackRequest, request: Request):
     _append_jsonl("feedback", req.model_dump())
     return {"status": "ok"}
+
+
+def _store_accuracy_report(data: dict) -> bool:
+    """Return False for a saved retry; serialize deduplication across workers.
+
+    Lock the directory itself, keeping raw storage limited to JSONL records.
+    The lock covers all date files so a retry across midnight stays idempotent.
+    """
+    FEEDBACK_DIR.mkdir(exist_ok=True)
+    directory_fd = os.open(FEEDBACK_DIR, os.O_RDONLY)
+    try:
+        fcntl.flock(directory_fd, fcntl.LOCK_EX)
+        report_id = data.get("report_id")
+        if report_id:
+            for path in FEEDBACK_DIR.glob("accuracy_reports*.jsonl"):
+                for line in path.read_text(encoding="utf-8").splitlines():
+                    try:
+                        previous = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if previous.get("report_id") == report_id:
+                        original = {k: v for k, v in previous.items() if k != "timestamp"}
+                        if original != data:
+                            raise HTTPException(status_code=409, detail="Report ID already used for different data")
+                        return False
+        _append_jsonl("accuracy_reports", data)
+        return True
+    finally:
+        fcntl.flock(directory_fd, fcntl.LOCK_UN)
+        os.close(directory_fd)
 
 
 @router.post("/accuracy-report")
@@ -71,8 +104,8 @@ async def submit_accuracy_report(req: AccuracyReportRequest, request: Request):
         round((req.actual_net_monthly - req.estimated_net_monthly) / req.estimated_net_monthly * 100, 2)
         if req.estimated_net_monthly else 0
     )
-    _append_jsonl("accuracy_reports", data)
-    return {"status": "ok"}
+    saved = _store_accuracy_report(data)
+    return {"status": "ok", "report_id": req.report_id, "duplicate": not saved}
 
 
 @router.post("/vote")

@@ -1,5 +1,5 @@
 const STORAGE_PREFIX = "lonklar:wizard";
-export const WIZARD_STATE_VERSION = 1;
+export const WIZARD_STATE_VERSION = 2;
 export const WIZARD_STATE_TTL_MS = 20 * 60 * 1000;
 
 export type PersistedWizardPayload<T> = {
