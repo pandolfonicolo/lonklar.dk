@@ -13,6 +13,7 @@ import {
   ReferenceLine,
   ReferenceArea,
 } from "recharts";
+import { chartBands, TAX_COLORS } from "../utils/chartBands";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -76,7 +77,6 @@ export function QuickOverview() {
 
   const grossNum = Number(grossInput) || 0;
   const netNum = liveResult?.net_monthly ?? 0;
-  const taxNum = grossNum - netNum;
   const effRate = liveResult?.effective_rate ?? 0;
 
   return (
@@ -136,13 +136,8 @@ export function QuickOverview() {
                   {effRate.toFixed(1)}%
                 </p>
                 {grossNum > 0 && (() => {
-                  const mellem = Math.round(641200 / 12);
-                  const top = Math.round(777900 / 12);
-                  const b = grossNum >= top
-                    ? { label: 'Topskat', color: '#ef4444' }
-                    : grossNum >= mellem
-                      ? { label: 'Mellemskat', color: '#f59e0b' }
-                      : { label: 'Bundskat', color: '#22c55e' };
+                  const band = liveResult?.tax_band ?? "Bundskat";
+                  const b = { label: band, color: TAX_COLORS[band] };
                   return (
                     <p className="text-xs mt-1.5 font-medium flex items-center justify-center gap-1" style={{ color: b.color }}>
                       <span style={{ width: 6, height: 6, borderRadius: '50%', background: b.color, display: 'inline-block' }} />
@@ -258,14 +253,7 @@ export function QuickOverview() {
                     if (!active || !payload?.length) return null;
                     const d = payload[0]?.payload as CurvePoint | undefined;
                     if (!d) return null;
-                    const tax = d.gross_monthly - d.net_monthly;
-                    const mellemThreshold = Math.round(641200 / 12);
-                    const topThreshold = Math.round(777900 / 12);
-                    const bracket = d.gross_monthly >= topThreshold
-                      ? { label: 'Topskat', color: '#ef4444' }
-                      : d.gross_monthly >= mellemThreshold
-                        ? { label: 'Mellemskat', color: '#f59e0b' }
-                        : { label: 'Bundskat', color: '#22c55e' };
+                    const bracket = { label: d.tax_band, color: TAX_COLORS[d.tax_band] };
                     return (
                       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
                         <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -281,7 +269,7 @@ export function QuickOverview() {
                 />
                 {/* Diagonal = gross (no tax) */}
                 <Line
-                  type="monotone"
+                  type="linear"
                   dataKey="gross_monthly"
                   name="gross_monthly"
                   stroke="var(--muted-foreground)"
@@ -292,7 +280,7 @@ export function QuickOverview() {
                 />
                 {/* Net curve */}
                 <Line
-                  type="monotone"
+                  type="linear"
                   dataKey="net_monthly"
                   name="net_monthly"
                   stroke="var(--nordic-accent)"
@@ -310,24 +298,12 @@ export function QuickOverview() {
                     strokeWidth={2}
                   />
                 )}
-                {/* Tax bracket zones */}
-                <ReferenceArea x1={0} x2={Math.round(641200 / 12)} fill="#22c55e" fillOpacity={0.04} />
-                <ReferenceArea x1={Math.round(641200 / 12)} x2={Math.round(777900 / 12)} fill="#f59e0b" fillOpacity={0.06} />
-                <ReferenceArea x1={Math.round(777900 / 12)} x2={140000} fill="#ef4444" fillOpacity={0.06} />
-                <ReferenceLine
-                  x={Math.round(641200 / 12)}
-                  stroke="#f59e0b"
-                  strokeDasharray="6 4"
-                  strokeWidth={1}
-                  strokeOpacity={0.6}
-                />
-                <ReferenceLine
-                  x={Math.round(777900 / 12)}
-                  stroke="#ef4444"
-                  strokeDasharray="6 4"
-                  strokeWidth={1}
-                  strokeOpacity={0.6}
-                />
+                {chartBands(curveData, d => d.gross_monthly, 140000).areas.map((area, i) => (
+                  <ReferenceArea key={`overview-area-${i}`} x1={area.start} x2={area.end} fill={area.color} fillOpacity={0.06} />
+                ))}
+                {chartBands(curveData, d => d.gross_monthly, 140000).boundaries.map(point => (
+                  <ReferenceLine key={`overview-boundary-${point.gross_monthly}`} x={point.gross_monthly} stroke={TAX_COLORS[point.tax_boundary!]} strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
