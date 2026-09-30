@@ -1,13 +1,5 @@
 import { createBrowserRouter } from "react-router";
 import { Home } from "./pages/Home";
-import { Wizard } from "./pages/Wizard";
-import { Results } from "./pages/Results";
-import { HowItWorks } from "./pages/HowItWorks";
-import { QuickOverview } from "./pages/QuickOverview";
-import { Feedback } from "./pages/Feedback";
-import { About } from "./pages/About";
-import { AdminFeedback } from "./pages/AdminFeedback";
-import { NotFound } from "./pages/NotFound";
 
 export const router = createBrowserRouter([
   {
@@ -16,34 +8,34 @@ export const router = createBrowserRouter([
   },
   {
     path: "/wizard/:serviceId",
-    Component: Wizard,
+    lazy: async () => ({ Component: (await import("./pages/Wizard")).Wizard }),
   },
   {
     path: "/results/:serviceId",
-    Component: Results,
+    lazy: async () => ({ Component: (await import("./pages/Results")).Results }),
   },
   {
     path: "/quick-overview",
-    Component: QuickOverview,
+    lazy: async () => ({ Component: (await import("./pages/QuickOverview")).QuickOverview }),
   },
   {
     path: "/how-it-works",
-    Component: HowItWorks,
+    lazy: async () => ({ Component: (await import("./pages/HowItWorks")).HowItWorks }),
   },
   {
     path: "/about",
-    Component: About,
+    lazy: async () => ({ Component: (await import("./pages/About")).About }),
   },
   {
     path: "/contact",
-    Component: Feedback,
+    lazy: async () => ({ Component: (await import("./pages/Feedback")).Feedback }),
   },
   {
     path: "/admin/feedback",
-    Component: AdminFeedback,
+    lazy: async () => ({ Component: (await import("./pages/AdminFeedback")).AdminFeedback }),
   },
   {
     path: "*",
-    Component: NotFound,
+    lazy: async () => ({ Component: (await import("./pages/NotFound")).NotFound }),
   },
 ]);

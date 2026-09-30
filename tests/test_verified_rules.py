@@ -160,7 +160,7 @@ class ApiRegressionTests(unittest.TestCase):
         self.assertEqual(r['befordring'], 11412)
         self.assertEqual(r['a_kasse_deduction'], 6000)
         curve = self.client.post('/api/compute/curve',json={**body,'min_gross':300000,'max_gross':300000,'step_monthly':1}).json()
-        self.assertEqual(curve[0]['net_monthly'], round(r['net_monthly']))
+        self.assertEqual(curve[0]['net_monthly'], round(r['net_monthly'], 2))
         scenario = compute_employee_scenario(EmployeeScenarioRequest(**body))
         self.assertAlmostEqual(scenario['net_monthly'], r['net_monthly'])
 

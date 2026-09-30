@@ -4,7 +4,8 @@ Tax computation endpoints: full-time, part-time, student, and chart curves.
 
 from fastapi import APIRouter
 
-from ..data import KOMMUNER
+from ..data import KOMMUNER, MELLEMSKAT_THRESHOLD, TOPSKAT_THRESHOLD, TOPTOPSKAT_THRESHOLD
+from ..chart_curves import hours_samples, sample_boundaries
 from ..tax_engine import compute_tax, compute_student_income, monthly_atp
 from ..salary_scenarios import (
     comparison_delta,
@@ -23,6 +24,14 @@ from ..models import (
 )
 
 router = APIRouter(prefix="/api")
+
+def tax_band(r):
+    return "Toptopskat" if r["toptopskat"] > 0 else "Topskat" if r["topskat"] > 0 else "Mellemskat" if r["mellemskat"] > 0 else "Bundskat"
+
+
+TAX_BOUNDARIES = [(MELLEMSKAT_THRESHOLD, "Mellemskat"),
+                  (TOPSKAT_THRESHOLD, "Topskat"),
+                  (TOPTOPSKAT_THRESHOLD, "Toptopskat")]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -204,9 +213,10 @@ def compute_curve(req: CurveRequest):
         step = req.max_gross / req.points
         gross_values = [step * i for i in range(req.points + 1)]
 
-    data = []
-    for gross in gross_values:
-        r = compute_tax(
+    gross_values.append(req.max_gross)
+
+    def evaluate(gross):
+        return compute_tax(
             gross, req.pension_pct / 100,
             rates["kommuneskat"], rates["kirkeskat"],
             req.is_church,
@@ -223,13 +233,17 @@ def compute_curve(req: CurveRequest):
             a_kasse_fees_annual=req.a_kasse_fees_annual,
             pension_type=req.pension_type,
         )
+    data = []
+    for gross, r, boundary in sample_boundaries(gross_values, evaluate, "income_after_am", TAX_BOUNDARIES):
         data.append({
-            "gross_annual": round(gross),
-            "gross_monthly": round(gross / 12),
-            "net_monthly": round(r["net_monthly"]),
+            "tax_boundary": boundary,
+            "tax_band_after": tax_band(evaluate(min(req.max_gross, gross + 0.001))) if boundary else None,
+            "gross_annual": round(gross, 6),
+            "gross_monthly": round(gross / 12, 6),
+            "net_monthly": round(r["net_monthly"], 2),
             "ferie_net_monthly": round(r["net_ferie_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
-            "tax_band": "Toptopskat" if r["toptopskat"] > 0 else "Topskat" if r["topskat"] > 0 else "Mellemskat" if r["mellemskat"] > 0 else "Bundskat",
+            "tax_band": tax_band(r),
         })
     return data
 
@@ -240,10 +254,9 @@ def compute_hours_curve(req: HoursCurveRequest):
     if req.kommune not in KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
     rates = KOMMUNER[req.kommune]
-    data = []
-    for h in range(0, req.max_hours + 1, 5):
+    def evaluate(h):
         gross_annual = req.hourly_rate * h * 12
-        r = compute_tax(
+        return compute_tax(
             gross_annual, req.pension_pct / 100,
             rates["kommuneskat"], rates["kirkeskat"],
             req.is_church,
@@ -260,13 +273,18 @@ def compute_hours_curve(req: HoursCurveRequest):
             a_kasse_fees_annual=req.a_kasse_fees_annual,
             pension_type=req.pension_type,
         )
+    data = []
+    values = hours_samples(req.max_hours, 5, req.atp_auto)
+    for h, r, boundary in sample_boundaries(values, evaluate, "income_after_am", TAX_BOUNDARIES):
         data.append({
+            "tax_boundary": boundary,
+            "tax_band_after": tax_band(evaluate(min(req.max_hours, h + 0.00001))) if boundary else None,
             "hours_month": h,
-            "gross_monthly": round(gross_annual / 12),
-            "net_monthly": round(r["net_monthly"]),
+            "gross_monthly": round(req.hourly_rate * h, 6),
+            "net_monthly": round(r["net_monthly"], 2),
             "ferie_net_monthly": round(r["net_ferie_monthly"]),
             "effective_rate": round(r["effective_tax_rate"], 2),
-            "tax_band": "Toptopskat" if r["toptopskat"] > 0 else "Topskat" if r["topskat"] > 0 else "Mellemskat" if r["mellemskat"] > 0 else "Bundskat",
+            "tax_band": tax_band(r),
         })
     return data
 
@@ -277,10 +295,9 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
     if req.kommune not in KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
     rates = KOMMUNER[req.kommune]
-    data = []
-    for h in range(0, req.max_hours + 1, req.step):
+    def evaluate(h):
         work_gross_monthly = req.hourly_rate * h
-        r = compute_student_income(
+        return compute_student_income(
             su_monthly=req.su_monthly,
             su_months=req.su_months,
             work_gross_monthly=work_gross_monthly,
@@ -300,12 +317,18 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
             union_fees_annual=req.union_fees_annual,
             a_kasse_fees_annual=req.a_kasse_fees_annual,
         )
+    data = []
+    values = hours_samples(req.max_hours, req.step, req.atp_auto)
+    limit = evaluate(0)["aars_fribeloeb"]
+    for h, r, boundary in sample_boundaries(values, evaluate, "work_after_am", [(limit, "fribeloeb")]):
         data.append({
+            "fribeloeb_boundary": boundary is not None,
+            "over_fribeloeb_after": evaluate(min(req.max_hours, h + 0.00001))["over_fribeloeb"] if boundary else None,
             "hours_month": h,
-            "net_monthly": round(r["net_monthly"]),
+            "net_monthly": round(r["net_monthly"], 2),
             "net_annual": round(r["net_annual"]),
             "su_gross_monthly": round(r["su_annual_gross"] / 12),
-            "work_gross_monthly": round(work_gross_monthly),
+            "work_gross_monthly": round(req.hourly_rate * h, 6),
             "feriepenge_monthly": round(r["work_feriepenge"] / 12),
             "deductions_monthly": round(r["total_deductions"] / 12),
             "over_fribeloeb": r["over_fribeloeb"],
