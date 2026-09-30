@@ -78,6 +78,7 @@ import {
   type ComparisonResult,
   type PensionType,
 } from "../utils/api";
+import { DataFreshness } from "../components/DataFreshness";
 import { useI18n } from "../utils/i18n";
 import {
   CURRENCY_CHANGE_EVENT,
@@ -1055,7 +1056,8 @@ export function Results() {
           {(r.pension > 0 || r.work_pension > 0 || r.employer_pension > 0 || r.work_employer_pension > 0) && <p>{t("scope.pension")}</p>}
           {r.befordring > 0 && <p>{t("scope.commuting")}</p>}
           {isStudent && <p>{t("scope.student")}</p>}
-          <p className="text-xs">{t("results.verifiedDate")} · <a className="underline" href="https://skat.dk/hjaelp/bundskat-mellemskat-topskat-og-toptopskat" target="_blank" rel="noreferrer">SKAT</a>{isStudent && <> · <a className="underline" href="https://www.su.dk/su/naar-du-faar-su/saa-meget-maa-du-tjene/du-har-tjent-for-meget" target="_blank" rel="noreferrer">SU</a></>}</p>
+          <DataFreshness />
+          <p className="text-xs"><a className="underline" href="https://skat.dk/hjaelp/bundskat-mellemskat-topskat-og-toptopskat" target="_blank" rel="noreferrer">SKAT</a>{isStudent && <> · <a className="underline" href="https://www.su.dk/su/naar-du-faar-su/saa-meget-maa-du-tjene/du-har-tjent-for-meget" target="_blank" rel="noreferrer">SU</a></>}</p>
         </div>
         {/* ── Quick stats ──────────────────────────────────────── */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

@@ -1,4 +1,5 @@
 import React from "react";
+import { DataFreshness } from "../components/DataFreshness";
 import { Header } from "../components/Header";
 import { ArrowLeft, ExternalLink, MessageSquare } from "lucide-react";
 import { Button } from "../components/ui/button";
@@ -64,7 +65,11 @@ export function HowItWorks() {
   });
 
   React.useEffect(() => {
-    window.scrollTo(0, 0);
+    if (window.location.hash === "#sources") {
+      document.getElementById("sources")?.scrollIntoView();
+    } else {
+      window.scrollTo(0, 0);
+    }
   }, []);
 
   return (
@@ -148,7 +153,7 @@ export function HowItWorks() {
           </section>
 
           {/* ── Data sources ── */}
-          <section className="mb-10">
+          <section id="sources" className="mb-10 scroll-mt-20">
             <h2 className="text-2xl mb-4 text-foreground">{t("method.sources.title")}</h2>
             <div className="bg-card border border-border rounded-[var(--radius-lg)] p-6 space-y-4">
               {[
@@ -208,9 +213,9 @@ export function HowItWorks() {
                   </div>
                 </div>
               ))}
-              <p className="mt-4 pt-3 border-t border-border text-xs text-muted-foreground">
-                {t("method.sources.updated")}
-              </p>
+              <div className="mt-4 pt-3 border-t border-border">
+                <DataFreshness details link={false} />
+              </div>
             </div>
           </section>
 
