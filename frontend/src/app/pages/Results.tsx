@@ -33,6 +33,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+import { chartBands, TAX_COLORS } from "../utils/chartBands";
 import { Header } from "../components/Header";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -1273,7 +1274,7 @@ export function Results() {
                           if (!d) return null;
                           const gVal = d.gross_monthly * cMul;
                           const nVal = d.net_monthly * cMul;
-                          const bracket = { label: d.tax_band, color: d.tax_band === 'Bundskat' ? '#22c55e' : '#ef4444' };
+                          const bracket = { label: d.tax_band, color: TAX_COLORS[d.tax_band] };
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
                               <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1288,7 +1289,7 @@ export function Results() {
                         }}
                       />
                       <Line
-                        type="monotone"
+                        type="linear"
                         dataKey="gross_monthly"
                         name="Gross"
                         stroke="var(--muted-foreground)"
@@ -1298,7 +1299,7 @@ export function Results() {
                         tooltipType="none"
                       />
                       <Line
-                        type="monotone"
+                        type="linear"
                         dataKey="net_monthly"
                         name="Net"
                         stroke="var(--nordic-accent)"
@@ -1318,24 +1319,13 @@ export function Results() {
                         stroke="white"
                         strokeWidth={2}
                       />
-                      {/* Tax bracket zones */}
-                      <ReferenceArea x1={0} x2={Math.round(641200 / 12)} fill="#22c55e" fillOpacity={0.04} />
-                      <ReferenceArea x1={Math.round(641200 / 12)} x2={Math.round(777900 / 12)} fill="#f59e0b" fillOpacity={0.06} />
-                      <ReferenceArea x1={Math.round(777900 / 12)} x2={140000} fill="#ef4444" fillOpacity={0.06} />
-                      <ReferenceLine
-                        x={Math.round(641200 / 12)}
-                        stroke="#f59e0b"
-                        strokeDasharray="6 4"
-                        strokeWidth={1}
-                        strokeOpacity={0.6}
-                      />
-                      <ReferenceLine
-                        x={Math.round(777900 / 12)}
-                        stroke="#ef4444"
-                        strokeDasharray="6 4"
-                        strokeWidth={1}
-                        strokeOpacity={0.6}
-                      />
+                      {/* Areas and markers use the same engine-derived curve samples. */}
+                      {chartBands(curveData, d => d.gross_monthly, 140000).areas.map((area, i) => (
+                        <ReferenceArea key={`salary-area-${i}`} x1={area.start} x2={area.end} fill={area.color} fillOpacity={0.06} />
+                      ))}
+                      {chartBands(curveData, d => d.gross_monthly, 140000).boundaries.map(point => (
+                        <ReferenceLine key={`salary-boundary-${point.gross_monthly}`} x={point.gross_monthly} stroke={TAX_COLORS[point.tax_boundary!]} strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                      ))}
                     </LineChart>
                   </ResponsiveContainer>
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
@@ -1400,13 +1390,7 @@ export function Results() {
                           if (!d) return null;
                           const gVal = d.gross_monthly * hMul;
                           const nVal = d.net_monthly * hMul;
-                          const mellemH = Math.round(641200 / 12);
-                          const topH = Math.round(777900 / 12);
-                          const bracket = d.gross_monthly >= topH
-                            ? { label: 'Topskat', color: '#ef4444' }
-                            : d.gross_monthly >= mellemH
-                              ? { label: 'Mellemskat', color: '#f59e0b' }
-                              : { label: 'Bundskat', color: '#22c55e' };
+                          const bracket = { label: d.tax_band, color: TAX_COLORS[d.tax_band] };
                           return (
                             <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 13, padding: '10px 14px', lineHeight: 1.6 }}>
                               <p style={{ fontSize: 11, color: bracket.color, fontWeight: 600, marginBottom: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
@@ -1421,7 +1405,7 @@ export function Results() {
                         }}
                       />
                       <Line
-                        type="monotone"
+                        type="linear"
                         dataKey="gross_monthly"
                         name="Gross"
                         stroke="var(--muted-foreground)"
@@ -1430,7 +1414,7 @@ export function Results() {
                         dot={false}
                       />
                       <Line
-                        type="monotone"
+                        type="linear"
                         dataKey="net_monthly"
                         name="Net"
                         stroke="var(--nordic-accent)"
@@ -1454,29 +1438,12 @@ export function Results() {
                         stroke="white"
                         strokeWidth={2}
                       />
-                      {/* Tax bracket zones based on hourly rate */}
-                      {(() => {
-                        const mellemHrs = Math.round(641200 / 12 / r.hourly_rate);
-                        const topHrs = Math.round(777900 / 12 / r.hourly_rate);
-                        return (
-                          <>
-                            {/* Bundskat zone — always visible up to mellemskat or end of chart */}
-                            <ReferenceArea x1={0} x2={Math.min(mellemHrs, 220)} fill="#22c55e" fillOpacity={0.04} />
-                            {mellemHrs <= 220 && (
-                              <>
-                                <ReferenceArea x1={mellemHrs} x2={Math.min(topHrs, 220)} fill="#f59e0b" fillOpacity={0.06} />
-                                <ReferenceLine x={mellemHrs} stroke="#f59e0b" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
-                              </>
-                            )}
-                            {topHrs <= 220 && (
-                              <>
-                                <ReferenceArea x1={topHrs} x2={220} fill="#ef4444" fillOpacity={0.06} />
-                                <ReferenceLine x={topHrs} stroke="#ef4444" strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
-                              </>
-                            )}
-                          </>
-                        );
-                      })()}
+                      {chartBands(hoursCurveData, d => d.hours_month, 220).areas.map((area, i) => (
+                        <ReferenceArea key={`hours-area-${i}`} x1={area.start} x2={area.end} fill={area.color} fillOpacity={0.06} />
+                      ))}
+                      {chartBands(hoursCurveData, d => d.hours_month, 220).boundaries.map(point => (
+                        <ReferenceLine key={`hours-boundary-${point.hours_month}`} x={point.hours_month} stroke={TAX_COLORS[point.tax_boundary!]} strokeDasharray="6 4" strokeWidth={1} strokeOpacity={0.6} />
+                      ))}
                     </LineChart>
                   </ResponsiveContainer>
                   <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
@@ -1496,8 +1463,18 @@ export function Results() {
             const studentHoursMonth = r._input_student_hours_month;
             const sMul = period === "annual" ? 12 : 1;
 
-            // Find the fribeløb boundary hour (first point where over_fribeloeb becomes true)
-            const fribeloebHour = studentHoursCurveData.find(d => d.over_fribeloeb)?.hours_month;
+            // Use the precise engine boundary rather than the next regular sample.
+            const fribeloebHour = studentHoursCurveData.find(d => d.fribeloeb_boundary)?.hours_month;
+            const fribeloebBoundaries = studentHoursCurveData.filter(d => d.fribeloeb_boundary);
+            let areaStart = 0;
+            let areaRisk = studentHoursCurveData[0]?.over_fribeloeb;
+            const fribeloebAreas = fribeloebBoundaries.map(point => {
+              const area = { start: areaStart, end: point.hours_month, risk: areaRisk };
+              areaStart = point.hours_month;
+              areaRisk = point.over_fribeloeb_after ?? point.over_fribeloeb;
+              return area;
+            });
+            fribeloebAreas.push({ start: areaStart, end: 220, risk: areaRisk });
 
             return (
             <TabsContent value="chart" className="mt-0 p-6 space-y-8">
@@ -1589,7 +1566,7 @@ export function Results() {
                       }}
                     />
                     <Line
-                      type="monotone"
+                      type="linear"
                       dataKey={period === "annual" ? "net_annual" : "net_monthly"}
                       name="Total net"
                       stroke="var(--nordic-accent)"
@@ -1624,20 +1601,12 @@ export function Results() {
                       );
                     })()}
                     {/* Fribeløb boundary */}
-                    {fribeloebHour && (
-                      <>
-                        <ReferenceArea x1={0} x2={fribeloebHour} fill="#22c55e" fillOpacity={0.04} />
-                        <ReferenceArea x1={fribeloebHour} x2={220} fill="#ef4444" fillOpacity={0.04} />
-                        <ReferenceLine
-                          x={fribeloebHour}
-                          stroke="var(--destructive)"
-                          strokeDasharray="6 4"
-                          strokeWidth={1}
-                          strokeOpacity={0.6}
-                          label={{ value: t("chart.fribeloebLine" as any), position: "top", fontSize: 11, fill: "var(--destructive)" }}
-                        />
-                      </>
-                    )}
+                    {fribeloebAreas.map((area, i) => (
+                      <ReferenceArea key={`su-area-${i}`} x1={area.start} x2={area.end} fill={area.risk ? "#ef4444" : "#22c55e"} fillOpacity={0.04} />
+                    ))}
+                    {fribeloebBoundaries.map(point => (
+                      <ReferenceLine key={`su-boundary-${point.hours_month}`} x={point.hours_month} stroke="var(--destructive)" strokeDasharray="6 4" strokeWidth={1.5} strokeOpacity={0.7} label={{ value: t("chart.fribeloebLine" as any), position: "top", fontSize: 11, fill: "var(--destructive)" }} />
+                    ))}
                   </LineChart>
                 </ResponsiveContainer>
                 <p className="flex items-center gap-1.5 text-xs text-muted-foreground mt-3 sm:hidden">
@@ -1647,10 +1616,10 @@ export function Results() {
               </div>
 
               {/* Fribeløb inflection explanation */}
-              {fribeloebHour && (
+              {fribeloebHour != null && (
                 <div className="flex gap-3 items-start rounded-[var(--radius)] border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 p-4">
                   <p className="text-sm text-amber-900 dark:text-amber-200 leading-relaxed">
-                    {t("chart.fribeloebExplain" as any)?.replace("{hours}", String(fribeloebHour)).replace("{fribeloeb}", showConverted ? fmtForeign(r.aars_fribeloeb, currencyRate) : `${fmtDKK(r.aars_fribeloeb)} kr`)}
+                    {t("chart.fribeloebExplain" as any)?.replace("{hours}", fribeloebHour.toFixed(1)).replace("{fribeloeb}", showConverted ? fmtForeign(r.aars_fribeloeb, currencyRate) : `${fmtDKK(r.aars_fribeloeb)} kr`)}
                   </p>
                 </div>
               )}

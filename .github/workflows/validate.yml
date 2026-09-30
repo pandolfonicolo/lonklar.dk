@@ -17,6 +17,7 @@ jobs:
         run: docker build --build-arg APP_UPDATED_AT="$(git log -1 --format=%cI)" -t lonklar-validation .
       - name: Verify the production server
         run: |
+          docker run --rm -v "$PWD/tests:/app/tests:ro" lonklar-validation python -m unittest discover -s tests
           docker run -d --name lonklar-validation -p 8000:8000 lonklar-validation
           for attempt in $(seq 1 30); do
             if curl -fsS http://localhost:8000/ -o /dev/null; then break; fi
@@ -29,12 +30,16 @@ jobs:
           curl -fsS http://localhost:8000/favicon.svg -o /tmp/lonklar.svg
           curl -fsS http://localhost:8000/apple-touch-icon.png -o /tmp/lonklar.png
           python3 - <<'PY'
-          import hashlib, json, subprocess
+          import hashlib, json, re, subprocess, urllib.request
           from pathlib import Path
           assert '?v=rientro-' in Path('/tmp/lonklar.html').read_text()
           meta = json.loads(Path('/tmp/lonklar-meta.json').read_text())
           assert meta['data_freshness']['site_updated_at'] == subprocess.check_output(['git', 'log', '-1', '--format=%cI'], text=True).strip()
           assert meta['data_freshness']['rules_verified_on']
+          html = Path('/tmp/lonklar.html').read_text()
+          asset = re.search(r'src="(/assets/[^\"]+\.js)"', html).group(1)
+          assert urllib.request.urlopen('http://localhost:8000' + asset).headers['Cache-Control'] == 'public, max-age=31536000, immutable'
+          assert urllib.request.urlopen('http://localhost:8000/').headers['Cache-Control'] == 'no-cache'
           expected = json.loads(Path('brand/icon.json').read_text())['files']
           for local, suffix in [('lonklar.svg', 'favicon.svg'), ('lonklar.png', 'apple-touch-icon.png')]:
               asset = next(item for item in expected if item['path'].endswith(suffix))

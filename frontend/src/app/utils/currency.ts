@@ -1,4 +1,4 @@
-export type CurrencyCode = "DKK" | "EUR" | "NZD" | "SEK" | "NOK";
+export type CurrencyCode = "DKK" | "EUR" | "USD" | "NZD" | "SEK" | "NOK";
 
 export type CurrencyConfig = {
   code: CurrencyCode;
@@ -10,6 +10,7 @@ export type CurrencyConfig = {
 export const CURRENCIES: CurrencyConfig[] = [
   { code: "DKK", label: "Danish Krone", symbol: "kr" },
   { code: "EUR", label: "Euro", symbol: "€", rateKey: "EUR" },
+  { code: "USD", label: "US Dollar", symbol: "US$", rateKey: "USD" },
   { code: "NZD", label: "New Zealand Dollar", symbol: "NZ$", rateKey: "NZD" },
   { code: "SEK", label: "Swedish Krona", symbol: "SEK", rateKey: "SEK" },
   { code: "NOK", label: "Norwegian Krone", symbol: "NOK", rateKey: "NOK" },
@@ -17,6 +18,7 @@ export const CURRENCIES: CurrencyConfig[] = [
 
 export const DEFAULT_DKK_RATES: Record<Exclude<CurrencyCode, "DKK">, number> = {
   EUR: 7.47,
+  USD: 6.54,
   NZD: 3.70,
   SEK: 0.67,
   NOK: 0.66,

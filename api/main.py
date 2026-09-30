@@ -56,8 +56,15 @@ app.include_router(feedback.router)
 STATIC_DIR = Path(__file__).resolve().parent.parent / "static"
 
 if STATIC_DIR.is_dir():
-    # Serve JS/CSS/images at /assets/...
-    app.mount("/assets", StaticFiles(directory=STATIC_DIR / "assets"), name="assets")
+    class CachedAssets(StaticFiles):
+        async def get_response(self, path, scope):
+            response = await super().get_response(path, scope)
+            if response.status_code in (200, 304):
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return response
+
+    # Vite filenames contain content hashes; HTML must revalidate after releases.
+    app.mount("/assets", CachedAssets(directory=STATIC_DIR / "assets"), name="assets")
 
     # Explicit routes for SEO files (must be before the SPA catch-all)
     @app.api_route("/robots.txt", methods=["GET", "HEAD"], include_in_schema=False)
@@ -75,7 +82,7 @@ if STATIC_DIR.is_dir():
         file = STATIC_DIR / full_path
         if full_path and file.is_file():
             return FileResponse(file)
-        return FileResponse(STATIC_DIR / "index.html")
+        return FileResponse(STATIC_DIR / "index.html", headers={"Cache-Control": "no-cache"})
 
 
 if __name__ == "__main__":

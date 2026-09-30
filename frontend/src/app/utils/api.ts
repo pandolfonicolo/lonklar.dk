@@ -184,6 +184,8 @@ export interface CurvePoint {
   ferie_net_monthly: number;
   effective_rate: number;
   tax_band: "Bundskat" | "Mellemskat" | "Topskat" | "Toptopskat";
+  tax_boundary?: "Mellemskat" | "Topskat" | "Toptopskat" | null;
+  tax_band_after?: "Bundskat" | "Mellemskat" | "Topskat" | "Toptopskat" | null;
 }
 
 export interface HoursCurvePoint {
@@ -193,6 +195,8 @@ export interface HoursCurvePoint {
   ferie_net_monthly: number;
   effective_rate: number;
   tax_band: "Bundskat" | "Mellemskat" | "Topskat" | "Toptopskat";
+  tax_boundary?: "Mellemskat" | "Topskat" | "Toptopskat" | null;
+  tax_band_after?: "Bundskat" | "Mellemskat" | "Topskat" | "Toptopskat" | null;
 }
 
 export interface StudentHoursCurvePoint {
@@ -204,6 +208,8 @@ export interface StudentHoursCurvePoint {
   feriepenge_monthly: number;
   deductions_monthly: number;
   over_fribeloeb: boolean;
+  fribeloeb_boundary?: boolean;
+  over_fribeloeb_after?: boolean | null;
 }
 
 export interface EmployeeScenarioRequest {
