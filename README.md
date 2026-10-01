@@ -158,7 +158,7 @@ The app auto-deploys on push to `main` via GitHub Actions:
 
 Production runs on Oracle Cloud Free Tier with Caddy as a reverse proxy for automatic HTTPS.
 
-The footer, calculation results and methodology show the tax year and rules verification date from `/api/meta`. Set `RULES_VERIFIED_ON` in `api/data.py` only when the official rules have actually been checked. The deployment workflow passes the published Git revision date as `APP_UPDATED_AT`, so the separate site-update date advances automatically. For a manual production build, use `docker build --build-arg APP_UPDATED_AT="$(git log -1 --format=%cI)" -t lonklar .`.
+The methodology page's Sources section is the single location for the tax year, rules verification date and site-update date from `/api/meta`. Set `RULES_VERIFIED_ON` in `api/data.py` only when the official rules have actually been checked. The deployment workflow passes the published Git revision date as `APP_UPDATED_AT`, so the separate site-update date advances automatically. For a manual production build, use `docker build --build-arg APP_UPDATED_AT="$(git log -1 --format=%cI)" -t lonklar .`.
 
 ## SEO
 
