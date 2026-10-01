@@ -6,6 +6,7 @@ import { Button } from "../components/ui/button";
 import { useNavigate, Link } from "react-router";
 import { useI18n } from "../utils/i18n";
 import { usePageMeta } from "../utils/usePageMeta";
+import { FreshnessProvider } from "../utils/freshness";
 
 /* ── pseudo-code formula block (language-independent) ────────── */
 const FORMULA = `// Full-time job → net pay (2026 rates)
@@ -214,7 +215,9 @@ export function HowItWorks() {
                 </div>
               ))}
               <div className="mt-4 pt-3 border-t border-border">
-                <DataFreshness details link={false} />
+                <FreshnessProvider>
+                  <DataFreshness details link={false} />
+                </FreshnessProvider>
               </div>
             </div>
           </section>
