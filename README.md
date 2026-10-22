@@ -149,12 +149,38 @@ Municipality-specific rates are loaded from [api/data.py](frontend/../api/data.p
 
 ## Deployment
 
-The app auto-deploys on push to `main` via GitHub Actions:
+The app auto-deploys on push to `main` via GitHub Actions. The production job
+first calls the same validation workflow used for pull requests; failed checks
+prevent SSH deployment. Production jobs are serialized and running deployments
+are not cancelled by a newer push. Manual workflow runs publish only from `main`.
 
-1. GitHub Actions SSHs into the production server
-2. Pulls latest code
-3. Rebuilds the Docker image
-4. Restarts the container
+1. Validate the production container, application behavior, icons and deployment
+   failure/rollback tests.
+2. SSH to the server, acquire the deployment lock and check out the exact full
+   Git SHA validated by this workflow (never pull a moving `main`).
+3. Build a revision-tagged image with its commit date and revision label.
+4. Keep the previous container while starting the replacement with the existing
+   feedback mount. Check `/` and `/api/meta`; restore the previous container and
+   its original runtime settings if startup or health checks fail.
+
+The existing `SERVER_IP`, `SSH_PRIVATE_KEY` and `ADMIN_TOKEN` GitHub secrets are
+reused. Secret values are passed as environment data and written to a mode-600
+server env file. No data migration is included. Old revision-tagged images are
+retained for an operator-selected rollback; monitor disk usage and prune reviewed
+images separately. A restart can still cause a short interruption; this is not a
+zero-downtime load-balancer setup.
+
+The server must provide Bash, Git, Docker, `sudo`, `flock` and `curl`, and retain
+the existing `/opt/lonklar.dk` checkout and `/opt/lonklar-data/feedback` directory.
+For an operator-selected rollback, choose a previously verified full SHA, fetch
+and detach-checkout that revision under `/tmp/lonklar-deploy.lock`, and rerun the
+reviewed deployment script with that SHA and the existing secret environment.
+For revisions predating the script, preserve the current reviewed script outside
+the checkout before switching. Do not delete the feedback directory.
+
+Validation and production currently build separate Docker images from the same
+source SHA. Base-image/dependency changes can still affect rebuilds; promoting
+one tested image by digest is a possible later improvement.
 
 Production runs on Oracle Cloud Free Tier with Caddy as a reverse proxy for automatic HTTPS.
 

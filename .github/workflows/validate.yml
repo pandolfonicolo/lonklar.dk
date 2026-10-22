@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_call:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,8 +13,13 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Verify deployment failure and rollback behavior
+        run: python3 -m unittest discover -s tests/deployment
       - name: Build production container and verify icons
         run: docker build --build-arg APP_UPDATED_AT="$(git log -1 --format=%cI)" -t lonklar-validation .
       - name: Verify the production server
