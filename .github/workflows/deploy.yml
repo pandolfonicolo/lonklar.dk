@@ -3,33 +3,47 @@ name: Deploy to Oracle Cloud
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-oracle
+  cancel-in-progress: false
 
 jobs:
+  validate:
+    uses: ./.github/workflows/validate.yml
+
   deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    environment:
+      name: production
+      url: https://lonklar.dk
     steps:
-      - name: Deploy via SSH
+      - name: Deploy the verified revision via SSH
         uses: appleboy/ssh-action@v1
+        env:
+          DEPLOY_SHA: ${{ github.sha }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 15m
+          envs: DEPLOY_SHA,ADMIN_TOKEN
+          command_timeout: 20m
           script: |
+            set -euo pipefail
+            [[ "$DEPLOY_SHA" =~ ^[0-9a-f]{40}$ ]]
             cd /opt/lonklar.dk
-            git pull origin main
-
-            # Write secrets to server.env (from GitHub Secrets)
-            echo 'ADMIN_TOKEN=${{ secrets.ADMIN_TOKEN }}' | sudo tee /opt/lonklar-data/server.env > /dev/null
-            sudo chmod 600 /opt/lonklar-data/server.env
-
-            sudo docker build --build-arg APP_UPDATED_AT="$(git log -1 --format=%cI)" -t lonklar .
-            sudo docker rm -f lonklar
-            sudo docker run -d \
-              --name lonklar \
-              --restart unless-stopped \
-              -p 8000:8000 \
-              -v /opt/lonklar-data/feedback:/app/feedback_data \
-              --env-file /opt/lonklar-data/server.env \
-              lonklar
-            sudo docker image prune -f
+            # Also serialize manual invocations using this server lock.
+            exec 9>/tmp/lonklar-deploy.lock
+            flock -w 900 9
+            [[ -z "$(git status --porcelain)" ]] || { echo 'Server checkout is dirty' >&2; exit 1; }
+            git fetch --no-tags origin "$DEPLOY_SHA"
+            git checkout --detach "$DEPLOY_SHA"
+            bash scripts/deploy-oracle.sh "$DEPLOY_SHA"
