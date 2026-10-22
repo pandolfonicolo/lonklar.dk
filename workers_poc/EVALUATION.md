@@ -5,7 +5,57 @@ functional compatibility and D1 feedback portability, but fails the sustained an
 concurrent workload on the account's current Workers Free plan. No DNS, production
 data, account subscription or Oracle deployment was changed.
 
-## Tested implementation
+## Follow-up: two runtime experiments
+
+The retained workaround is **Python 3.13**, selected by compatibility date
+2026-09-07, using the standard class ASGI entrypoint and a regenerated Wasm lock.
+Runtime source: `a31d6208f88337534c74be5442794315f68af4db`; deployed version
+`48bce6d7-3aed-4c85-81ce-35b516c78c3e`. No plan upgrade or domain change.
+
+| Variant | Correct calculations / 260 | HTTP failures | Observed runtime failure |
+| --- | ---: | ---: | --- |
+| Original Python 3.14/class | 214 | 46 | nested-promising-task SystemError |
+| Python 3.14/global handler | 146 | 114 | CPU interruption, then NoGilError |
+| Python 3.13/class | 192 | 68 | All HTTP errors were 503 / code 1102 (CPU limit) |
+
+The global-handler attempt (`5a50533`, version
+`20384452-f2f9-4a45-92de-dfff7837b133`) passed local tests but failed hosted load.
+Tail directly captured `Worker exceeded CPU time limit.` followed by
+`Attempted to use PyProxy when Python GIL not held` in `preparePython`. The
+global handler was therefore removed; it is not the final implementation.
+
+The Python 3.13 benchmark ran at 19:35:24–19:35:53 UTC. No HTTP 500/1101,
+promising-task exception or GIL exception occurred. The first six sequential
+workloads passed 120/120; student-hours passed 18/20, projection and comparison
+each 0/20, and the mixed burst passed 54/80. All 192 successes matched CPython.
+A separate reproduction then sent 40 concurrent heavy comparisons (31 successes,
+9 CPU errors), 20 light calculations (17 successes, 3 CPU errors), and five D1
+health probes (four successes, one CPU error). Across these **325 requests**,
+there were 81 CPU-limit failures and no 1101/runtime exceptions. The sampled tail
+recorded only `exceededCpu` for this version. This mitigates the observed Pyodide
+failure in this finite test; it does not establish a general platform fix or a
+production reliability guarantee. Requests after CPU errors could still succeed.
+
+The first request to the new version was correct, invocation 1, HTTP 2274 ms;
+the next took 123 ms. Wrangler initialization was 4503 ms. Successful-request
+analytics initially reported CPU p50 15.807 ms and p95 67.737 ms; adaptive sampling
+and ingestion mean analytics counts are not exact HTTP totals. Client HTTP median
+was 100 ms and p95 1180 ms across all outcomes in the 260-request test.
+
+The new configuration passed 32 regressions, 39 local Worker HTTP checks including
+17 exact parity cases, 20 local feedback checks, dry run, and both GitHub workflows.
+workers-py does not invalidate its dependency cache when only Wrangler config
+changes, and its version selector ignores the negative Python-3.14 flag. Selecting
+the earlier date and explicitly running `pywrangler sync --force` regenerated
+Python-3.13 wheels (Pydantic 2.10.6 / core 2.27.2). Verification now rejects a
+runtime/lock mismatch and preserves the original startup error if workerd exits
+before cleanup.
+
+**Migration remains blocked by Free CPU limits.** Retain this isolated workaround
+for the next controlled experiment; do not promote it to Oracle or change DNS.
+Paid may remove the 10 ms constraint, but has not been tested or enabled.
+
+## Original baseline implementation
 
 Runtime source: `ee4da9067499ab9149b22abb5247c1dfe6572638`, Python Workers ASGI,
 Wrangler 4.152.0, workers-py 1.17.8, runtime SDK 1.9.5, compatibility date
