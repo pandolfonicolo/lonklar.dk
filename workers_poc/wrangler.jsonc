@@ -5,7 +5,8 @@
   "account_id": "585ac81ae021c1bcd59e429e7a6af1ac",
   "compatibility_date": "2026-10-22",
   "compatibility_flags": [
-    "python_workers"
+    "python_workers",
+    "disable_python_no_global_handlers"
   ],
   "workers_dev": true,
   "preview_urls": false,
