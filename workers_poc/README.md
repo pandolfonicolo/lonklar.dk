@@ -19,6 +19,11 @@ to Oracle and the existing deployment workflow is unchanged.
 
 Requires Node 22.22.0 and uv 0.13.5. Python dependencies/tooling are locked in
 `uv.lock`; pywrangler manages the compatible Wasm package set in `pylock.toml`.
+The current runtime experiment pins compatibility date 2026-09-07, selecting
+Python 3.13 with matching Wasm wheels. If changing the compatibility date, run
+`uv run --locked pywrangler sync --force` before verification: workers-py's cache
+does not invalidate on Wrangler configuration changes alone. Verification rejects
+a Python-version mismatch in the Wasm lock.
 
 ```sh
 npm ci --prefix frontend

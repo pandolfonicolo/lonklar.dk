@@ -3,10 +3,9 @@
   "name": "lonklar-python-poc",
   "main": "src/entry.py",
   "account_id": "585ac81ae021c1bcd59e429e7a6af1ac",
-  "compatibility_date": "2026-10-22",
+  "compatibility_date": "2026-09-07",
   "compatibility_flags": [
-    "python_workers",
-    "disable_python_no_global_handlers"
+    "python_workers"
   ],
   "workers_dev": true,
   "preview_urls": false,

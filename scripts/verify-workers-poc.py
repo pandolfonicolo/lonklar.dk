@@ -6,8 +6,10 @@ import secrets
 import subprocess
 import sys
 import time
+import tomllib
 import urllib.request
 from pathlib import Path
+from pywrangler.utils import get_python_version
 
 root = Path(__file__).resolve().parents[1]
 project = root / "workers_poc"
@@ -18,6 +20,10 @@ assert config["d1_databases"][0]["database_id"] == "891c9b79-dc3e-4b65-be50-b223
 assert config["d1_databases"][0]["database_name"] == "lonklar-python-poc"
 assert not any(key in config for key in ("routes", "route", "env", "kv_namespaces", "services", "triggers"))
 assert config["preview_urls"] is False and config["workers_dev"] is True
+wasm_lock = tomllib.loads((project / "pylock.toml").read_text())
+assert wasm_lock["requires-python"].startswith(">=" + get_python_version() + "."), (
+    "Wasm lock targets a different Python runtime; run pywrangler sync --force"
+)
 for path in (project / "src/api").rglob("*.py"):
     assert path.read_bytes() == (root / "api" / path.relative_to(project / "src/api")).read_bytes(), path
 
@@ -54,7 +60,10 @@ with log_path.open("w") as log:
             secret_file.unlink(missing_ok=True)
         else:
             secret_file.write_bytes(previous_secret_file)
-        os.killpg(process.pid, signal.SIGTERM)
+        try:
+            os.killpg(process.pid, signal.SIGTERM)
+        except ProcessLookupError:
+            pass  # Preserve the startup/test error if the runtime already exited.
         try:
             process.wait(timeout=10)
         except subprocess.TimeoutExpired:
