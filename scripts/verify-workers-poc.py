@@ -2,6 +2,7 @@
 import json
 import os
 import signal
+import secrets
 import subprocess
 import sys
 import time
@@ -22,6 +23,11 @@ for path in (project / "src/api").rglob("*.py"):
 
 subprocess.run([sys.executable, "-m", "unittest", "discover", "-s", "tests"], cwd=root, check=True)
 subprocess.run(["uv", "run", "--locked", "pywrangler", "d1", "migrations", "apply", "FEEDBACK_DB", "--local"], cwd=project, check=True)
+secret_file = project / ".dev.vars"
+previous_secret_file = secret_file.read_bytes() if secret_file.exists() else None
+admin_token = secrets.token_urlsafe(40)
+secret_file.write_text("FEEDBACK_ADMIN_TOKEN=" + admin_token + "\n")
+secret_file.chmod(0o600)
 log_path = project / ".wrangler/poc-verification.log"
 log_path.parent.mkdir(exist_ok=True)
 with log_path.open("w") as log:
@@ -41,7 +47,13 @@ with log_path.open("w") as log:
         else:
             raise RuntimeError("Worker did not become ready; inspect " + str(log_path))
         subprocess.run([sys.executable, "scripts/smoke-workers-poc.py", "--report", str(project / ".wrangler/verification.json")], cwd=root, check=True)
+        subprocess.run([sys.executable, "scripts/test-workers-feedback.py"], cwd=root,
+                       env={**os.environ, "LONKLAR_TEST_ADMIN_TOKEN": admin_token}, check=True)
     finally:
+        if previous_secret_file is None:
+            secret_file.unlink(missing_ok=True)
+        else:
+            secret_file.write_bytes(previous_secret_file)
         os.killpg(process.pid, signal.SIGTERM)
         try:
             process.wait(timeout=10)

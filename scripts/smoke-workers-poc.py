@@ -27,21 +27,14 @@ results = []
 
 
 def request(path, payload=None, headers=None):
-    data = json.dumps(payload).encode() if payload is not None else None
-    req = urllib.request.Request(args.base + path, data=data, headers={"Content-Type": "application/json", **(headers or {})})
-    opener = urllib.request.build_opener(urllib.request.ProxyHandler({})) if args.base.startswith("http://127") else urllib.request.build_opener()
-    started = time.perf_counter()
+    from poc_http import request as http
+    response = http(args.base, path, payload, headers)
     try:
-        response = opener.open(req, timeout=45)
-    except urllib.error.HTTPError as error:
-        response = error
-    raw = response.read()
-    try:
-        body = json.loads(raw)
+        body = json.loads(response["body"])
     except ValueError:
-        body = raw.decode()
-    results.append({"path": path, "status": response.code, "ms": round((time.perf_counter()-started)*1000, 1)})
-    return response.code, body, response.headers
+        body = response["body"].decode()
+    results.append({"path": path, "status": response["status"], "ms": round(response["http_ms"], 1)})
+    return response["status"], body, response["headers"]
 
 
 for gross in (0, 240_000, 600_000, 1_200_000, 3_000_000):
@@ -74,7 +67,7 @@ assert request("/api/compute/fulltime", {})[0] == 422
 assert request("/api/compute/curve", {"step_monthly": 0.00001})[0] == 422
 assert request("/api/feedback", {"type": "general", "message": "x"*70000})[0] == 413
 assert request("/api/feedback", {"type": "general", "message": "synthetic"}, {"Origin": "https://example.com"})[0] == 403
-assert request("/api/admin/feedback")[0] == 404
+assert request("/api/admin/feedback")[0] in (401, 503)
 assert request("/api/does-not-exist")[0] == 404
 
 baseline = request("/api/vote/stats")[1]
@@ -91,7 +84,7 @@ assert request("/api/accuracy-report", {**report, "actual_net_monthly": 12000})[
 
 status, html, headers = request("/")
 assert status == 200 and "synthetic inputs only" in html and "analytics.lonklar.dk/script.js" not in html
-assert "noindex" in headers["X-Robots-Tag"]
+assert "noindex" in headers["x-robots-tag"]
 asset = re.search(r'src="(/assets/[^\"]+\.js)"', html).group(1)
 assert request(asset)[0] == 200
 assert request("/wizard/fulltime")[0] == 200

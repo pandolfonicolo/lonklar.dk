@@ -7,8 +7,10 @@ from functools import wraps
 from fastapi import FastAPI, HTTPException, Request
 from starlette.responses import JSONResponse
 
-from api.models import FeedbackRequest, AccuracyReportRequest, VoteRequest
 from api.routers import compute, meta
+from storage import db
+from feedback_api import router as feedback_router
+from diagnostics import stamp
 
 app = FastAPI(title="Lonklar Python Workers proof", redirect_slashes=False)
 
@@ -78,30 +80,14 @@ async def proof_headers(request: Request, call_next):
                     raise ValueError()
             except (ValueError, TypeError, ZeroDivisionError):
                 return JSONResponse({"detail": "Proof accepts at most 500 chart samples/hours"}, status_code=422)
+    instance, invocation = stamp()
     response = await call_next(request)
     response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
     response.headers["Cache-Control"] = "no-store"
     response.headers["X-Lonklar-Environment"] = "python-workers-poc"
+    response.headers["X-Lonklar-Instance"] = instance
+    response.headers["X-Lonklar-Invocation"] = str(invocation)
     return response
-
-
-def db(request):
-    return request.scope["env"].FEEDBACK_DB
-
-
-async def limited(request, category, limit):
-    # Atomic, persistent counter; no mutable process state or raw IP storage.
-    import hashlib
-    bucket = int(time.time()) // 60
-    ip = request.headers.get("cf-connecting-ip", "local")
-    key = hashlib.sha256(f"{bucket}:{category}:{ip}".encode()).hexdigest()
-    result = await db(request).prepare(
-        "INSERT INTO rate_limits (key, bucket, count) VALUES (?1, ?2, 1) "
-        "ON CONFLICT(key) DO UPDATE SET count=count+1 RETURNING count"
-    ).bind(key, bucket).first("count")
-    await db(request).prepare("DELETE FROM rate_limits WHERE bucket < ?1").bind(bucket - 2).run()
-    if result > limit:
-        raise HTTPException(429, "Too many requests", headers={"Retry-After": "60"})
 
 
 @app.get("/api/meta")
@@ -143,57 +129,7 @@ async def exchange_rates(request: Request):
     return result
 
 
-async def save(request, kind, data, report_id=None):
-    payload = json.dumps(data, sort_keys=True, ensure_ascii=False, allow_nan=False)
-    timestamp = datetime.now(timezone.utc).isoformat()
-    inserted = await db(request).prepare(
-        "INSERT INTO feedback(kind, report_id, payload, created_at) VALUES (?1, ?2, ?3, ?4) "
-        "ON CONFLICT(report_id) DO NOTHING"
-    ).bind(kind, report_id, payload, timestamp).run()
-    if inserted.meta.changes:
-        return True
-    previous = await db(request).prepare("SELECT payload FROM feedback WHERE report_id=?1").bind(report_id).first("payload")
-    if previous != payload:
-        raise HTTPException(409, "Report ID already used for different data")
-    return False
-
-
-@app.post("/api/feedback")
-async def feedback(req: FeedbackRequest, request: Request):
-    await limited(request, "feedback", 10)
-    await save(request, "feedback", req.model_dump())
-    return {"status": "ok"}
-
-
-@app.post("/api/accuracy-report")
-async def accuracy_report(req: AccuracyReportRequest, request: Request):
-    await limited(request, "accuracy-report", 10)
-    data = req.model_dump()
-    data["difference"] = round(req.actual_net_monthly - req.estimated_net_monthly, 2)
-    data["difference_pct"] = round((req.actual_net_monthly - req.estimated_net_monthly) / req.estimated_net_monthly * 100, 2) if req.estimated_net_monthly else 0
-    saved = await save(request, "accuracy_reports", data, req.report_id)
-    return {"status": "ok", "report_id": req.report_id, "duplicate": not saved}
-
-
-@app.post("/api/vote")
-async def vote(req: VoteRequest, request: Request):
-    await limited(request, "vote", 30)
-    await save(request, "votes", req.model_dump())
-    return {"status": "ok"}
-
-
-@app.get("/api/vote/stats")
-async def vote_stats(request: Request):
-    await limited(request, "vote-stats", 60)
-    result = await db(request).prepare(
-        "SELECT COALESCE(SUM(json_extract(payload, '$.vote')='up'),0) AS up, "
-        "COALESCE(SUM(json_extract(payload, '$.vote')='down'),0) AS down FROM feedback WHERE kind='votes'"
-    ).first()
-    return {"up": result.up, "down": result.down, "total": result.up + result.down}
-
-
-# Intentionally no public admin export. Inspect only the dedicated test DB via
-# authenticated Wrangler. No production ADMIN_TOKEN or feedback data is copied.
+app.include_router(feedback_router)
 
 # Outermost middleware: enforce the cap before any body-reading middleware.
 app.add_middleware(BodyLimit)

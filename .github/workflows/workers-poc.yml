@@ -2,7 +2,7 @@ name: Verify Python Workers proof
 
 on:
   pull_request:
-    paths: ['workers_poc/**', 'api/**', 'frontend/**', 'scripts/*workers-poc.py', '.github/workflows/workers-poc.yml']
+    paths: ['workers_poc/**', 'api/**', 'frontend/**', 'scripts/*workers-*.py', 'scripts/poc_http.py', '.github/workflows/workers-poc.yml']
   workflow_dispatch:
 
 permissions:
