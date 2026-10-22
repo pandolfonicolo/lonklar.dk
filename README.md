@@ -226,3 +226,9 @@ MIT
 ---
 
 Built with ☕ in Copenhagen · [Lonklar](https://lonklar.dk)
+
+## Isolated Python Workers experiment
+
+The optional [Python Workers + D1 proof](workers_poc/README.md) runs on a separate
+`workers.dev` hostname and a dedicated test database. It does not change the
+Oracle production workflow or the `lonklar.dk` domain. Use synthetic inputs only.

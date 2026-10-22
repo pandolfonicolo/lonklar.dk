@@ -35,3 +35,12 @@ INFRASTRUCTURE.md
 # User feedback data (persisted on server, not in repo)
 feedback_data/
 *.jsonl
+
+# Isolated Python Workers proof build/cache
+node_modules/
+.wrangler/
+python_modules/
+workers_poc/public/
+.dev.vars*
+workers_poc/src/api/
+.venv-workers/

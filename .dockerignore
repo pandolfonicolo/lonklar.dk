@@ -11,3 +11,6 @@ feedback_data
 .DS_Store
 *.md
 start.sh
+
+# Separate experimental deployment; never include its tooling in Oracle builds.
+workers_poc
