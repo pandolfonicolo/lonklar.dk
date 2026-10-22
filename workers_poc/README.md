@@ -47,7 +47,7 @@ it in memory, supports logout, paginated/filterable records, archive/restore and
 streaming export including archived records. Missing configuration fails closed;
 admin responses are never cached. Rotate with `uv run pywrangler secret put FEEDBACK_ADMIN_TOKEN`.
 
-`python ../scripts/import-workers-feedback.py /secure/backup/feedback_2026-10-22.jsonl`
+`uv run --locked python ../scripts/import-workers-feedback.py /secure/backup/feedback_2026-10-22.jsonl`
 validates a legacy file without writing anything. It also accepts the unified admin
 export. Use `--apply --token-file /secure/admin-token` only to import into this
 isolated proof. The source is completely validated before writes, each bounded D1
@@ -82,3 +82,7 @@ for rollback and take/validate the real feedback backup before migrating data.
 Official references: [Python Workers](https://developers.cloudflare.com/workers/languages/python/),
 [FastAPI ASGI](https://developers.cloudflare.com/workers/languages/python/packages/fastapi/),
 [D1 Python bindings](https://developers.cloudflare.com/d1/examples/query-d1-from-python-workers/).
+
+Measured results and the current **do not migrate** decision are recorded in
+[EVALUATION.md](EVALUATION.md). Passing functional verification does not mean that
+the hosted Python runtime has passed the load test.

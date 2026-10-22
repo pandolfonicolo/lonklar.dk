@@ -5,6 +5,7 @@ import datetime
 import hashlib
 import json
 import math
+import re
 import statistics
 import sys
 from pathlib import Path
@@ -38,6 +39,10 @@ def sample(base,name,payload,expected,label,index):
     path='curve' if name=='curve-max' else name
     result=request(base,f'/api/compute/{path}?benchmark={label}-{name}-{index}',payload)
     result['correct']=result['status']==200 and equivalent(json.loads(result['body']),expected)
+    # Keep platform error codes without persisting application response payloads.
+    if result['status']!=200:
+        match=re.fullmatch(rb'error code: (\d+)\s*',result['body'])
+        result['platform_error_code']=int(match[1]) if match else None
     result.pop('body');return result
 
 p=argparse.ArgumentParser();p.add_argument('--base',default='https://lonklar-python-poc.nicolo-pandolfo.workers.dev')
@@ -46,7 +51,7 @@ p.add_argument('--label',default='candidate');p.add_argument('--report',type=Pat
 assert 1<=args.per_case<=100 and 0<=args.burst<=200
 assert args.label.replace('-','').isalnum()
 expected={name:fn(model(**payload)) for name,payload,model,fn in CASES}
-report={'label':args.label,'started':utc(),'cases':[],'burst':[],'cpu_source':'Collect separately from Cloudflare workersInvocationsAdaptive; CPU units are microseconds.'}
+report={'label':args.label,'started':utc(),'cases':[],'burst':[],'burst_concurrency':8,'cpu_source':'Collect separately from Cloudflare workersInvocationsAdaptive; CPU units are microseconds.'}
 for name,payload,_,_ in CASES:
     row={'name':name,'started':utc(),'requests':[]}
     for i in range(args.per_case):row['requests'].append(sample(args.base,name,payload,expected[name],args.label,i))
