@@ -10,7 +10,8 @@
     "contracts": "python scripts/generate_contract.py",
     "typecheck": "tsc --noEmit",
     "test:runtime": "node scripts/runtime-smoke.mjs",
-    "benchmark:runtime": "node scripts/runtime-benchmark.mjs"
+    "benchmark:runtime": "node scripts/runtime-benchmark.mjs",
+    "build:preview": "node scripts/build-preview.mjs"
   },
   "devDependencies": {
     "esbuild": "0.28.2",

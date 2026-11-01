@@ -94,6 +94,10 @@ export async function appFetch(request:Request,env:Env={}):Promise<Response>{
     else if(error instanceof RangeError)response=json({detail:error.message},422);
     else response=json({detail:'Internal Server Error'},500);
   }
+  if(env.PREVIEW_MODE==='true'){
+    const headers=new Headers(response.headers);headers.set('X-Robots-Tag','noindex, nofollow, noarchive');
+    response=new Response(response.body,{status:response.status,headers});
+  }
   return cors(request,response,env);
 }
 export default {fetch:appFetch};
