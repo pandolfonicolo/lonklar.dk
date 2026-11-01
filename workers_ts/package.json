@@ -1,12 +1,21 @@
 {
-  "name":"lonklar-native-worker-preview",
-  "private":true,
-  "type":"module",
-  "engines":{"node":">=24"},
-  "scripts":{
-    "test":"node --test tests/*.test.ts",
-    "contracts":"python scripts/generate_contract.py",
-    "typecheck":"tsc --noEmit"
+  "name": "lonklar-native-worker-preview",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
   },
-  "devDependencies":{"typescript":"5.9.3"}
+  "scripts": {
+    "test": "node --test tests/*.test.ts",
+    "contracts": "python scripts/generate_contract.py",
+    "typecheck": "tsc --noEmit",
+    "test:runtime": "node scripts/runtime-smoke.mjs",
+    "benchmark:runtime": "node scripts/runtime-benchmark.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "miniflare": "5.20261023.3-beta",
+    "typescript": "5.9.3",
+    "wrangler": "4.156.0"
+  }
 }

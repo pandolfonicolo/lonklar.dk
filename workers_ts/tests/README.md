@@ -44,3 +44,14 @@ Timing output measures local Node wall time for requests in this mixed suite.
 It is **not** a hosted Cloudflare benchmark, CPU-time measurement, network
 latency estimate, cold-start test or response-time guarantee. Tests of storage,
 admin, CORS, exchange fallback and frontend flows must run separately.
+
+## Native runtime check
+
+`npm run test:runtime` (from `workers_ts`) bundles TypeScript and replays the
+same corpus through actual local workerd/Miniflare. It also exercises ephemeral
+D1 migrations, feedback/admin/idempotency, the native read-rate binding and
+strict durable mutation quotas. Outbound requests are blocked; no Cloudflare
+account, hosted Worker or live database is touched. The native limiter admits
+60 local test reads then rejects the next; this does not prove a globally exact
+60-request cap on Cloudflare's distributed service. Node storage-budget tests
+separately assert 200 allowed stats reads perform zero SQL writes/batches.

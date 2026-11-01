@@ -109,3 +109,72 @@ test('concurrent duplicate reports have one winner; API enforces per-route quota
   assert.equal(result.accuracy_reports.length, 1);
   assert.deepEqual(result.votes, []);
 });
+
+// Track issued statements, not merely changed row counts: DELETE/UPSERT on an
+// empty table would still constitute write amplification and must be caught.
+function countedDatabase() {
+  const backing = database();
+  const calls = { reads: 0, writes: 0, batches: 0 };
+  return { calls, db: {
+    prepare(sql: string) {
+      if (/^\s*SELECT\b/i.test(sql)) calls.reads++; else calls.writes++;
+      return backing.prepare(sql);
+    },
+    async batch(statements: any[]) { calls.batches++; return backing.batch(statements); },
+  }};
+}
+
+test('many admitted statistics reads issue zero D1 writes; native limiter receives only a hash', async () => {
+  const { db, calls } = countedDatabase();
+  const keys: string[] = [];
+  const env = { FEEDBACK_DB: db, VOTE_STATS_LIMITER: { async limit({ key }: { key: string }) { keys.push(key); return { success: true }; } } };
+  const req = new Request('https://preview.invalid/api/vote/stats', { headers: { 'CF-Connecting-IP': '192.0.2.33', 'X-Forwarded-For': '203.0.113.2' } });
+  for (let i = 0; i < 200; i++) {
+    const response = (await handleFeedback(req, '/api/vote/stats', null, env))!;
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { up: 0, down: 0, total: 0 });
+  }
+  assert.deepEqual(calls, { reads: 200, writes: 0, batches: 0 });
+  assert.equal(keys.length, 200);
+  assert.equal(new Set(keys).size, 1);
+  assert.match(keys[0], /^[a-f0-9]{64}$/);
+  assert.ok(!keys[0].includes('192.0.2.33'));
+  const expected = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('/api/vote/stats\0' + '192.0.2.33'));
+  assert.equal(keys[0], Buffer.from(expected).toString('hex'));
+});
+
+test('missing, denied, throwing and invalid statistics limiter fail closed before touching D1', async () => {
+  const req = new Request('https://preview.invalid/api/vote/stats');
+  const scenarios: [any, number][] = [
+    [undefined, 503],
+    [{ async limit() { return { success: false }; } }, 429],
+    [{ async limit() { throw Error('binding failed'); } }, 503],
+    [{ async limit() { return null; } }, 503],
+    [{ async limit() { return { success: 'true' }; } }, 503],
+    [{ async limit() { return {}; } }, 503],
+    [{}, 503],
+  ];
+  for (const [limiter, status] of scenarios) {
+    const { db, calls } = countedDatabase();
+    const response = (await handleFeedback(req, '/api/vote/stats', null, { FEEDBACK_DB: db, VOTE_STATS_LIMITER: limiter }))!;
+    assert.equal(response.status, status);
+    if (status === 429) assert.equal(response.headers.get('Retry-After'), '60');
+    assert.deepEqual(calls, { reads: 0, writes: 0, batches: 0 });
+  }
+});
+
+test('native statistics limiter cannot bypass strict mutation quota or storage failures', async () => {
+  let nativeCalls = 0;
+  const limiter = { async limit() { nativeCalls++; return { success: true }; } };
+  const { db, calls } = countedDatabase();
+  const env = { FEEDBACK_DB: db, VOTE_STATS_LIMITER: limiter };
+  const req = new Request('https://preview.invalid/api/vote', { method: 'POST' });
+  for (let i = 0; i < 30; i++) assert.equal((await handleFeedback(req, '/api/vote', { vote: 'up' }, env))!.status, 200);
+  assert.equal((await handleFeedback(req, '/api/vote', { vote: 'up' }, env))!.status, 429);
+  assert.equal(nativeCalls, 0);
+  assert.equal(calls.batches, 31);
+  assert.ok(calls.writes >= 31);
+  const broken: any = { prepare() { throw Error('storage offline'); } };
+  assert.equal((await handleFeedback(req, '/api/vote', { vote: 'up' }, { FEEDBACK_DB: broken, VOTE_STATS_LIMITER: limiter }))!.status, 500);
+  assert.equal(nativeCalls, 0);
+});

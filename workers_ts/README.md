@@ -30,13 +30,17 @@ python workers_ts/tests/generate-corpus.py
 cd workers_ts
 npm run typecheck
 npm test
+npm run test:runtime
+npm run benchmark:runtime
 ```
 
 The Python oracle is source-hash pinned. Fixtures contain only generated
 synthetic values. Generated fixtures are ignored; no personal salary/feedback
 data belongs in Git. `tests/README.md` describes comparison tolerances and
 coverage. Local timings are Node wall time, **not Workers CPU, network latency,
-first-request latency or an SLA**.
+first-request latency or an SLA**. `test:runtime` bundles the Worker and runs
+it in local workerd with ephemeral D1 and native rate limiting, synthetic data
+only, outbound requests blocked and no Cloudflare account or provisioned resource.
 
 ## Deliberate safety/compatibility differences
 
@@ -48,8 +52,16 @@ first-request latency or an SLA**.
 - HTTP 422 preserves invalid field locations, not exact Pydantic error prose.
 - Missing admin secret fails closed (no legacy `changeme` fallback).
 - Missing D1 binding returns 503. No ephemeral in-memory feedback fallback.
-- D1-backed rate limits are global per hashed client/route and fixed 60-second
-  windows; old process-local counters were reset with each server restart.
+- Mutation rate limits remain durable/global per hashed client/route with
+  fixed 60-second windows; storage failure never bypasses admission control.
+- Public vote-stat reads use the native `VOTE_STATS_LIMITER` binding, not D1
+  counters: **zero database writes per read**, including rejected reads. The
+  binding is approximate and per Cloudflare location, not a global strict cap.
+  Missing/unavailable/invalid binding fails closed with 503; denied reads return
+  429 before querying D1. No isolate-memory fallback or raw-IP storage.
+  The configured threshold is 60 requests/minute/client/route. Hashing reduces
+  raw-address exposure but is not a claim of anonymization. The preview
+  namespace ID must be checked for account uniqueness before deployment.
 - Exchange cache is per isolate, not a global promise of one upstream fetch/hour.
 - Feedback timestamp representation uses ISO UTC; retained timestamps must be
   preserved by a future migration, not replaced with import times.
@@ -62,15 +74,17 @@ first-request latency or an SLA**.
    bindings/secrets/data. `wrangler.jsonc` intentionally contains no routes,
    resources, deploy script or enabled public preview URL.
 2. Apply the test schema only to that synthetic database and test actual D1
-   concurrency/failure behavior. Local tests use SQLite-backed protocol doubles,
-   not proof that Cloudflare permissions/runtime are configured correctly.
+   concurrency/failure behavior. Local tests cover SQLite-backed protocol
+   doubles and an actual local workerd/Miniflare D1/native-limiter simulation.
+   Neither proves hosted Cloudflare permissions, distributed behavior or latency.
 3. Measure real Worker CPU and cold/warm response times, including dense curves
    and 50-year comparisons; test idle first requests and user-visible latency.
-4. Reconsider the rate-limit adapter's D1 writes before production: DELETE plus
-   UPSERT on each counted request includes `/api/vote/stats` GET. This is correct
-   durable admission control but not a minimal-write design. Prefer dedicated
-   edge rate limiting once its configuration/semantics are verified; do not
-   mistake this prototype for a cost-optimized production configuration.
+4. Verify the native read-rate binding and namespace in the hosted preview.
+   Mutation endpoints still consume D1 writes for their durable quotas and
+   actual records; this change removes read-triggered write amplification,
+   not all storage usage. No service subscription or paid upgrade is enabled
+   by this code. The native binding's approximate/local semantics are documented
+   in [Cloudflare's API reference](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/).
 5. Build/bind React assets and browser-test all modes, charts, currencies,
    languages, feedback/admin, SEO/deep links and caching. No browser QA or
    hosted assets verification is claimed by local Node tests.
@@ -84,3 +98,5 @@ first-request latency or an SLA**.
 
 2026 rules and existing model limitations remain unchanged; a code port is not
 an official tax-rule re-verification. Preserve `RULES_VERIFIED_ON`.
+
+Measured representative local runtime results and methodology: [BENCHMARK.md](BENCHMARK.md). These are not hosting-plan capacity or latency guarantees.

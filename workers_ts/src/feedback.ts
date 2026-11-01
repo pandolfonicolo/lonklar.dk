@@ -2,7 +2,14 @@ import { FeedbackStore, ReportConflict } from './storage.ts';
 import type { Database } from './storage.ts';
 import { pyRound } from './numeric.ts';
 
-export interface FeedbackEnv { FEEDBACK_DB?: Database; ADMIN_TOKEN?: string }
+export interface VoteStatsLimiter {
+  limit(options: { key: string }): Promise<{ success: boolean }>;
+}
+export interface FeedbackEnv {
+  FEEDBACK_DB?: Database;
+  ADMIN_TOKEN?: string;
+  VOTE_STATS_LIMITER?: VoteStatsLimiter;
+}
 const json = (body: any, status = 200, headers = {}) => Response.json(body, { status, headers });
 const limits: Record<string, number> = { '/api/feedback': 10, '/api/accuracy-report': 10, '/api/vote': 30, '/api/vote/stats': 60 };
 
@@ -21,8 +28,24 @@ export async function handleFeedback(request: Request, path: string, body: any, 
       const identity = request.headers.get('CF-Connecting-IP') || 'unknown';
       const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(path + '\0' + identity));
       const key = Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, '0')).join('');
-      const rate = await store.allow(key, limits[path]);
-      if (!rate.allowed) return json({ error: `Rate limit exceeded: ${limits[path]} per 1 minute` }, 429, { 'Retry-After': String(rate.retryAfter) });
+      if (path === '/api/vote/stats') {
+        // Read admission must not amplify reads into D1 writes. Cloudflare's
+        // native limiter is approximate and per location, not a global quota.
+        // Fail closed rather than silently replacing it with isolate memory.
+        if (!env.VOTE_STATS_LIMITER) return json({ detail: 'Vote statistics rate limiter unavailable' }, 503);
+        let result: { success: boolean };
+        try {
+          result = await env.VOTE_STATS_LIMITER.limit({ key });
+          if (!result || typeof result.success !== 'boolean') throw new Error('Invalid limiter result');
+        } catch {
+          return json({ detail: 'Vote statistics rate limiter unavailable' }, 503);
+        }
+        if (!result.success) return json({ error: 'Rate limit exceeded: 60 per 1 minute' }, 429, { 'Retry-After': '60' });
+      } else {
+        // Mutations retain the strict, durable D1-backed quota.
+        const rate = await store.allow(key, limits[path]);
+        if (!rate.allowed) return json({ error: `Rate limit exceeded: ${limits[path]} per 1 minute` }, 429, { 'Retry-After': String(rate.retryAfter) });
+      }
     }
     if (admin) return json({ feedback: await store.records('feedback'), accuracy_reports: await store.records('accuracy_reports'), votes: await store.records('votes') });
     if (path === '/api/vote/stats') return json(await store.stats());
