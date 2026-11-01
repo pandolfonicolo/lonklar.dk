@@ -1,0 +1,40 @@
+name: Validate native Worker preview
+on:
+  pull_request:
+    paths:
+      - 'workers_ts/**'
+      - 'api/**'
+      - 'tests/**'
+      - '.github/workflows/validate-native-worker.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      - name: Install reference and compiler dependencies
+        run: |
+          python -m pip install -r requirements.txt
+          npm ci --ignore-scripts --prefix workers_ts
+      - name: Original Python regressions
+        run: python -m unittest discover -s tests
+      - name: Check generated contracts
+        run: |
+          python workers_ts/scripts/generate_contract.py
+          git diff --exit-code -- workers_ts/src/schemas.ts workers_ts/src/meta.ts
+      - name: Generate synthetic reference corpus
+        run: python workers_ts/tests/generate-corpus.py
+      - name: Typecheck and parity, security, persistence tests
+        working-directory: workers_ts
+        run: |
+          npm run typecheck
+          npm test

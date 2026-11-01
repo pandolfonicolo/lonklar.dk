@@ -1,0 +1,11 @@
+{
+  "$schema":"node_modules/wrangler/config-schema.json",
+  "name":"lonklar-native-ts-preview",
+  "main":"src/index.ts",
+  "compatibility_date":"2026-10-01",
+  "workers_dev":false,
+  "preview_urls":false
+  // Deliberately no routes, triggers, production bindings or deploy scripts.
+  // Local API checks need no resources. ASSETS and D1 binding are an explicit
+  // later preview setup step; never point FEEDBACK_DB at production data.
+}
