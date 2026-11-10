@@ -46,7 +46,7 @@ import {
   type PensionType,
 } from "../utils/api";
 import { useI18n, type TranslationKey } from "../utils/i18n";
-import { usePageMeta } from "../utils/usePageMeta";
+import { NotFound } from "./NotFound";
 import {
   clearWizardState,
   loadWizardState,
@@ -63,14 +63,15 @@ function fmt(n: number): string {
 
 export function Wizard() {
   const { serviceId } = useParams<{ serviceId: string }>();
+  return ["fulltime", "parttime", "student"].includes(serviceId ?? "")
+    ? <WizardForm key={serviceId} /> : <NotFound />;
+}
+
+function WizardForm() {
+  const { serviceId = "" } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
   const { t, lang } = useI18n();
 
-  usePageMeta({
-    title: `${(serviceId ?? "calculator").replace(/^\w/, c => c.toUpperCase())} Salary Calculator – Lonklar | lønklar.dk`,
-    description: `Calculate your Danish net salary for a ${serviceId ?? ""} job. Step-by-step wizard with AM-bidrag, bundskat, pension, and standard 2026 deductions.`,
-    path: `/wizard/${serviceId ?? ""}`,
-  });
   const [step, setStep] = useState(0);
   const [meta, setMeta] = useState<Meta | null>(null);
   const [loading, setLoading] = useState(false);
@@ -432,11 +433,6 @@ export function Wizard() {
     studyStartMonth,
     studyEndMonth,
   ]);
-
-  if (!serviceId || !stepNames[serviceId]) {
-    navigate("/");
-    return null;
-  }
 
   const stepKeys = stepNames[serviceId];
   const steps = stepKeys.map((k) => t(k));

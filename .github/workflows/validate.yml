@@ -52,3 +52,9 @@ jobs:
               asset = next(item for item in expected if item['path'].endswith(suffix))
               assert hashlib.sha256(Path('/tmp', local).read_bytes()).hexdigest() == asset['sha256']
           PY
+      - name: Verify indexing and calculator navigation in Chromium
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npm run test:indexing

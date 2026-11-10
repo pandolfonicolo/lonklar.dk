@@ -90,6 +90,7 @@ import {
   type CurrencyCode,
 } from "../utils/currency";
 import { clearWizardState } from "../utils/wizardPersistence";
+import { NotFound } from "./NotFound";
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -675,8 +676,6 @@ export function Results() {
   const savedResult = location.state as TaxResult | StudentResult | null;
   const result = savedResult?.calculation_version ? savedResult : null;
   const { t, lang } = useI18n();
-  // Results pages are dynamic/state-based, no SEO needed
-  React.useEffect(() => { document.title = "Results – Lonklar | lønklar.dk"; }, []);
 
   // Toggle state
   const [period, setPeriod] = useState<"monthly" | "annual">("monthly");
@@ -825,6 +824,7 @@ export function Results() {
     }
   }, [result, serviceId]);
 
+  if (!["fulltime", "parttime", "student"].includes(serviceId ?? "")) return <NotFound />;
   if (!result) {
     return <div className="min-h-screen bg-background"><Header /><main className="max-w-xl mx-auto p-8 space-y-4">
       <p>{t("results.recalculate")}</p>
