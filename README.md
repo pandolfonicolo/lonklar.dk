@@ -123,6 +123,44 @@ docker run -p 8000:8000 lonklar
 # → http://localhost:8000
 ```
 
+## Indexing regression checks
+
+The production FastAPI server serves only the routes listed in
+`frontend/public/pages.json`. Its eight public pages receive route-specific
+titles, canonical URLs and visible HTML summaries before JavaScript loads.
+Results and the feedback admin remain accessible with `noindex`; unknown URLs
+return HTTP 404. The React app uses the same metadata during navigation.
+`privatePaths` is an indexing classification, not an authentication boundary.
+
+When adding a public page, update the route, page metadata and sitemap together.
+Do not invent sitemap `lastmod` dates or change the tax-rule verification date
+for an indexing-only release. Initial summaries describe the existing UI;
+interactive calculations still require JavaScript and the API.
+
+```bash
+npm --prefix frontend ci
+npm --prefix frontend run build
+python -m unittest discover -s tests -v
+```
+
+The HTTP tests use `static/` in the production image, or `frontend/dist/`
+locally. To exercise the full production setup in a browser:
+
+```bash
+docker build -t lonklar-indexing .
+docker run --rm -p 8000:8000 lonklar-indexing
+# In another terminal:
+cd frontend
+npx playwright install --with-deps chromium
+npm run test:indexing
+```
+
+Browser tests use localhost only, block external requests (including analytics),
+and cover direct URLs, no-JavaScript content, lazy loading, metadata transitions,
+404 recovery and all three calculator-to-results flows. CI runs both suites
+against the built production container. Vite's development fallback is not the
+production HTTP routing contract.
+
 ## Tax Model
 
 The tax engine implements the Danish 2026 tax system:

@@ -6,7 +6,8 @@
   "scripts": {
     "build": "npm run icons:check && vite build",
     "icons:check": "node ../scripts/check-brand-icons.mjs",
-    "dev": "vite"
+    "dev": "vite",
+    "test:indexing": "node --test --test-timeout=120000 tests/indexing.test.mjs"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",
@@ -69,6 +70,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "4.1.12",
     "@vitejs/plugin-react": "4.7.0",
+    "playwright": "1.62.1",
     "tailwindcss": "4.1.12",
     "vite": "6.3.5"
   },

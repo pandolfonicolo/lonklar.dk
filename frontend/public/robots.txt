@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /api/
-Disallow: /results/
 
 Sitemap: https://lonklar.dk/sitemap.xml

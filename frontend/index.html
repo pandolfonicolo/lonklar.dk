@@ -8,27 +8,22 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=rientro-1" />
     <meta name="theme-color" content="#5B7A9E" />
 
-    <!-- SEO: primary meta -->
-    <title>Lonklar – Danish Salary & Tax Calculator | lønklar.dk</title>
-    <meta name="description" content="Lonklar (lønklar.dk) is a free Danish net salary calculator. Get an accurate tax breakdown for full-time, part-time, and student jobs — aligned with SKAT 2026 rates." />
-    <link rel="canonical" href="https://lonklar.dk/" />
-
-    <!-- Open Graph -->
+    <!-- PAGE_META -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Lonklar" />
-    <meta property="og:title" content="Lonklar – Danish Salary & Tax Calculator" />
-    <meta property="og:description" content="Free, accurate Danish net salary calculator. Full-time, part-time & student jobs. SKAT 2026 rates, no ads, no tracking." />
-    <meta property="og:url" content="https://lonklar.dk/" />
     <meta property="og:image" content="https://lonklar.dk/og-image.png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:locale" content="en_DK" />
-
-    <!-- Twitter / X -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Lonklar – Danish Salary & Tax Calculator" />
-    <meta name="twitter:description" content="Free, accurate Danish net salary calculator. SKAT 2026 rates." />
     <meta name="twitter:image" content="https://lonklar.dk/og-image.png" />
+    <style>
+      .initial-page { max-width: 52rem; margin: 0 auto; padding: 3rem 1.5rem; font: 1rem/1.7 system-ui; color: #243746; }
+      .initial-page h1 { font-size: 2rem; line-height: 1.25; margin: 1.5rem 0; }
+      .initial-page p { margin: 1rem 0; }
+      .initial-page a { color: #3b5d81; text-decoration: underline; }
+      .initial-page ul { display: flex; flex-wrap: wrap; gap: .5rem 1.5rem; padding: 0; list-style: none; }
+    </style>
 
     <!-- Structured data: WebSite -->
     <script type="application/ld+json">
@@ -38,12 +33,7 @@
       "name": "Lonklar",
       "alternateName": "lønklar.dk",
       "url": "https://lonklar.dk/",
-      "description": "Free Danish net salary calculator aligned with SKAT 2026 rates.",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://lonklar.dk/wizard/{search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
+      "description": "Free Danish net salary calculator with an explained 2026 tax model."
     }
     </script>
     <!-- Structured data: WebApplication -->
@@ -65,23 +55,7 @@
   </head>
 
   <body>
-    <div id="root"><div role="status" style="min-height:100svh;display:grid;place-content:center;text-align:center;background:#eeece5;color:#5b7a9e;font:500 18px system-ui"><img src="/favicon.svg?v=rientro-1" alt="" width="52" height="52" style="margin:0 auto 16px" /><span>LønKlar</span><span style="font-size:14px;margin-top:8px">Loading… / Indlæser…</span></div></div>
-    <noscript>
-      <h1>Lonklar – Danish Salary & Tax Calculator</h1>
-      <p>Lonklar (lønklar.dk) is a free Danish net salary calculator aligned with official SKAT 2026 rates. Calculate your take-home pay for full-time, part-time, and student jobs.</p>
-      <nav>
-        <ul>
-          <li><a href="/">Home</a></li>
-          <li><a href="/about">About</a></li>
-          <li><a href="/how-it-works">How It Works</a></li>
-          <li><a href="/quick-overview">Quick Overview</a></li>
-          <li><a href="/wizard/fulltime">Full-Time Calculator</a></li>
-          <li><a href="/wizard/parttime">Part-Time Calculator</a></li>
-          <li><a href="/wizard/student">Student Calculator</a></li>
-          <li><a href="/contact">Contact</a></li>
-        </ul>
-      </nav>
-    </noscript>
+    <div id="root"><!-- PAGE_CONTENT --></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,0 +1,92 @@
+{
+  "origin": "https://lonklar.dk",
+  "pages": {
+    "/": {
+      "title": "Lonklar – Danish Salary & Tax Calculator | lønklar.dk",
+      "description": "Estimate Danish take-home pay for full-time, part-time and student jobs with Lonklar's explained 2026 tax model.",
+      "heading": "Danish salary and tax calculator",
+      "label": "Home",
+      "paragraphs": [
+        "Lonklar is a free Danish net salary calculator for employees and students. Choose a full-time salary, an hourly job, or student income from SU and work to estimate your take-home pay.",
+        "The calculators explain pension contributions, AM-bidrag, income taxes and deductions. Adjust your municipality and employment details to see how they affect your estimate. Results are estimates based on the 2026 model, not an official tax assessment."
+      ]
+    },
+    "/about": {
+      "title": "About Lonklar – Free Danish Salary Calculator | lønklar.dk",
+      "description": "Learn about Lonklar, a free Danish salary calculator with explained assumptions for employees, students and newcomers to Denmark.",
+      "heading": "About Lonklar",
+      "label": "About",
+      "paragraphs": [
+        "Lonklar helps you understand the difference between gross salary and take-home pay in Denmark. It is designed for newcomers comparing offers, students combining SU with work, and employees exploring a change in salary or hours.",
+        "The tool is free, has no advertising, and does not require an account. Its source code and calculation assumptions are available for inspection. Read the methodology for the scope and limitations of the estimates, or use the contact page to report a problem."
+      ]
+    },
+    "/how-it-works": {
+      "title": "How It Works – Lonklar | lønklar.dk",
+      "description": "Understand Lonklar's Danish net salary calculation, including pension, AM-bidrag, income taxes, deductions and the model's limitations.",
+      "heading": "How the Danish salary calculation works",
+      "label": "How it works",
+      "paragraphs": [
+        "Lonklar starts from your salary or hourly earnings and accounts for pension, ATP and holiday pay according to the selected employment type. It then calculates AM-bidrag and the relevant state, municipal and optional church taxes.",
+        "Deductions and personal allowances reduce the applicable tax bases. Student estimates combine SU and work and assess income against the annual fribeløb. The interactive methodology page explains the calculation steps and links to official SKAT, SU and ATP sources.",
+        "The model covers common employment situations and cannot replace your forskudsopgørelse or final tax assessment. Unusual income, special tax schemes and individual circumstances may change the result."
+      ]
+    },
+    "/quick-overview": {
+      "title": "Quick Overview – Lonklar | lønklar.dk",
+      "description": "Explore how Danish gross salary relates to net pay and tax brackets under the quick overview's standard assumptions.",
+      "heading": "Danish gross to net salary at a glance",
+      "label": "Quick overview",
+      "paragraphs": [
+        "The quick overview compares gross monthly salary with estimated take-home pay across a range of incomes. The interactive chart shows how the tax burden changes as income crosses the Danish tax brackets.",
+        "This overview uses a standard Copenhagen employee scenario with pension, ATP and church tax. It is a comparison tool rather than a personalized estimate. Use the full-time calculator to enter your own municipality, pension and deductions."
+      ]
+    },
+    "/wizard/fulltime": {
+      "title": "Full-Time Salary Calculator – Lonklar | lønklar.dk",
+      "description": "Estimate Danish net pay from a full-time salary, with your municipality, pension, ATP and deductions using Lonklar's 2026 model.",
+      "heading": "Full-time Danish salary calculator",
+      "label": "Full-time calculator",
+      "paragraphs": [
+        "Estimate your take-home pay from a monthly or annual gross salary in Denmark. Enter your salary, select your municipality and church-tax status, then adjust employee and employer pension contributions.",
+        "The calculator also supports ATP, taxable benefits and common deductions. Review your inputs to see the estimated tax breakdown, ordinary monthly cash and holiday-pay treatment. Your personal inputs are needed before a salary result can be calculated."
+      ]
+    },
+    "/wizard/parttime": {
+      "title": "Part-Time & Hourly Salary Calculator – Lonklar | lønklar.dk",
+      "description": "Estimate take-home pay for Danish hourly and part-time work from your hourly rate, monthly hours, pension and municipality.",
+      "heading": "Part-time and hourly Danish salary calculator",
+      "label": "Part-time calculator",
+      "paragraphs": [
+        "Estimate net income from an hourly job in Denmark. Start with your hourly wage and working hours per month, then select your municipality and pension arrangements.",
+        "The estimate accounts for taxes and the selected ATP and holiday-pay settings. Explore how changing your hours affects earnings and deductions. If you receive SU as well as wages, use the student calculator so that both income sources are considered together."
+      ]
+    },
+    "/wizard/student": {
+      "title": "Student SU & Salary Calculator – Lonklar | lønklar.dk",
+      "description": "Estimate Danish student income from SU and work, including taxes, SU months and potential fribeløb repayment risk.",
+      "heading": "Danish student income calculator: SU and work",
+      "label": "Student calculator",
+      "paragraphs": [
+        "Estimate your combined income from Danish SU and student work. Select your education and living situation, specify the months receiving SU, and add your hourly jobs or choose SU-only income.",
+        "The calculator estimates tax on the combined income and checks work income against the annual fribeløb. It separates current take-home income from potential later SU repayment. Your actual SU award and individual circumstances should be reflected in the inputs."
+      ]
+    },
+    "/contact": {
+      "title": "Contact – Lonklar | lønklar.dk",
+      "description": "Send feedback, report a bug or suggest a feature for Lonklar, the free Danish salary calculator.",
+      "heading": "Contact Lonklar",
+      "label": "Contact",
+      "paragraphs": [
+        "Help improve Lonklar by reporting a calculation or interface problem, suggesting a feature, or sharing general feedback. The contact form lets you choose the type of message and describe what happened.",
+        "For a bug report, explain which calculator you used and the steps needed to reproduce the problem. Avoid including personal identifiers or confidential financial documents. For an explanation of the estimates and their assumptions, read the methodology page."
+      ]
+    }
+  },
+  "privatePaths": [
+    "/results/fulltime",
+    "/results/parttime",
+    "/results/student",
+    "/admin/feedback"
+  ]
+}
