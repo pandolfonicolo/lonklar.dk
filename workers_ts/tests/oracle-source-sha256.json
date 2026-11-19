@@ -1,0 +1,12 @@
+{
+  "reference_commit": "f436bb22f2ea7e85365d35d0b1081ea17a7c9bd3",
+  "source_sha256": {
+    "api/tax_engine.py": "861c0cdffec0d58d23c709e6ca353a9beeec3f871a4f0c9aee498bbb21b2db5e",
+    "api/data.py": "947df1baecadd6a5d2ff830303df4c611f44571211068753660b7ce6dee25007",
+    "api/models.py": "bc5e7ff63ec36134e2d35a3fd5dd1f8a654b44478baa55e4cfe5d062438cd7ab",
+    "api/chart_curves.py": "7bf3bd729ae5e4596867963a9e27ae5ea3026cd2ed7e6074844e949c43471487",
+    "api/salary_scenarios.py": "c5bda772b63594d19b87a67e851b59a363182a2a24f2b4f7b9f69480f99f1422",
+    "api/routers/compute.py": "af193cdbb24419b02263aaa66e190cd5b021ff82704eac309c73d9aafc2bf1f4",
+    "api/routers/meta.py": "86ca6f9127c8bd0490f16f855bdb8f0142b7afb9dc4c6c9e5c6e6ddd5657489f"
+  }
+}
