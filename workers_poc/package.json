@@ -1,0 +1,13 @@
+{
+  "name": "lonklar-python-poc",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix ../frontend run build && python3 ../scripts/build-workers-poc.py",
+    "verify": "npm run build && uv run --locked python ../scripts/verify-workers-poc.py && uv run --locked pywrangler deploy --dry-run",
+    "deploy": "npm run verify && uv run --locked python ../scripts/deploy-workers-poc.py"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "5.20261022.1",
+    "wrangler": "4.152.0"
+  }
+}

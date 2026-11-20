@@ -1,0 +1,15 @@
+[project]
+name = "lonklar-python-poc"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.160.0",
+    "httpx>=0.28.1",
+]
+
+[dependency-groups]
+dev = [
+    "slowapi>=0.1.10",
+    "workers-py>=1.17.8",
+    "workers-runtime-sdk>=1.9.5",
+]

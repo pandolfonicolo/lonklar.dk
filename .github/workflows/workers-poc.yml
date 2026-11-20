@@ -1,0 +1,33 @@
+name: Verify Python Workers proof
+
+on:
+  pull_request:
+    paths: ['workers_poc/**', 'api/**', 'frontend/**', 'scripts/*workers-*.py', 'scripts/poc_http.py', '.github/workflows/workers-poc.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workers-poc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22.22.0
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          version: 0.13.5
+      - run: npm ci --prefix frontend
+      - run: npm ci
+        working-directory: workers_poc
+      - run: npm run verify
+        working-directory: workers_poc
