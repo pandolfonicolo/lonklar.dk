@@ -264,3 +264,29 @@ MIT
 ---
 
 Built with ☕ in Copenhagen · [Lonklar](https://lonklar.dk)
+
+### Tax years
+
+The calculator defaults to the existing 2026 model. Select 2027 in any wizard,
+Quick Overview, or the worked formula on How It Works. Results, charts,
+comparisons and projections use the selected rules; projections hold those
+rules fixed rather than predicting future tax law. The API accepts optional
+`?tax_year=2027` on `/api/meta` and the `/api/compute/*` endpoints.
+
+2027 fixtures use the [Ministry's personal tax rates][tax-2027],
+[deductions][deductions-2027], [municipal workbook][municipal-2027],
+[commuting order no. 1008][commute-2027], [SU awards and loan rates][su-2027],
+[SU income limits][fribeloeb-2027], and [ATP rates][atp-2027]. The 2027 middle-tax
+threshold is the published DKK 659,900; the November political agreement's
+DKK 673,900 is not used here. Recheck enactment before merging or publishing.
+The existing scope is unchanged: standard commuting rates only (no special
+geographic or income-based additions), and SU award estimates do not determine
+eligibility or funding duration. Payslip accuracy reports remain 2026-only.
+
+[tax-2027]: https://svmn.dk/tal-og-metode/satser/satser-og-beloebsgraenser-i-lovgivningen/personskatteloven
+[deductions-2027]: https://svmn.dk/tal-og-metode/satser/satser-og-beloebsgraenser-i-lovgivningen/ligningsloven
+[municipal-2027]: https://svmn.dk/media/edpptjbc/kommuneskattesatser_2027.xlsx
+[commute-2027]: https://www.lovtidende.dk/api/pdf/258848
+[su-2027]: https://www.su.dk/satser
+[fribeloeb-2027]: https://www.su.dk/su/naar-du-faar-su/saa-meget-maa-du-tjene/satser-for-maanedsfribeloeb
+[atp-2027]: https://virk.dk/vejledning/atp/atp-arbejdsgiver/atp-satser/

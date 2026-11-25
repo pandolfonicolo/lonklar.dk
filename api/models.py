@@ -93,7 +93,7 @@ class ComparisonRequest(BaseModel):
 
 
 class StudentRequest(BaseModel):
-    su_monthly: float = Field(7426.0, ge=0, le=50000, description="Monthly SU before tax")
+    su_monthly: float | None = Field(None, ge=0, le=50000, description="Monthly SU before tax")
     su_months: int = Field(12, ge=0, le=12, description="Number of SU payments received in the tax year")
     work_gross_monthly: float = Field(..., description="Monthly gross work income")
     kommune: str = Field("København", description="Municipality name")
@@ -160,7 +160,7 @@ class HoursCurveRequest(BaseModel):
 
 class StudentHoursCurveRequest(BaseModel):
     hourly_rate: float = Field(..., description="Student hourly wage in DKK")
-    su_monthly: float = Field(7426.0, ge=0, le=50000, description="Monthly SU before tax")
+    su_monthly: float | None = Field(None, ge=0, le=50000, description="Monthly SU before tax")
     su_months: int = Field(12, ge=0, le=12, description="Number of SU payments received in the tax year")
     kommune: str = Field("København")
     pension_pct: float = Field(0.0)

@@ -1,3 +1,5 @@
+import { TaxYearSelect, useTaxYear } from "../components/TaxYearSelect";
+import { fetchMeta, type Meta } from "../utils/api";
 import React from "react";
 import { DataFreshness } from "../components/DataFreshness";
 import { Header } from "../components/Header";
@@ -5,10 +7,11 @@ import { ArrowLeft, ExternalLink, MessageSquare } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate, Link } from "react-router";
 import { useI18n } from "../utils/i18n";
+import { taxText } from "../utils/taxText";
 import { FreshnessProvider } from "../utils/freshness";
 
 /* ── pseudo-code formula block (language-independent) ────────── */
-const FORMULA = `// Full-time job → net pay (2026 rates)
+const formula = ({ tax_year: year, constants: c }: Meta) => `// Full-time job → net pay (${year} rates)
 
 pension        = gross × employee_pension_%
 atp            = 99 kr/month × 12                // (varies by hours)
@@ -21,32 +24,32 @@ income_after_am = am_basis − am_bidrag
 
 // ── deductions ──
 employment_base = am_basis + qualifying_payroll_pension + reported_ATP
-beskæft_fradrag = min(employment_base × 12.75%, 63 300)
-job_fradrag     = min(max(employment_base − 235 200, 0) × 4.50%, 3 100)
-befordring      = (max(min(daily_km, 120) − 24, 0) × 3.17
-                  + max(daily_km − 120, 0) × 1.59) × actual_days
+beskæft_fradrag = min(employment_base × 12.75%, ${c.beskaeft_max})
+job_fradrag     = min(max(employment_base − ${c.job_fradrag_threshold}, 0) × 4.50%, ${c.job_fradrag_max})
+befordring      = (max(min(daily_km, 120) − 24, 0) × ${c.transport_rate_low}
+                  + max(daily_km − 120, 0) × ${c.transport_rate_high}) × actual_days
 fagforening     = min(annual_union_fees, 7 000)
 lignings_fradrag = befordring + fagforening + annual_a_kasse_fees
 
 // ── state tax ──
-bundskat_base   = max(income_after_am − 54 100, 0)
+bundskat_base   = max(income_after_am − ${c.personfradrag}, 0)
 bundskat        = bundskat_base × 12.01%
 
 // ── municipal tax (reduced base) ──
-kommune_base    = max(income_after_am − 54 100
+kommune_base    = max(income_after_am − ${c.personfradrag}
                     − beskæft − job − lignings_fradrag, 0)
 kommuneskat     = kommune_base × kommune_%
 
 // ── church tax (optional, same reduced base) ──
-kirke_base      = max(income_after_am − 54 100
+kirke_base      = max(income_after_am − ${c.personfradrag}
                     − beskæft − job − lignings_fradrag, 0)
 kirkeskat       = kirke_base × kirke_%
 
 // ── cumulative progressive taxes (personal income after AM) ──
 mellem_rate     = min(7.5%, max(44.57% − 12.01% − kommune_%, 0))
-mellemskat      = max(income_after_am − 641 200, 0) × mellem_rate
-topskat         = max(income_after_am − 777 900, 0) × 7.5%
-toptopskat      = max(income_after_am − 2 592 700, 0) × 5.0%
+mellemskat      = max(income_after_am − ${c.mellemskat_threshold}, 0) × mellem_rate
+topskat         = max(income_after_am − ${c.topskat_threshold}, 0) × 7.5%
+toptopskat      = max(income_after_am − ${c.toptopskat_threshold}, 0) × 5.0%
 
 // ── net ──
 total_tax       = am_bidrag + bundskat + kommuneskat
@@ -56,7 +59,17 @@ net_annual      = gross + feriepenge − pension − atp
 
 export function HowItWorks() {
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
+  const [taxYear, setTaxYear] = useTaxYear();
+  const [meta, setMeta] = React.useState<Meta | null>(null);
+  React.useEffect(() => {
+    let active = true;
+    fetchMeta(taxYear).then((data) => { if (active) setMeta(data); }).catch(console.error);
+    return () => { active = false; };
+  }, [taxYear]);
+
+  const currentMeta = meta?.tax_year === taxYear ? meta : null;
+  const rateText = (key: Parameters<typeof t>[0]) => taxText(t(key), currentMeta, lang);
 
   React.useEffect(() => {
     if (window.location.hash === "#sources") {
@@ -79,7 +92,8 @@ export function HowItWorks() {
         <article className="prose prose-slate max-w-none">
           {/* ── Hero ── */}
           <div className="mb-10">
-            <h1 className="text-3xl font-semibold text-foreground mb-3">{t("method.title")}</h1>
+            <div className="mb-3"><TaxYearSelect year={taxYear} onChange={setTaxYear} /></div>
+        <h1 className="text-3xl font-semibold text-foreground mb-3">{t("method.title")}</h1>
             <p className="text-muted-foreground text-lg max-w-xl">
               {t("method.subtitle")}
             </p>
@@ -110,8 +124,8 @@ export function HowItWorks() {
                     <li>{t("method.calc.fulltime.kommune")}</li>
                     <li>{t("method.calc.fulltime.progressive")}</li>
                     <li>{t("method.calc.fulltime.skatteloft")}</li>
-                    <li>{t("method.calc.fulltime.beskfradrag")}</li>
-                    <li>{t("method.calc.fulltime.jobfradrag")}</li>
+                    <li>{rateText("method.calc.fulltime.beskfradrag")}</li>
+                    <li>{rateText("method.calc.fulltime.jobfradrag")}</li>
                     <li>{t("method.calc.fulltime.atp")}</li>
                   </ul>
                 </div>
@@ -154,17 +168,17 @@ export function HowItWorks() {
                 {
                   label: t("method.sources.skat"),
                   url: "https://skat.dk/hjaelp/satser",
-                  desc: t("method.sources.skat.desc"),
+                  desc: rateText("method.sources.skat.desc"),
                 },
                 {
                   label: t("method.sources.skm"),
                   url: "https://skm.dk/tal-og-metode/satser/kommuneskatteprocenter",
-                  desc: t("method.sources.skm.desc"),
+                  desc: rateText("method.sources.skm.desc"),
                 },
                 {
                   label: t("method.sources.su"),
                   url: "https://su.dk/satser",
-                  desc: t("method.sources.su.desc"),
+                  desc: rateText("method.sources.su.desc"),
                 },
                 {
                   label: t("method.sources.fribeloeb"),
@@ -208,7 +222,7 @@ export function HowItWorks() {
                 </div>
               ))}
               <div className="mt-4 pt-3 border-t border-border">
-                <FreshnessProvider>
+                <FreshnessProvider taxYear={taxYear}>
                   <DataFreshness details link={false} />
                 </FreshnessProvider>
               </div>
@@ -243,8 +257,8 @@ export function HowItWorks() {
                 <span className="w-2 h-2 rounded-full bg-green-400/70" />
                 <span className="ml-2 text-[10px] text-muted-foreground font-mono">tax_engine.py</span>
               </div>
-              <pre className="p-4 overflow-x-auto text-[11px] leading-[1.6] font-mono text-foreground/80 whitespace-pre">
-                {FORMULA}
+            <pre className="p-4 overflow-x-auto text-[11px] leading-[1.6] font-mono text-foreground/80 whitespace-pre">
+                {currentMeta ? formula(currentMeta) : null}
               </pre>
             </div>
           </section>

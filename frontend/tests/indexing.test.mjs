@@ -6,7 +6,7 @@ import { chromium } from 'playwright';
 const config = JSON.parse(await readFile(new URL('../public/pages.json', import.meta.url)));
 const base = 'http://127.0.0.1:8000';
 let browser;
-before(async () => { browser = await chromium.launch(); });
+before(async () => { browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH }); });
 after(async () => { await browser?.close(); });
 
 async function open(t, options = {}) {
@@ -127,5 +127,38 @@ for (const service of ['fulltime', 'parttime', 'student']) {
     await page.reload();
     await mounted(page);
     assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'noindex,follow');
+  });
+}
+
+for (const service of ['fulltime', 'parttime', 'student']) {
+  test(`${service}: selects 2027, computes with 2027, and keeps inputs on return`, async t => {
+    const page = await open(t, { viewport: { width: 390, height: 844 } });
+    await page.goto(base + '/wizard/' + service);
+    await mounted(page);
+    const choice = page.getByLabel('Tax year', { exact: true });
+    assert.equal(await choice.inputValue(), '2026');
+    const loading = page.waitForResponse(r => r.url() === base + '/api/meta?tax_year=2027');
+    await choice.selectOption('2027');
+    assert.equal((await loading).status(), 200);
+    await page.waitForURL(/tax_year=2027$/);
+    for (let step = 0; step < 3; step++) {
+      await page.getByRole('button', { name: 'Next', exact: true }).click();
+    }
+    const compute = page.waitForResponse(r => r.url() === base + '/api/compute/' + service + '?tax_year=2027');
+    const curvePath = service === 'student' ? 'student-hours-curve' : 'curve';
+    const curve = page.waitForResponse(r => r.url() === base + '/api/compute/' + curvePath + '?tax_year=2027');
+    await page.getByRole('button', { name: 'Calculate', exact: true }).click();
+    const result = await (await compute).json();
+    assert.equal(result.tax_year, 2027);
+    if (service === 'student') assert.equal(result.su_annual_gross, 7608 * 12);
+    assert.equal((await curve).status(), 200);
+    await page.getByText(/Tax year 2027/).waitFor();
+    assert.equal(await page.locator('#pay-month').count(), 0);
+    await page.goBack();
+    await choice.waitFor();
+    assert.equal(await choice.inputValue(), '2027');
+    await choice.selectOption('2026');
+    await page.waitForURL(base + '/wizard/' + service);
+    assert.equal(await choice.inputValue(), '2026');
   });
 }

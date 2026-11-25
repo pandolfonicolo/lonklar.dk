@@ -1,3 +1,5 @@
+export type TaxYear = 2026 | 2027;
+
 /**
  * API client — calls the FastAPI backend for real tax calculations.
  */
@@ -22,6 +24,10 @@ export interface TaxConstants {
   skatteloft: number;
   beskaeft_rate: number;
   beskaeft_max: number;
+  job_fradrag_threshold: number;
+  transport_rate_low: number;
+  transport_rate_high: number;
+  free_phone_annual: number;
   job_fradrag_rate: number;
   job_fradrag_max: number;
   ferietillaeg_rate: number;
@@ -279,6 +285,7 @@ export interface ComparisonResult {
 }
 
 export interface TaxResult {
+  tax_year: TaxYear;
   calculation_version: string;
   ordinary_net_monthly: number;
   a_kasse_deduction: number;
@@ -326,6 +333,7 @@ export interface TaxResult {
 }
 
 export interface StudentResult {
+  tax_year: TaxYear;
   calculation_version: string;
   ordinary_net_monthly: number;
   a_kasse_deduction: number;
@@ -384,6 +392,8 @@ export interface StudentResult {
 
 // ── API calls ────────────────────────────────────────────────────────
 
+const yearQuery = (year: TaxYear) => year === 2026 ? "" : `?tax_year=${year}`;
+
 const BASE = "";  // same origin, proxied by vite
 
 async function post<T>(url: string, body: unknown): Promise<T> {
@@ -396,41 +406,42 @@ async function post<T>(url: string, body: unknown): Promise<T> {
   return res.json();
 }
 
-export async function fetchMeta(): Promise<Meta> {
-  const res = await fetch(`${BASE}/api/meta`);
+export async function fetchMeta(year: TaxYear = 2026): Promise<Meta> {
+  const res = await fetch(`${BASE}/api/meta${yearQuery(year)}`);
   if (!res.ok) throw new Error(`API error: ${res.status}`);
   return res.json();
 }
 
-export async function computeFullTime(req: FullTimeRequest): Promise<TaxResult> {
-  return post("/api/compute/fulltime", req);
+export async function computeFullTime(req: FullTimeRequest, year: TaxYear = 2026): Promise<TaxResult> {
+  return post(`/api/compute/fulltime${yearQuery(year)}`, req);
 }
 
-export async function computePartTime(req: PartTimeRequest): Promise<TaxResult> {
-  return post("/api/compute/parttime", req);
+export async function computePartTime(req: PartTimeRequest, year: TaxYear = 2026): Promise<TaxResult> {
+  return post(`/api/compute/parttime${yearQuery(year)}`, req);
 }
 
-export async function computeStudent(req: StudentRequest): Promise<StudentResult> {
-  return post("/api/compute/student", req);
+export async function computeStudent(req: StudentRequest, year: TaxYear = 2026): Promise<StudentResult> {
+  return post(`/api/compute/student${yearQuery(year)}`, req);
 }
 
-export async function fetchCurve(req: CurveRequest): Promise<CurvePoint[]> {
-  return post("/api/compute/curve", req);
+export async function fetchCurve(req: CurveRequest, year: TaxYear = 2026): Promise<CurvePoint[]> {
+  return post(`/api/compute/curve${yearQuery(year)}`, req);
 }
 
-export async function fetchHoursCurve(req: HoursCurveRequest): Promise<HoursCurvePoint[]> {
-  return post("/api/compute/hours-curve", req);
+export async function fetchHoursCurve(req: HoursCurveRequest, year: TaxYear = 2026): Promise<HoursCurvePoint[]> {
+  return post(`/api/compute/hours-curve${yearQuery(year)}`, req);
 }
 
-export async function fetchStudentHoursCurve(req: StudentHoursCurveRequest): Promise<StudentHoursCurvePoint[]> {
-  return post("/api/compute/student-hours-curve", req);
+export async function fetchStudentHoursCurve(req: StudentHoursCurveRequest, year: TaxYear = 2026): Promise<StudentHoursCurvePoint[]> {
+  return post(`/api/compute/student-hours-curve${yearQuery(year)}`, req);
 }
 
 export async function computeProjection(
   scenario: EmployeeScenarioRequest,
   settings: ProjectionSettings,
+  year: TaxYear = 2026,
 ): Promise<ProjectionResult> {
-  return post("/api/compute/projection", { scenario, settings });
+  return post(`/api/compute/projection${yearQuery(year)}`, { scenario, settings });
 }
 
 export async function computeComparison(
@@ -439,8 +450,9 @@ export async function computeComparison(
   projection?: ProjectionSettings | null,
   projectionA?: ProjectionSettings | null,
   projectionB?: ProjectionSettings | null,
+  year: TaxYear = 2026,
 ): Promise<ComparisonResult> {
-  return post("/api/compute/comparison", {
+  return post(`/api/compute/comparison${yearQuery(year)}`, {
     scenario_a: scenarioA,
     scenario_b: scenarioB,
     projection,

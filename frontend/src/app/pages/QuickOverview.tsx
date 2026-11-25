@@ -1,3 +1,4 @@
+import { TaxYearSelect, useTaxYear, taxYearQuery } from "../components/TaxYearSelect";
 import React, { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
@@ -43,16 +44,21 @@ const STANDARD = {
 export function QuickOverview() {
   const navigate = useNavigate();
   const { t, lang } = useI18n();
+  const [taxYear, setTaxYear] = useTaxYear();
   const [curveData, setCurveData] = useState<CurvePoint[]>([]);
   const [loading, setLoading] = useState(true);
   const [grossInput, setGrossInput] = useState("42000");
 
   useEffect(() => {
-    fetchCurve(STANDARD)
-      .then(setCurveData)
+    let active = true;
+    setLoading(true);
+    setCurveData([]);
+    fetchCurve(STANDARD, taxYear)
+      .then((data) => { if (active) setCurveData(data); })
       .catch(console.error)
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [taxYear]);
 
   // Find the closest curve point for the typed gross
   const liveResult = useMemo(() => {
@@ -77,11 +83,12 @@ export function QuickOverview() {
       <Header />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <Button variant="ghost" onClick={() => navigate("/wizard/fulltime")} className="mb-6">
+        <Button variant="ghost" onClick={() => navigate(`/wizard/fulltime${taxYearQuery(taxYear)}`)} className="mb-6">
           <ArrowLeft className="w-4 h-4 mr-2" />
           {t("btn.backWizard")}
         </Button>
 
+        <div className="mb-4"><TaxYearSelect year={taxYear} onChange={setTaxYear} /></div>
         <h1 className="text-3xl font-semibold text-foreground mb-2">
           {t("overview.title")}
         </h1>
@@ -306,7 +313,7 @@ export function QuickOverview() {
         <div className="mt-8 flex gap-3 justify-center">
           <Button
             size="lg"
-            onClick={() => navigate("/wizard/fulltime")}
+            onClick={() => navigate(`/wizard/fulltime${taxYearQuery(taxYear)}`)}
           >
             {t("overview.cta")}
           </Button>

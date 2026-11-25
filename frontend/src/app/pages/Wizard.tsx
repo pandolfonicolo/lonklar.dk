@@ -1,3 +1,4 @@
+import { TaxYearSelect, useTaxYear, taxYearQuery } from "../components/TaxYearSelect";
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import {
@@ -71,6 +72,7 @@ function WizardForm() {
   const { serviceId = "" } = useParams<{ serviceId: string }>();
   const navigate = useNavigate();
   const { t, lang } = useI18n();
+  const [taxYear, setTaxYear] = useTaxYear();
 
   const [step, setStep] = useState(0);
   const [meta, setMeta] = useState<Meta | null>(null);
@@ -378,8 +380,12 @@ function WizardForm() {
   }
 
   useEffect(() => {
-    fetchMeta().then(setMeta).catch(console.error);
-  }, []);
+    let active = true;
+    fetchMeta(taxYear).then((data) => {
+      if (active) setMeta(data);
+    }).catch(console.error);
+    return () => { active = false; };
+  }, [taxYear]);
 
   useEffect(() => {
     if (!serviceId) return;
@@ -438,7 +444,7 @@ function WizardForm() {
   const steps = stepKeys.map((k) => t(k));
   const isReview = step === steps.length - 1;
   const kommuneList = meta ? Object.keys(meta.kommuner) : [];
-  const c = meta?.constants;
+  const c = meta?.tax_year === taxYear ? meta.constants : undefined;
 
   // ── Computed values ────────────────────────────────────────────
 
@@ -484,6 +490,7 @@ function WizardForm() {
   // ── Submit ─────────────────────────────────────────────────────
 
   const handleSubmit = async () => {
+    if (!c) return;
     if (needsSuAward) { setStep(0); return; }
     setSubmitError(false);
     setLoading(true);
@@ -506,7 +513,7 @@ function WizardForm() {
           union_fees_annual: Number(unionFees),
           a_kasse_fees_annual: Number(aKasseFees),
           transport_days: Number(transportDays),
-        });
+        }, taxYear);
       } else if (serviceId === "parttime") {
         result = await computePartTime({
           hourly_rate: Number(hourlyRate),
@@ -525,7 +532,7 @@ function WizardForm() {
           union_fees_annual: Number(unionFees),
           a_kasse_fees_annual: Number(aKasseFees),
           transport_days: Number(transportDays),
-        });
+        }, taxYear);
       } else {
         result = await computeStudent({
           su_monthly: suMonthlyAmount,
@@ -545,9 +552,9 @@ function WizardForm() {
           union_fees_annual: Number(unionFees),
           a_kasse_fees_annual: Number(aKasseFees),
           transport_days: Number(transportDays),
-        });
+        }, taxYear);
       }
-      navigate(`/results/${serviceId}`, { state: {
+      navigate(`/results/${serviceId}${taxYearQuery(taxYear)}`, { state: {
         ...result,
         _input_pension_pct: Number(pensionPct),
         _input_employer_pension_pct: Number(erPensionPct),
@@ -1696,6 +1703,8 @@ function WizardForm() {
           <p className="text-muted-foreground text-lg mt-1">{t(`home.${serviceId}.subtitle` as any)}</p>
         </div>
 
+        <div className="mb-5"><TaxYearSelect year={taxYear} onChange={setTaxYear} disabled={loading} /></div>
+
         <div className="mb-12">
           <Stepper steps={steps} currentStep={step} />
         </div>
@@ -1713,7 +1722,7 @@ function WizardForm() {
                 <RotateCcw className="w-4 h-4 mr-2" />
                 {t("btn.reset" as any)}
               </Button>
-              <Button onClick={handleNext} disabled={loading || needsSuAward}>
+              <Button onClick={handleNext} disabled={loading || !c || needsSuAward}>
                 {loading
                   ? t("btn.calculating")
                   : isReview
@@ -1729,7 +1738,7 @@ function WizardForm() {
         {serviceId === "fulltime" && step === 0 && (
           <div className="mt-5 text-center">
             <button
-              onClick={() => navigate("/quick-overview")}
+              onClick={() => navigate(`/quick-overview${taxYearQuery(taxYear)}`)}
               className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-[var(--nordic-accent)] dark:text-[var(--nordic-accent-dark)] border border-[var(--nordic-accent)]/30 dark:border-[var(--nordic-accent-dark)]/30 rounded-full hover:bg-[var(--nordic-accent-light)] hover:border-[var(--nordic-accent)]/50 transition-all duration-200"
             >
               <BarChart3 className="w-4 h-4" />
