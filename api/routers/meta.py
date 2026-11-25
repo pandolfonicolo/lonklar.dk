@@ -8,21 +8,17 @@ import time
 import httpx
 
 from ..data import (
-    KOMMUNER, TAX_YEAR, RULES_VERIFIED_ON, DKK_PER_EUR,
-    AM_RATE, PERSONFRADRAG, BUNDSKAT_RATE,
-    MELLEMSKAT_THRESHOLD, MELLEMSKAT_RATE,
-    TOPSKAT_THRESHOLD, TOPSKAT_RATE,
-    TOPTOPSKAT_THRESHOLD, TOPTOPSKAT_RATE,
+    DKK_PER_EUR,
+    AM_RATE, BUNDSKAT_RATE,
+    MELLEMSKAT_RATE,
+    TOPSKAT_RATE,
+    TOPTOPSKAT_RATE,
     SKATTELOFT,
-    BESKAEFT_RATE, BESKAEFT_MAX,
-    JOB_FRADRAG_RATE, JOB_FRADRAG_MAX,
-    SU_UDEBOENDE_MONTH, SU_HJEMMEBOENDE_BASE, SU_HJEMMEBOENDE_MAX,
-    FRIBELOEB_LAVESTE_UNGDOM, FRIBELOEB_LAVESTE_VID,
-    FRIBELOEB_MELLEMSTE, FRIBELOEB_HOEJESTE,
-    FRIBELOEB_PARENT_BONUS,
-    FERIETILLAEG_RATE, FERIEPENGE_RATE,
+    BESKAEFT_RATE, JOB_FRADRAG_RATE, FERIETILLAEG_RATE, FERIEPENGE_RATE,
     ATP_MONTHLY, ATP_MONTHLY_PARTTIME,
 )
+from ..tax_rules import TaxYearQuery, SUPPORTED_YEARS, rules_for_year
+
 
 router = APIRouter(prefix="/api")
 
@@ -32,12 +28,14 @@ router = APIRouter(prefix="/api")
 # ═══════════════════════════════════════════════════════════════════════
 
 @router.get("/meta")
-def get_meta():
+def get_meta(tax_year: TaxYearQuery = 2026):
     """Return tax year, kommune list, constants, and fallback exchange rate."""
+    rules = rules_for_year(tax_year)
     return {
-        "tax_year": TAX_YEAR,
+        "tax_year": rules.year,
+        "supported_tax_years": SUPPORTED_YEARS,
         "data_freshness": {
-            "rules_verified_on": RULES_VERIFIED_ON,
+            "rules_verified_on": rules.RULES_VERIFIED_ON,
             "site_updated_at": os.getenv("APP_UPDATED_AT") or None,
         },
         "dkk_per_eur": DKK_PER_EUR,
@@ -46,35 +44,39 @@ def get_meta():
                 "kommuneskat": rates["kommuneskat"],
                 "kirkeskat": rates["kirkeskat"],
             }
-            for name, rates in sorted(KOMMUNER.items())
+            for name, rates in sorted(rules.KOMMUNER.items())
         },
         "constants": {
             "am_rate": AM_RATE,
-            "personfradrag": PERSONFRADRAG,
+            "personfradrag": rules.PERSONFRADRAG,
             "bundskat_rate": BUNDSKAT_RATE,
-            "mellemskat_threshold": MELLEMSKAT_THRESHOLD,
+            "mellemskat_threshold": rules.MELLEMSKAT_THRESHOLD,
             "mellemskat_rate": MELLEMSKAT_RATE,
-            "topskat_threshold": TOPSKAT_THRESHOLD,
+            "topskat_threshold": rules.TOPSKAT_THRESHOLD,
             "topskat_rate": TOPSKAT_RATE,
-            "toptopskat_threshold": TOPTOPSKAT_THRESHOLD,
+            "toptopskat_threshold": rules.TOPTOPSKAT_THRESHOLD,
             "toptopskat_rate": TOPTOPSKAT_RATE,
             "skatteloft": SKATTELOFT,
             "beskaeft_rate": BESKAEFT_RATE,
-            "beskaeft_max": BESKAEFT_MAX,
+            "beskaeft_max": rules.BESKAEFT_MAX,
+            "transport_rate_low": rules.BEFORDRING_RATE_LOW,
+            "transport_rate_high": rules.BEFORDRING_RATE_HIGH,
+            "free_phone_annual": rules.FRI_TELEFON_ANNUAL,
+            "job_fradrag_threshold": rules.JOB_FRADRAG_THRESHOLD,
             "job_fradrag_rate": JOB_FRADRAG_RATE,
-            "job_fradrag_max": JOB_FRADRAG_MAX,
+            "job_fradrag_max": rules.JOB_FRADRAG_MAX,
             "ferietillaeg_rate": FERIETILLAEG_RATE,
             "feriepenge_rate": FERIEPENGE_RATE,
             "atp_monthly_fulltime": ATP_MONTHLY,
             "atp_monthly_parttime": ATP_MONTHLY_PARTTIME,
-            "su_udeboende_month": SU_UDEBOENDE_MONTH,
-            "su_hjemmeboende_base": SU_HJEMMEBOENDE_BASE,
-            "su_hjemmeboende_max": SU_HJEMMEBOENDE_MAX,
-            "fribeloeb_laveste_vid": FRIBELOEB_LAVESTE_VID,
-            "fribeloeb_laveste_ungdom": FRIBELOEB_LAVESTE_UNGDOM,
-            "fribeloeb_mellemste": FRIBELOEB_MELLEMSTE,
-            "fribeloeb_hoejeste": FRIBELOEB_HOEJESTE,
-            "fribeloeb_parent_bonus": FRIBELOEB_PARENT_BONUS,
+            "su_udeboende_month": rules.SU_UDEBOENDE_MONTH,
+            "su_hjemmeboende_base": rules.SU_HJEMMEBOENDE_BASE,
+            "su_hjemmeboende_max": rules.SU_HJEMMEBOENDE_MAX,
+            "fribeloeb_laveste_vid": rules.FRIBELOEB_LAVESTE_VID,
+            "fribeloeb_laveste_ungdom": rules.FRIBELOEB_LAVESTE_UNGDOM,
+            "fribeloeb_mellemste": rules.FRIBELOEB_MELLEMSTE,
+            "fribeloeb_hoejeste": rules.FRIBELOEB_HOEJESTE,
+            "fribeloeb_parent_bonus": rules.FRIBELOEB_PARENT_BONUS,
         },
         "salary_options": {
             "pension_types": {

@@ -8,7 +8,7 @@ projections aligned.
 
 from __future__ import annotations
 
-from .data import KOMMUNER
+from .tax_rules import TaxRules, RULES_2026
 from .models import EmployeeScenarioRequest, ProjectionSettings
 from .tax_engine import compute_tax
 
@@ -19,11 +19,11 @@ def scenario_gross_annual(scenario: EmployeeScenarioRequest) -> float:
     return scenario.gross_annual or 0.0
 
 
-def compute_employee_scenario(scenario: EmployeeScenarioRequest) -> dict:
-    if scenario.kommune not in KOMMUNER:
+def compute_employee_scenario(scenario: EmployeeScenarioRequest, *, rules: TaxRules = RULES_2026) -> dict:
+    if scenario.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {scenario.kommune}"}
 
-    rates = KOMMUNER[scenario.kommune]
+    rates = rules.KOMMUNER[scenario.kommune]
     gross_annual = scenario_gross_annual(scenario)
     result = compute_tax(
         gross_annual=gross_annual,
@@ -44,6 +44,7 @@ def compute_employee_scenario(scenario: EmployeeScenarioRequest) -> dict:
         transport_days=scenario.transport_days,
         a_kasse_fees_annual=scenario.a_kasse_fees_annual,
         pension_type=scenario.pension_type,
+        rules=rules,
     )
     return {
         "employment_type": scenario.employment_type,
@@ -82,6 +83,7 @@ def comparison_delta(a: dict, b: dict) -> dict:
 def project_employee_scenario(
     scenario: EmployeeScenarioRequest,
     settings: ProjectionSettings,
+    *, rules: TaxRules = RULES_2026,
 ) -> dict:
     growth = settings.salary_growth_pct / 100
     return_rate = settings.annual_return_pct / 100
@@ -97,7 +99,7 @@ def project_employee_scenario(
             projected = projected.model_copy(
                 update={"hourly_rate": (scenario.hourly_rate or 0.0) * ((1 + growth) ** (year - 1))}
             )
-        result = compute_employee_scenario(projected)
+        result = compute_employee_scenario(projected, rules=rules)
         if "error" in result:
             return result
 

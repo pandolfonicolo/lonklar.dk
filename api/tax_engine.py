@@ -1,4 +1,4 @@
-"""Annual Danish salary/SU estimates for 2026, averaged over twelve months.
+"""Annual Danish salary/SU estimates by income year, averaged over twelve months.
 
 The ordinary-cash estimate excludes the net holiday-pay contribution. It is
 not a tax-card withholding calculation. Special relief and SU periodisation
@@ -9,26 +9,20 @@ from __future__ import annotations
 
 from .data import (
     AM_RATE,
-    PERSONFRADRAG,
     BUNDSKAT_RATE,
-    MELLEMSKAT_THRESHOLD, MELLEMSKAT_RATE,
-    TOPSKAT_THRESHOLD,    TOPSKAT_RATE,
-    TOPTOPSKAT_THRESHOLD, TOPTOPSKAT_RATE,
+    MELLEMSKAT_RATE,
+    TOPSKAT_RATE,
+    TOPTOPSKAT_RATE,
     SKATTELOFT,
-    BESKAEFT_RATE, BESKAEFT_MAX,
-    JOB_FRADRAG_THRESHOLD, JOB_FRADRAG_RATE, JOB_FRADRAG_MAX,
-    FRIBELOEB_LAVESTE_VID,
-    FRIBELOEB_LAVESTE_UNGDOM, FRIBELOEB_MELLEMSTE,
-    SU_UDEBOENDE_MONTH, SU_LOAN_MONTHLY,
-    CALCULATION_VERSION,
-    FERIETILLAEG_RATE, FERIEPENGE_RATE,
-    BEFORDRING_RATE_LOW, BEFORDRING_RATE_HIGH,
+    BESKAEFT_RATE, JOB_FRADRAG_RATE, FERIETILLAEG_RATE, FERIEPENGE_RATE,
     BEFORDRING_THRESHOLD, BEFORDRING_HIGH_THRESHOLD,
     FAGFORENING_MAX, ATP_EMPLOYER_FACTOR,
 )
+from .tax_rules import TaxRules, RULES_2026
 
 
-def compute_befordringsfradrag(daily_km: float, work_days: int = 218) -> float:
+
+def compute_befordringsfradrag(daily_km: float, work_days: int = 218, *, rules: TaxRules = RULES_2026) -> float:
     """Compute annual transport deduction (befordringsfradrag).
 
     Parameters
@@ -40,11 +34,11 @@ def compute_befordringsfradrag(daily_km: float, work_days: int = 218) -> float:
         return 0.0
     deductible_km = daily_km - BEFORDRING_THRESHOLD
     if daily_km <= BEFORDRING_HIGH_THRESHOLD:
-        return deductible_km * BEFORDRING_RATE_LOW * work_days
+        return deductible_km * rules.BEFORDRING_RATE_LOW * work_days
     # Split: 25–120 km at high rate, >120 km at low rate
     km_at_low  = BEFORDRING_HIGH_THRESHOLD - BEFORDRING_THRESHOLD
     km_at_high = daily_km - BEFORDRING_HIGH_THRESHOLD
-    return (km_at_low * BEFORDRING_RATE_LOW + km_at_high * BEFORDRING_RATE_HIGH) * work_days
+    return (km_at_low * rules.BEFORDRING_RATE_LOW + km_at_high * rules.BEFORDRING_RATE_HIGH) * work_days
 
 
 def monthly_atp(hours_month: float) -> float:
@@ -58,13 +52,13 @@ def monthly_atp(hours_month: float) -> float:
     return 99.0
 
 
-def compute_progressive_tax(personal_income: float, kommune_pct: float) -> tuple[float, float, float]:
+def compute_progressive_tax(personal_income: float, kommune_pct: float, *, rules: TaxRules = RULES_2026) -> tuple[float, float, float]:
     """PSL §19: only bundskat + kommune + mellemskat share the 44.57% ceiling."""
     mellem_rate = min(MELLEMSKAT_RATE, max(SKATTELOFT - BUNDSKAT_RATE - kommune_pct / 100, 0))
     return (
-        max(personal_income - MELLEMSKAT_THRESHOLD, 0) * mellem_rate,
-        max(personal_income - TOPSKAT_THRESHOLD, 0) * TOPSKAT_RATE,
-        max(personal_income - TOPTOPSKAT_THRESHOLD, 0) * TOPTOPSKAT_RATE,
+        max(personal_income - rules.MELLEMSKAT_THRESHOLD, 0) * mellem_rate,
+        max(personal_income - rules.TOPSKAT_THRESHOLD, 0) * TOPSKAT_RATE,
+        max(personal_income - rules.TOPTOPSKAT_THRESHOLD, 0) * TOPTOPSKAT_RATE,
     )
 
 
@@ -78,7 +72,7 @@ def employment_deduction_base(am_basis: float, qualifying_pension: float, atp_an
     return max(am_basis + qualifying_pension + atp_annual * (1 + ATP_EMPLOYER_FACTOR), 0)
 
 
-def compute_su_repayment(excess: float, su_received: float) -> tuple[float, float]:
+def compute_su_repayment(excess: float, su_received: float, *, rules: TaxRules = RULES_2026) -> tuple[float, float]:
     """Ordinary SU-only estimate; excludes loans, periodisation and later interest.
 
     su.dk: half of the first middle-minus-youth-lowest band, full excess above
@@ -86,9 +80,9 @@ def compute_su_repayment(excess: float, su_received: float) -> tuple[float, floa
     away-from-home SU payment plus one normal monthly SU loan.
     """
     excess = max(excess, 0)
-    discount_band = FRIBELOEB_MELLEMSTE - FRIBELOEB_LAVESTE_UNGDOM
+    discount_band = rules.FRIBELOEB_MELLEMSTE - rules.FRIBELOEB_LAVESTE_UNGDOM
     principal = min(max(su_received, 0), excess - min(excess, discount_band) / 2)
-    supplement = principal * 0.07 if principal > SU_UDEBOENDE_MONTH + SU_LOAN_MONTHLY else 0.0
+    supplement = principal * 0.07 if principal > rules.SU_UDEBOENDE_MONTH + rules.SU_LOAN_MONTHLY else 0.0
     return principal, supplement
 
 
@@ -116,6 +110,7 @@ def compute_tax(
     _skip_ferie: bool = False,
     transport_days: int = 218,
     a_kasse_fees_annual: float = 0.0,
+    *, rules: TaxRules = RULES_2026,
 ) -> dict:
     """Full Danish tax calculation for one year.
 
@@ -179,15 +174,15 @@ def compute_tax(
         am_basis, 0 if is_section53a else total_pension, atp_annual
     )
     if has_employment_income:
-        beskaeft = min(employment_base * BESKAEFT_RATE, BESKAEFT_MAX)
+        beskaeft = min(employment_base * BESKAEFT_RATE, rules.BESKAEFT_MAX)
         # Jobfradrag: only on income ABOVE bundgrænse (ligningsloven § 9 K)
-        job_frad = min(max(employment_base - JOB_FRADRAG_THRESHOLD, 0)
-                       * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
+        job_frad = min(max(employment_base - rules.JOB_FRADRAG_THRESHOLD, 0)
+                       * JOB_FRADRAG_RATE, rules.JOB_FRADRAG_MAX)
     else:
         beskaeft = job_frad = 0.0
 
     # 3b) Ligningsmæssige fradrag (reduce kommune/kirke base, NOT bundskat base)
-    befordring = compute_befordringsfradrag(transport_km, transport_days) if transport_km > 0 else 0.0
+    befordring = compute_befordringsfradrag(transport_km, transport_days, rules=rules) if transport_km > 0 else 0.0
     union_deduction = min(max(union_fees_annual, 0), FAGFORENING_MAX)
     a_kasse_deduction = max(a_kasse_fees_annual, 0)
     lignings_fradrag = befordring + union_deduction + a_kasse_deduction
@@ -199,22 +194,22 @@ def compute_tax(
     #    assessment on skat.dk), which may include personal deductions we don't
     #    know about (rentefradrag, kapitalindkomst, etc.). This is the primary
     #    source of deviation between our estimate and real payslips.
-    bundskat_base = max(income_after_am - PERSONFRADRAG, 0)
+    bundskat_base = max(income_after_am - rules.PERSONFRADRAG, 0)
     bundskat = bundskat_base * BUNDSKAT_RATE
 
     # 5) Kommuneskat (reduced base via fradrag)
-    kommune_base = max(income_after_am - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
+    kommune_base = max(income_after_am - rules.PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
     k_pct = kommune_pct / 100.0
     kommuneskat = kommune_base * k_pct
 
     # 6) Kirkeskat (also reduced by all ligningsmæssige fradrag)
     kirkeskat = 0.0
     if is_church:
-        kirke_base = max(income_after_am - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
+        kirke_base = max(income_after_am - rules.PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
         kirkeskat = kirke_base * (kirke_pct / 100.0)
 
     # Each progressive tax continues above its own threshold.
-    mellemskat, topskat, toptopskat = compute_progressive_tax(income_after_am, kommune_pct)
+    mellemskat, topskat, toptopskat = compute_progressive_tax(income_after_am, kommune_pct, rules=rules)
 
     # 8) Totals
     total_income_tax = (bundskat + kommuneskat + kirkeskat
@@ -225,7 +220,8 @@ def compute_tax(
     net_annual = total_cash - total_deductions - aftertax_deductions_annual
 
     result = {
-        "calculation_version": CALCULATION_VERSION,
+        "tax_year": rules.year,
+        "calculation_version": rules.CALCULATION_VERSION,
         "employment_deduction_base": employment_base,
         "a_kasse_deduction": a_kasse_deduction,
         "transport_days": transport_days,
@@ -275,6 +271,7 @@ def compute_tax(
             atp_monthly, transport_km, union_fees_annual,
             pension_type=pension_type,
             _skip_ferie=True,
+            rules=rules,
             transport_days=transport_days,
             a_kasse_fees_annual=a_kasse_fees_annual,
         )
@@ -312,6 +309,7 @@ def compute_student_income(
     _skip_ferie: bool = False,
     transport_days: int = 218,
     a_kasse_fees_annual: float = 0.0,
+    *, rules: TaxRules = RULES_2026,
 ) -> dict:
     """Combined net income: SU (no AM) + work wages (AM applies).
 
@@ -319,7 +317,7 @@ def compute_student_income(
     If aars_fribeloeb is not given, defaults to 12 × laveste videregående.
     """
     if aars_fribeloeb is None:
-        aars_fribeloeb = FRIBELOEB_LAVESTE_VID * 12
+        aars_fribeloeb = rules.FRIBELOEB_LAVESTE_VID * 12
     su_annual_gross = su_monthly * su_months
     work_annual     = work_gross_monthly * 12
 
@@ -351,7 +349,7 @@ def compute_student_income(
     # Egenindkomst includes feriepenge (su.dk: "Dine feriepenge tæller med")
     # Årsfribeløb = sum of 12 månedsfribeløb (passed in or default)
     fribeloeb_excess = max(work_after_am - aars_fribeloeb, 0)
-    su_repayment, su_repayment_supplement = compute_su_repayment(fribeloeb_excess, su_annual_gross)
+    su_repayment, su_repayment_supplement = compute_su_repayment(fribeloeb_excess, su_annual_gross, rules=rules)
     over_fribeloeb = fribeloeb_excess > 0
 
     # Repayment is a later assessment, not a current monthly payroll deduction.
@@ -361,32 +359,32 @@ def compute_student_income(
     employment_base = employment_deduction_base(
         work_am_basis, 0 if is_section53a else work_total_pension, atp_annual
     )
-    beskaeft = min(employment_base * BESKAEFT_RATE, BESKAEFT_MAX)
-    job_frad = min(max(employment_base - JOB_FRADRAG_THRESHOLD, 0)
-                   * JOB_FRADRAG_RATE, JOB_FRADRAG_MAX)
+    beskaeft = min(employment_base * BESKAEFT_RATE, rules.BESKAEFT_MAX)
+    job_frad = min(max(employment_base - rules.JOB_FRADRAG_THRESHOLD, 0)
+                   * JOB_FRADRAG_RATE, rules.JOB_FRADRAG_MAX)
 
     # Ligningsmæssige fradrag (reduce kommune/kirke base)
-    befordring = compute_befordringsfradrag(transport_km, transport_days) if transport_km > 0 else 0.0
+    befordring = compute_befordringsfradrag(transport_km, transport_days, rules=rules) if transport_km > 0 else 0.0
     union_deduction = min(max(union_fees_annual, 0), FAGFORENING_MAX)
     a_kasse_deduction = max(a_kasse_fees_annual, 0)
     lignings_fradrag = befordring + union_deduction + a_kasse_deduction
 
     # Bundskat
-    bundskat_base = max(total_personal - PERSONFRADRAG, 0)
+    bundskat_base = max(total_personal - rules.PERSONFRADRAG, 0)
     bundskat = bundskat_base * BUNDSKAT_RATE
 
     # Kommuneskat
-    kommune_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
+    kommune_base = max(total_personal - rules.PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
     k_pct = kommune_pct / 100.0
     kommuneskat = kommune_base * k_pct
 
     # Kirkeskat (reduced by ligningsmæssige fradrag: beskaeft + jobfradrag)
     kirkeskat = 0.0
     if is_church:
-        kirke_base = max(total_personal - PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
+        kirke_base = max(total_personal - rules.PERSONFRADRAG - beskaeft - job_frad - lignings_fradrag, 0)
         kirkeskat = kirke_base * (kirke_pct / 100.0)
 
-    mellemskat, topskat, toptopskat = compute_progressive_tax(total_personal, kommune_pct)
+    mellemskat, topskat, toptopskat = compute_progressive_tax(total_personal, kommune_pct, rules=rules)
     total_income_tax = bundskat + kommuneskat + kirkeskat + mellemskat + topskat + toptopskat
     total_deductions = work_am_bidrag + work_pension + total_income_tax + atp_annual
     # Net = SU gross + work cash - deductions - after-tax items
@@ -396,7 +394,8 @@ def compute_student_income(
     work_after_am_monthly = work_after_am / 12
 
     result = {
-        "calculation_version": CALCULATION_VERSION,
+        "tax_year": rules.year,
+        "calculation_version": rules.CALCULATION_VERSION,
         "employment_deduction_base": employment_base,
         "a_kasse_deduction": a_kasse_deduction,
         "transport_days": transport_days,
@@ -446,7 +445,7 @@ def compute_student_income(
         "net_annual":              net_annual,
         "net_monthly":             net_annual / 12,
         "over_fribeloeb":          over_fribeloeb,
-        "fribeloeb_limit":         FRIBELOEB_LAVESTE_VID,
+        "fribeloeb_limit":         rules.FRIBELOEB_LAVESTE_VID,
         "work_after_am_monthly":   work_after_am_monthly,
     }
 
@@ -462,6 +461,7 @@ def compute_student_income(
             pension_type=pension_type,
             su_months=su_months,
             _skip_ferie=True,
+            rules=rules,
             transport_days=transport_days,
             a_kasse_fees_annual=a_kasse_fees_annual,
         )

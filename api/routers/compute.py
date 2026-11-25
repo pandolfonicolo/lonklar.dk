@@ -4,7 +4,7 @@ Tax computation endpoints: full-time, part-time, student, and chart curves.
 
 from fastapi import APIRouter
 
-from ..data import KOMMUNER, MELLEMSKAT_THRESHOLD, TOPSKAT_THRESHOLD, TOPTOPSKAT_THRESHOLD
+from ..tax_rules import TaxRules, TaxYearQuery, rules_for_year
 from ..chart_curves import hours_samples, sample_boundaries
 from ..tax_engine import compute_tax, compute_student_income, monthly_atp
 from ..salary_scenarios import (
@@ -29,9 +29,10 @@ def tax_band(r):
     return "Toptopskat" if r["toptopskat"] > 0 else "Topskat" if r["topskat"] > 0 else "Mellemskat" if r["mellemskat"] > 0 else "Bundskat"
 
 
-TAX_BOUNDARIES = [(MELLEMSKAT_THRESHOLD, "Mellemskat"),
-                  (TOPSKAT_THRESHOLD, "Topskat"),
-                  (TOPTOPSKAT_THRESHOLD, "Toptopskat")]
+def tax_boundaries(rules: TaxRules):
+    return [(rules.MELLEMSKAT_THRESHOLD, "Mellemskat"),
+            (rules.TOPSKAT_THRESHOLD, "Topskat"),
+            (rules.TOPTOPSKAT_THRESHOLD, "Toptopskat")]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -39,12 +40,13 @@ TAX_BOUNDARIES = [(MELLEMSKAT_THRESHOLD, "Mellemskat"),
 # ═══════════════════════════════════════════════════════════════════════
 
 @router.post("/compute/fulltime")
-def compute_fulltime(req: FullTimeRequest):
+def compute_fulltime(req: FullTimeRequest, tax_year: TaxYearQuery = 2026):
     """Full-time salary tax calculation."""
-    if req.kommune not in KOMMUNER:
+    rules = rules_for_year(tax_year)
+    if req.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
 
-    rates = KOMMUNER[req.kommune]
+    rates = rules.KOMMUNER[req.kommune]
     res = compute_tax(
         gross_annual=req.gross_annual,
         pension_pct=req.pension_pct / 100,
@@ -64,6 +66,7 @@ def compute_fulltime(req: FullTimeRequest):
         transport_days=req.transport_days,
         a_kasse_fees_annual=req.a_kasse_fees_annual,
         pension_type=req.pension_type,
+        rules=rules,
     )
     return {
         "kommune": req.kommune,
@@ -74,12 +77,13 @@ def compute_fulltime(req: FullTimeRequest):
 
 
 @router.post("/compute/parttime")
-def compute_parttime(req: PartTimeRequest):
+def compute_parttime(req: PartTimeRequest, tax_year: TaxYearQuery = 2026):
     """Part-time / hourly tax calculation."""
-    if req.kommune not in KOMMUNER:
+    rules = rules_for_year(tax_year)
+    if req.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
 
-    rates = KOMMUNER[req.kommune]
+    rates = rules.KOMMUNER[req.kommune]
     gross_annual = req.hourly_rate * req.hours_month * 12
 
     res = compute_tax(
@@ -101,6 +105,7 @@ def compute_parttime(req: PartTimeRequest):
         transport_days=req.transport_days,
         a_kasse_fees_annual=req.a_kasse_fees_annual,
         pension_type=req.pension_type,
+        rules=rules,
     )
     return {
         "kommune": req.kommune,
@@ -113,14 +118,15 @@ def compute_parttime(req: PartTimeRequest):
 
 
 @router.post("/compute/student")
-def compute_student(req: StudentRequest):
+def compute_student(req: StudentRequest, tax_year: TaxYearQuery = 2026):
     """Student (SU + work) tax calculation."""
-    if req.kommune not in KOMMUNER:
+    rules = rules_for_year(tax_year)
+    if req.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
 
-    rates = KOMMUNER[req.kommune]
+    rates = rules.KOMMUNER[req.kommune]
     res = compute_student_income(
-        su_monthly=req.su_monthly,
+        su_monthly=rules.SU_UDEBOENDE_MONTH if req.su_monthly is None else req.su_monthly,
         su_months=req.su_months,
         work_gross_monthly=req.work_gross_monthly,
         pension_pct=req.pension_pct / 100,
@@ -138,6 +144,7 @@ def compute_student(req: StudentRequest):
         transport_days=req.transport_days,
         a_kasse_fees_annual=req.a_kasse_fees_annual,
         pension_type=req.pension_type,
+        rules=rules,
     )
     return {
         "kommune": req.kommune,
@@ -148,18 +155,20 @@ def compute_student(req: StudentRequest):
 
 
 @router.post("/compute/projection")
-def compute_projection(req: ProjectionRequest):
+def compute_projection(req: ProjectionRequest, tax_year: TaxYearQuery = 2026):
     """Project salary, tax, compensation, and pension over time."""
-    return project_employee_scenario(req.scenario, req.settings)
+    rules = rules_for_year(tax_year)
+    return project_employee_scenario(req.scenario, req.settings, rules=rules)
 
 
 @router.post("/compute/comparison")
-def compute_comparison(req: ComparisonRequest):
+def compute_comparison(req: ComparisonRequest, tax_year: TaxYearQuery = 2026):
     """Compare two employee salary scenarios side by side."""
-    scenario_a = compute_employee_scenario(req.scenario_a)
+    rules = rules_for_year(tax_year)
+    scenario_a = compute_employee_scenario(req.scenario_a, rules=rules)
     if "error" in scenario_a:
         return scenario_a
-    scenario_b = compute_employee_scenario(req.scenario_b)
+    scenario_b = compute_employee_scenario(req.scenario_b, rules=rules)
     if "error" in scenario_b:
         return scenario_b
 
@@ -167,10 +176,10 @@ def compute_comparison(req: ComparisonRequest):
     settings_a = req.projection_a or req.projection
     settings_b = req.projection_b or req.projection
     if settings_a is not None and settings_b is not None:
-        projection_a = project_employee_scenario(req.scenario_a, settings_a)
+        projection_a = project_employee_scenario(req.scenario_a, settings_a, rules=rules)
         if "error" in projection_a:
             return projection_a
-        projection_b = project_employee_scenario(req.scenario_b, settings_b)
+        projection_b = project_employee_scenario(req.scenario_b, settings_b, rules=rules)
         if "error" in projection_b:
             return projection_b
         projection_delta = {
@@ -193,11 +202,12 @@ def compute_comparison(req: ComparisonRequest):
 # ═══════════════════════════════════════════════════════════════════════
 
 @router.post("/compute/curve")
-def compute_curve(req: CurveRequest):
+def compute_curve(req: CurveRequest, tax_year: TaxYearQuery = 2026):
     """Return net-vs-gross curve data for charts."""
-    if req.kommune not in KOMMUNER:
+    rules = rules_for_year(tax_year)
+    if req.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
-    rates = KOMMUNER[req.kommune]
+    rates = rules.KOMMUNER[req.kommune]
 
     # Build gross-annual values list
     if req.step_monthly > 0:
@@ -232,9 +242,10 @@ def compute_curve(req: CurveRequest):
             transport_days=req.transport_days,
             a_kasse_fees_annual=req.a_kasse_fees_annual,
             pension_type=req.pension_type,
+            rules=rules,
         )
     data = []
-    for gross, r, boundary in sample_boundaries(gross_values, evaluate, "income_after_am", TAX_BOUNDARIES):
+    for gross, r, boundary in sample_boundaries(gross_values, evaluate, "income_after_am", tax_boundaries(rules)):
         data.append({
             "tax_boundary": boundary,
             "tax_band_after": tax_band(evaluate(min(req.max_gross, gross + 0.001))) if boundary else None,
@@ -249,11 +260,12 @@ def compute_curve(req: CurveRequest):
 
 
 @router.post("/compute/hours-curve")
-def compute_hours_curve(req: HoursCurveRequest):
+def compute_hours_curve(req: HoursCurveRequest, tax_year: TaxYearQuery = 2026):
     """Return net-vs-hours curve data for part-time charts."""
-    if req.kommune not in KOMMUNER:
+    rules = rules_for_year(tax_year)
+    if req.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
-    rates = KOMMUNER[req.kommune]
+    rates = rules.KOMMUNER[req.kommune]
     def evaluate(h):
         gross_annual = req.hourly_rate * h * 12
         return compute_tax(
@@ -272,10 +284,11 @@ def compute_hours_curve(req: HoursCurveRequest):
             transport_days=req.transport_days,
             a_kasse_fees_annual=req.a_kasse_fees_annual,
             pension_type=req.pension_type,
+            rules=rules,
         )
     data = []
     values = hours_samples(req.max_hours, 5, req.atp_auto)
-    for h, r, boundary in sample_boundaries(values, evaluate, "income_after_am", TAX_BOUNDARIES):
+    for h, r, boundary in sample_boundaries(values, evaluate, "income_after_am", tax_boundaries(rules)):
         data.append({
             "tax_boundary": boundary,
             "tax_band_after": tax_band(evaluate(min(req.max_hours, h + 0.00001))) if boundary else None,
@@ -290,15 +303,16 @@ def compute_hours_curve(req: HoursCurveRequest):
 
 
 @router.post("/compute/student-hours-curve")
-def compute_student_hours_curve(req: StudentHoursCurveRequest):
+def compute_student_hours_curve(req: StudentHoursCurveRequest, tax_year: TaxYearQuery = 2026):
     """Return net-vs-hours curve data for student (SU + work) charts."""
-    if req.kommune not in KOMMUNER:
+    rules = rules_for_year(tax_year)
+    if req.kommune not in rules.KOMMUNER:
         return {"error": f"Unknown kommune: {req.kommune}"}
-    rates = KOMMUNER[req.kommune]
+    rates = rules.KOMMUNER[req.kommune]
     def evaluate(h):
         work_gross_monthly = req.hourly_rate * h
         return compute_student_income(
-            su_monthly=req.su_monthly,
+            su_monthly=rules.SU_UDEBOENDE_MONTH if req.su_monthly is None else req.su_monthly,
             su_months=req.su_months,
             work_gross_monthly=work_gross_monthly,
             pension_pct=req.pension_pct / 100,
@@ -308,6 +322,7 @@ def compute_student_hours_curve(req: StudentHoursCurveRequest):
             employer_pension_pct=req.employer_pension_pct / 100,
             aars_fribeloeb=req.aars_fribeloeb,
             pension_type=req.pension_type,
+            rules=rules,
             atp_monthly=monthly_atp(h) if req.atp_auto else req.atp_monthly,
             other_pay_annual=req.other_pay_monthly * 12,
             pretax_deductions_annual=req.pretax_deductions_monthly * 12,

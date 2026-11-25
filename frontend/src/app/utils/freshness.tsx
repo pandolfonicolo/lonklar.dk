@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { fetchMeta } from "./api";
+import { fetchMeta, type TaxYear } from "./api";
 
 interface Freshness {
   taxYear: number;
@@ -9,12 +9,12 @@ interface Freshness {
 
 const FreshnessContext = createContext<Freshness | null>(null);
 
-export function FreshnessProvider({ children }: { children: ReactNode }) {
+export function FreshnessProvider({ children, taxYear = 2026 }: { children: ReactNode; taxYear?: TaxYear }) {
   const [freshness, setFreshness] = useState<Freshness | null>(null);
 
   useEffect(() => {
     let active = true;
-    fetchMeta().then((meta) => {
+    fetchMeta(taxYear).then((meta) => {
       if (active && meta.data_freshness) {
         setFreshness({
           taxYear: meta.tax_year,
@@ -24,9 +24,9 @@ export function FreshnessProvider({ children }: { children: ReactNode }) {
       }
     }).catch(() => {});
     return () => { active = false; };
-  }, []);
+  }, [taxYear]);
 
-  return <FreshnessContext.Provider value={freshness}>{children}</FreshnessContext.Provider>;
+  return <FreshnessContext.Provider value={freshness?.taxYear === taxYear ? freshness : null}>{children}</FreshnessContext.Provider>;
 }
 
 export function useFreshness() {

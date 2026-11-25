@@ -3,12 +3,12 @@
   "pages": {
     "/": {
       "title": "Lonklar – Danish Salary & Tax Calculator | lønklar.dk",
-      "description": "Estimate Danish take-home pay for full-time, part-time and student jobs with Lonklar's explained 2026 tax model.",
+      "description": "Estimate Danish take-home pay for full-time, part-time and student jobs with Lonklar's explained 2026 and 2027 tax models.",
       "heading": "Danish salary and tax calculator",
       "label": "Home",
       "paragraphs": [
         "Lonklar is a free Danish net salary calculator for employees and students. Choose a full-time salary, an hourly job, or student income from SU and work to estimate your take-home pay.",
-        "The calculators explain pension contributions, AM-bidrag, income taxes and deductions. Adjust your municipality and employment details to see how they affect your estimate. Results are estimates based on the 2026 model, not an official tax assessment."
+        "The calculators explain pension contributions, AM-bidrag, income taxes and deductions. Adjust your municipality and employment details to see how they affect your estimate. Results are estimates based on the selected 2026 or 2027 tax model, not an official tax assessment."
       ]
     },
     "/about": {
@@ -44,7 +44,7 @@
     },
     "/wizard/fulltime": {
       "title": "Full-Time Salary Calculator – Lonklar | lønklar.dk",
-      "description": "Estimate Danish net pay from a full-time salary, with your municipality, pension, ATP and deductions using Lonklar's 2026 model.",
+      "description": "Estimate Danish net pay from a full-time salary, with your municipality, pension, ATP and deductions using Lonklar's 2026 and 2027 models.",
       "heading": "Full-time Danish salary calculator",
       "label": "Full-time calculator",
       "paragraphs": [

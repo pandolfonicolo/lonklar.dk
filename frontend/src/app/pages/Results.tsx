@@ -1,3 +1,5 @@
+import { taxText } from "../utils/taxText";
+import { taxYearQuery } from "../components/TaxYearSelect";
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useLocation, useNavigate } from "react-router";
 import {
@@ -675,6 +677,7 @@ export function Results() {
   const navigate = useNavigate();
   const savedResult = location.state as TaxResult | StudentResult | null;
   const result = savedResult?.calculation_version ? savedResult : null;
+  const taxYear = result?.tax_year === 2027 ? 2027 : 2026;
   const { t, lang } = useI18n();
 
   // Toggle state
@@ -718,7 +721,12 @@ export function Results() {
   const API = "";
 
   useEffect(() => {
-    fetchMeta().then(setMeta).catch(console.error);
+    let active = true;
+    fetchMeta(taxYear).then((data) => { if (active) setMeta(data); }).catch(console.error);
+    return () => { active = false; };
+  }, [taxYear]);
+
+  useEffect(() => {
     fetchExchangeRates().then(setExchangeRates).catch(console.error);
     // Fetch vote stats
     fetch("/api/vote/stats")
@@ -748,6 +756,10 @@ export function Results() {
   // Fetch curve data for charts
   useEffect(() => {
     if (!result || !serviceId) return;
+    let active = true;
+    setCurveData([]);
+    setHoursCurveData([]);
+    setStudentHoursCurveData([]);
     const r = result as any;
     const pensionPct = r._input_pension_pct ?? 0;
     const erPensionPct = r._input_employer_pension_pct ?? 0;
@@ -782,8 +794,8 @@ export function Results() {
         ...extraParams,
         max_gross: 1_680_000,   // 140k monthly × 12
         step_monthly: 500,      // 500 DKK granularity
-      })
-        .then(setCurveData)
+      }, taxYear)
+        .then((data) => { if (active) setCurveData(data); })
         .catch(console.error);
     }
     if (serviceId === "parttime" && r.hourly_rate) {
@@ -798,8 +810,8 @@ export function Results() {
         ...extraParams,
         atp_auto: r._input_atp_auto ?? false,
         max_hours: 220,
-      })
-        .then(setHoursCurveData)
+      }, taxYear)
+        .then((data) => { if (active) setHoursCurveData(data); })
         .catch(console.error);
     }
     if (serviceId === "student" && r._input_student_hourly_rate > 0 && (!r._input_student_jobs || r._input_student_jobs.length <= 1)) {
@@ -818,11 +830,12 @@ export function Results() {
         atp_auto: r._input_atp_auto ?? false,
         max_hours: 220,
         step: 1,
-      })
-        .then(setStudentHoursCurveData)
+      }, taxYear)
+        .then((data) => { if (active) setStudentHoursCurveData(data); })
         .catch(console.error);
     }
-  }, [result, serviceId]);
+    return () => { active = false; };
+  }, [result, serviceId, taxYear]);
 
   if (!["fulltime", "parttime", "student"].includes(serviceId ?? "")) return <NotFound />;
   if (!result) {
@@ -921,7 +934,7 @@ export function Results() {
   const runProjection = async () => {
     if (isStudent) return;
     try {
-      const next = await computeProjection(makeScenario(), currentProjectionSettings());
+      const next = await computeProjection(makeScenario(), currentProjectionSettings(), taxYear);
       setProjectionResult(next);
     } catch (err) {
       console.error(err);
@@ -948,6 +961,7 @@ export function Results() {
         null,
         { years: projectionYears, annual_return_pct: projectionReturn, salary_growth_pct: comparisonGrowthA },
         { years: projectionYears, annual_return_pct: projectionReturn, salary_growth_pct: comparisonGrowthB },
+        taxYear,
       );
       setComparisonResult(next);
     } catch (err) {
@@ -968,7 +982,7 @@ export function Results() {
         {/* ── Primary Result Card ──────────────────────────────── */}
         <div className="bg-gradient-to-br from-[var(--nordic-accent)] to-[var(--nordic-accent-dark)] text-white rounded-[var(--radius-xl)] p-8 mb-6 shadow-[var(--shadow-xl)]">
           <p className="text-xs uppercase tracking-widest opacity-75 mb-1">
-            {serviceTitle}
+            {serviceTitle} · {t("input.taxYear")} {taxYear}
           </p>
           <div className="flex items-end justify-between flex-wrap gap-4">
             <div>
@@ -2107,7 +2121,7 @@ export function Results() {
                       {t(`glossary.${key}.term` as any)}
                     </p>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      {t(`glossary.${key}.desc` as any)}
+                      {taxText(t(`glossary.${key}.desc` as any), meta?.tax_year === taxYear ? meta : null, lang)}
                     </p>
                   </div>
                 ))}
@@ -2251,10 +2265,9 @@ export function Results() {
             )}
           </div>
 
-          <hr className="border-border" />
-
-          {/* Accuracy report */}
-          {accuracyStatus === "success" ? (
+          {/* The payslip comparison is currently supported for 2026 only. */}
+          {taxYear === 2026 && <hr className="border-border" />}
+          {taxYear === 2026 && (accuracyStatus === "success" ? (
             <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-[var(--radius-md)] px-5 py-3">
               <CheckCircle className="w-4 h-4 flex-shrink-0" />
               {t("accuracy.success")}
@@ -2326,7 +2339,7 @@ export function Results() {
                 </Button>
               </div>
             </div>
-          )}
+          ))}
         </div>
 
         {/* ── Actions ──────────────────────────────────────────── */}
@@ -2334,7 +2347,7 @@ export function Results() {
           <Button
             variant="outline"
             size="lg"
-            onClick={() => navigate(`/wizard/${serviceId}`)}
+            onClick={() => navigate(`/wizard/${serviceId}${taxYearQuery(taxYear)}`)}
           >
             {t("btn.adjust")}
           </Button>
